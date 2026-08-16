@@ -35,13 +35,21 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe();
   }, [loadProfile]);
 
-  // Sending a magic link is how BOTH a participant leaving their first
-  // comment AND an organizer/admin logging in create/access their account —
-  // the profiles row is auto-created by a DB trigger on first sign-in.
-  const signInWithEmail = async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  // Email + password replaces the magic-link flow entirely. The profiles
+  // row is still auto-created by the DB trigger on first successful sign-up.
+  const signInWithPassword = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
+
+  // extraData carries signup-time consent flags (marketing_consent,
+  // terms_accepted) through to raw_user_meta_data, read by the
+  // handle_new_user() trigger when it creates the profile row.
+  const signUp = async (email, password, extraData = {}) => {
+    const { error } = await supabase.auth.signUp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      password,
+      options: { emailRedirectTo: window.location.origin, data: extraData },
     });
     return { error };
   };
@@ -56,7 +64,8 @@ export function AuthProvider({ children }) {
     isAdmin: profile?.role === "admin",
     isOrganizer: profile?.role === "organizer",
     loading,
-    signInWithEmail,
+    signInWithPassword,
+    signUp,
     signOut,
     refreshProfile: () => loadProfile(session?.user?.id),
   };
