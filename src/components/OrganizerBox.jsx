@@ -10,18 +10,19 @@ function socialLink(handle, baseUrl) {
   return `${baseUrl}${clean}`;
 }
 
-// `race.organizer` is the joined profiles row (via races.created_by), holding
-// the organizer's reusable profile info. `race.organizer_name` is a plain
-// fallback label for races that aren't linked to a real organizer account.
+// `race.organizer` is the joined organizers row (via races.organizer_id) —
+// a standalone public profile that doesn't require the organizer to have
+// ever logged in. `race.organizer_name` is a plain fallback label for races
+// with no linked organizer entity at all.
 export default function OrganizerBox({ race }) {
   const org = race.organizer;
-  const displayName = org?.org_name || race.organizer_name;
+  const displayName = org?.name || race.organizer_name;
 
-  const website = normalizeUrl(org?.org_website);
-  const instagram = socialLink(org?.org_instagram, "https://instagram.com/");
-  const facebook = socialLink(org?.org_facebook, "https://facebook.com/");
-  const strava = socialLink(org?.org_strava, "https://www.strava.com/clubs/");
-  const email = org?.org_email;
+  const website = normalizeUrl(org?.website);
+  const instagram = socialLink(org?.instagram, "https://instagram.com/");
+  const facebook = socialLink(org?.facebook, "https://facebook.com/");
+  const strava = socialLink(org?.strava, "https://www.strava.com/clubs/");
+  const email = org?.email;
 
   const hasAnything = displayName || website || email || instagram || facebook || strava;
   if (!hasAnything) return null;
@@ -29,8 +30,8 @@ export default function OrganizerBox({ race }) {
   return (
     <div className="organizer-box">
       <div className="organizer-box-head">
-        {org?.org_logo_url && (
-          <img src={org.org_logo_url} alt="" className="organizer-logo" />
+        {org?.logo_url && (
+          <img src={org.logo_url} alt="" className="organizer-logo" />
         )}
         <div>
           <div className="organizer-box-label">Organisé par</div>

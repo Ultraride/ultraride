@@ -129,7 +129,7 @@ export default function RaceDetail() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("*, organizer:profiles!races_created_by_fkey(org_name, org_website, org_email, org_instagram, org_facebook, org_strava, org_logo_url)")
+      .select("*, organizer:organizers!races_organizer_id_fkey(name, website, email, instagram, facebook, strava, logo_url)")
       .eq("id", id)
       .single()
       .then(({ data, error }) => {

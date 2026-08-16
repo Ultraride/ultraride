@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../lib/AuthContext";
+import OrganizerQuickCreate from "./OrganizerQuickCreate";
 
 const EMPTY = {
   name: "", country: "", discipline: "Gravel", format: "course", mode: "Autonomie",
@@ -7,19 +9,35 @@ const EMPTY = {
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
-  status: "published",
+  status: "published", organizer_id: "",
 };
 
 export default function RaceForm({ race, onSaved, onCancel }) {
-  const [form, setForm] = useState(race ? { ...EMPTY, ...race } : EMPTY);
+  const { isAdmin, isOrganizer, user } = useAuth();
+  const [form, setForm] = useState(race ? { ...EMPTY, ...race, organizer_id: race.organizer_id || "" } : EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [organizerList, setOrganizerList] = useState([]);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+
+  const loadOrganizers = () => {
+    supabase
+      .from("organizers")
+      .select("id, name")
+      .order("name", { ascending: true })
+      .then(({ data }) => setOrganizerList(data || []));
+  };
+
+  useEffect(() => {
+    if (isAdmin) loadOrganizers();
+  }, [isAdmin]);
 
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
   const numOrNull = (v) => (v === "" || v === null ? null : Number(v));
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
     setSaving(true);
     setError(null);
@@ -35,7 +53,12 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       end_lat: numOrNull(form.end_lat),
       end_lon: numOrNull(form.end_lon),
     };
-    delete payload.created_by; // never client-settable, trigger owns this
+
+    // organizer_id (a standalone public entity, not tied to any login) can
+    // be picked freely by an admin. created_by (who submitted the race) is
+    // never client-settable — the server owns that entirely.
+    payload.organizer_id = payload.organizer_id || null;
+    delete payload.created_by;
     delete payload.reviewed_by;
     delete payload.created_at;
     delete payload.updated_at;
@@ -165,16 +188,50 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <input value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
       </div>
 
-      <div className="grid-2">
+      {isAdmin ? (
+        <div className="grid-2">
+          <div className="field">
+            <label>Organisateur lié</label>
+            <select value={form.organizer_id || ""} onChange={(e) => field("organizer_id", e.target.value)}>
+              <option value="">— Aucun (nom libre ci-dessous) —</option>
+              {organizerList.map((o) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+            <div className="field-hint">Si un organisateur est sélectionné, ses coordonnées (site, réseaux) s'affichent automatiquement sur la fiche course — inutile de les ressaisir. Il n'a pas besoin d'avoir de compte.</div>
+            {showQuickCreate ? (
+              <OrganizerQuickCreate
+                onCreated={(o) => {
+                  setOrganizerList((list) => [...list, o].sort((a, b) => a.name.localeCompare(b.name)));
+                  field("organizer_id", o.id);
+                  setShowQuickCreate(false);
+                }}
+                onCancel={() => setShowQuickCreate(false)}
+              />
+            ) : (
+              <button type="button" className="filter-reset" style={{ marginTop: 6 }} onClick={() => setShowQuickCreate(true)}>
+                + Créer un nouvel organisateur
+              </button>
+            )}
+          </div>
+          <div className="field">
+            <label>Organisateur (nom affiché, si aucun organisateur lié)</label>
+            <input value={form.organizer_name || ""} onChange={(e) => field("organizer_name", e.target.value)} />
+          </div>
+        </div>
+      ) : (
         <div className="field">
           <label>Organisateur (nom affiché)</label>
           <input value={form.organizer_name || ""} onChange={(e) => field("organizer_name", e.target.value)} />
-          <div className="field-hint">Si la course est liée à un compte organisateur, ses coordonnées (site, réseaux) viennent automatiquement de sa fiche organisateur. Ce champ ne sert que si aucun compte n'est lié.</div>
+          {isOrganizer && (
+            <div className="field-hint">Connecté en tant que {user?.email}.</div>
+          )}
         </div>
-        <div className="field">
-          <label>Prochaine édition</label>
-          <input value={form.next_edition || ""} onChange={(e) => field("next_edition", e.target.value)} />
-        </div>
+      )}
+
+      <div className="field">
+        <label>Prochaine édition</label>
+        <input value={form.next_edition || ""} onChange={(e) => field("next_edition", e.target.value)} />
       </div>
 
       <div className="field">
@@ -192,15 +249,17 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <textarea rows={4} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)} />
       </div>
 
-      <div className="field">
-        <label>Statut</label>
-        <select value={form.status} onChange={(e) => field("status", e.target.value)}>
-          <option value="draft">Brouillon</option>
-          <option value="pending">En attente</option>
-          <option value="published">Publiée</option>
-          <option value="rejected">Refusée</option>
-        </select>
-      </div>
+      {isAdmin && (
+        <div className="field">
+          <label>Statut</label>
+          <select value={form.status} onChange={(e) => field("status", e.target.value)}>
+            <option value="draft">Brouillon</option>
+            <option value="pending">En attente</option>
+            <option value="published">Publiée</option>
+            <option value="rejected">Refusée</option>
+          </select>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 10 }}>
         <button className="btn btn-primary" type="submit" disabled={saving}>

@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import OrganizerQuickCreate from "./OrganizerQuickCreate";
 
 const FIELDS = [
-  { key: "org_name", label: "Nom de l'organisation" },
-  { key: "org_website", label: "Site web", placeholder: "exemple.fr" },
-  { key: "org_email", label: "Email de contact public", type: "email" },
-  { key: "org_instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
-  { key: "org_facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
-  { key: "org_strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
-  { key: "org_logo_url", label: "Logo (URL image)", placeholder: "https://..." },
+  { key: "name", label: "Nom de l'organisation" },
+  { key: "website", label: "Site web", placeholder: "exemple.fr" },
+  { key: "email", label: "Email de contact public", type: "email" },
+  { key: "instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
+  { key: "facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
+  { key: "strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
+  { key: "logo_url", label: "Logo (URL image)", placeholder: "https://..." },
 ];
 
 function OrganizerEditForm({ organizer, onSaved, onCancel }) {
   const [form, setForm] = useState({
-    org_name: organizer.org_name || "",
-    org_website: organizer.org_website || "",
-    org_email: organizer.org_email || "",
-    org_instagram: organizer.org_instagram || "",
-    org_facebook: organizer.org_facebook || "",
-    org_strava: organizer.org_strava || "",
-    org_logo_url: organizer.org_logo_url || "",
+    name: organizer.name || "",
+    website: organizer.website || "",
+    email: organizer.email || "",
+    instagram: organizer.instagram || "",
+    facebook: organizer.facebook || "",
+    strava: organizer.strava || "",
+    logo_url: organizer.logo_url || "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -30,7 +31,7 @@ function OrganizerEditForm({ organizer, onSaved, onCancel }) {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const { data, error } = await supabase.from("profiles").update(form).eq("id", organizer.id).select();
+    const { data, error } = await supabase.from("organizers").update(form).eq("id", organizer.id).select();
     setSaving(false);
     if (error) setError(error.message);
     else if (!data || data.length === 0) setError("Aucune ligne mise à jour.");
@@ -40,7 +41,6 @@ function OrganizerEditForm({ organizer, onSaved, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="panel" style={{ marginTop: 10 }}>
       {error && <div className="error-box">{error}</div>}
-      <div className="muted mono" style={{ fontSize: 11, marginBottom: 12 }}>{organizer.email}</div>
       {FIELDS.map((f) => (
         <div className="field" key={f.key}>
           <label>{f.label}</label>
@@ -66,12 +66,12 @@ export default function OrganizersManager() {
   const [organizers, setOrganizers] = useState(null);
   const [error, setError] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const load = () => {
     supabase
-      .from("profiles")
-      .select("id, email, display_name, role, created_at, org_name, org_website, org_email, org_instagram, org_facebook, org_strava, org_logo_url")
-      .eq("role", "organizer")
+      .from("organizers")
+      .select("*, linked_account:profiles!organizers_linked_profile_id_fkey(email)")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) setError(error.message);
@@ -81,40 +81,65 @@ export default function OrganizersManager() {
 
   useEffect(() => { load(); }, []);
 
-  const hasProfile = (o) => o.org_name || o.org_website || o.org_email || o.org_instagram || o.org_facebook || o.org_strava;
+  const remove = async (o) => {
+    if (!window.confirm(`Supprimer la fiche « ${o.name} » ? Les courses liées ne seront plus rattachées à un organisateur.`)) return;
+    const { error } = await supabase.from("organizers").delete().eq("id", o.id);
+    if (error) setError(error.message);
+    else load();
+  };
+
+  const hasContact = (o) => o.website || o.email || o.instagram || o.facebook || o.strava;
 
   return (
     <div>
-      <h1 className="h1">Fiches organisateur</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h1 className="h1" style={{ margin: 0 }}>Fiches organisateur</h1>
+        <button className="btn btn-primary" onClick={() => setCreating(true)}>+ Nouvel organisateur</button>
+      </div>
       <p className="muted" style={{ marginBottom: 16 }}>
-        Comptes avec le rôle organisateur, et les coordonnées qu'ils ont renseignées (affichées automatiquement sur leurs courses).
+        Ces fiches n'exigent pas de compte — tu peux en créer une pour n'importe quel organisateur, même s'il ne s'est jamais connecté. Si un compte se connecte un jour avec le même profil, tu pourras le relier (« lié à »).
       </p>
+
+      {creating && (
+        <div style={{ marginBottom: 16 }}>
+          <OrganizerQuickCreate
+            onCreated={() => { setCreating(false); load(); }}
+            onCancel={() => setCreating(false)}
+          />
+        </div>
+      )}
+
       {error && <div className="error-box">{error}</div>}
       {organizers === null ? (
         <p className="muted">Chargement…</p>
       ) : organizers.length === 0 ? (
-        <p className="muted">Aucun compte organisateur pour l'instant.</p>
+        <p className="muted">Aucune fiche organisateur pour l'instant.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {organizers.map((o) => (
             <div key={o.id} className="card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                 <div>
-                  <div className="h2" style={{ marginBottom: 2 }}>{o.org_name || "(fiche non renseignée)"}</div>
-                  <div className="muted mono" style={{ fontSize: 12 }}>{o.email}</div>
-                  {hasProfile(o) && (
+                  <div className="h2" style={{ marginBottom: 2 }}>{o.name}</div>
+                  <div className="muted mono" style={{ fontSize: 12 }}>
+                    {o.linked_account ? `Lié à ${o.linked_account.email}` : "Aucun compte lié"}
+                  </div>
+                  {hasContact(o) && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                      {o.org_website && <span className="tag">{o.org_website}</span>}
-                      {o.org_email && <span className="tag">{o.org_email}</span>}
-                      {o.org_instagram && <span className="tag">Instagram</span>}
-                      {o.org_facebook && <span className="tag">Facebook</span>}
-                      {o.org_strava && <span className="tag">Strava</span>}
+                      {o.website && <span className="tag">{o.website}</span>}
+                      {o.email && <span className="tag">{o.email}</span>}
+                      {o.instagram && <span className="tag">Instagram</span>}
+                      {o.facebook && <span className="tag">Facebook</span>}
+                      {o.strava && <span className="tag">Strava</span>}
                     </div>
                   )}
                 </div>
-                <button className="btn" onClick={() => setEditingId(editingId === o.id ? null : o.id)}>
-                  {editingId === o.id ? "Fermer" : "Modifier"}
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn" onClick={() => setEditingId(editingId === o.id ? null : o.id)}>
+                    {editingId === o.id ? "Fermer" : "Modifier"}
+                  </button>
+                  <button className="btn btn-danger" onClick={() => remove(o)}>Suppr.</button>
+                </div>
               </div>
               {editingId === o.id && (
                 <OrganizerEditForm

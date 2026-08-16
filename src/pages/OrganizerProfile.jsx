@@ -4,35 +4,43 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 
 const FIELDS = [
-  { key: "org_name", label: "Nom de l'organisation", placeholder: "Collectif Baronnies Gravel" },
-  { key: "org_website", label: "Site web", placeholder: "exemple.fr" },
-  { key: "org_email", label: "Email de contact public", placeholder: "contact@exemple.fr", type: "email" },
-  { key: "org_instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
-  { key: "org_facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
-  { key: "org_strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
-  { key: "org_logo_url", label: "Logo (URL image)", placeholder: "https://..." },
+  { key: "name", label: "Nom de l'organisation", placeholder: "Collectif Baronnies Gravel" },
+  { key: "website", label: "Site web", placeholder: "exemple.fr" },
+  { key: "email", label: "Email de contact public", placeholder: "contact@exemple.fr", type: "email" },
+  { key: "instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
+  { key: "facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
+  { key: "strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
+  { key: "logo_url", label: "Logo (URL image)", placeholder: "https://..." },
 ];
 
+const EMPTY_FORM = { name: "", website: "", email: "", instagram: "", facebook: "", strava: "", logo_url: "" };
+
 export default function OrganizerProfile() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, loading } = useAuth();
+  const [organizerId, setOrganizerId] = useState(null);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (profile) {
-      setForm({
-        org_name: profile.org_name || "",
-        org_website: profile.org_website || "",
-        org_email: profile.org_email || "",
-        org_instagram: profile.org_instagram || "",
-        org_facebook: profile.org_facebook || "",
-        org_strava: profile.org_strava || "",
-        org_logo_url: profile.org_logo_url || "",
+    if (!user) return;
+    supabase
+      .from("organizers")
+      .select("*")
+      .eq("linked_profile_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setOrganizerId(data.id);
+          setForm({ ...EMPTY_FORM, ...data });
+        } else {
+          // No organizer entry linked to this account yet — start blank,
+          // it'll be created on first save.
+          setForm(EMPTY_FORM);
+        }
       });
-    }
-  }, [profile]);
+  }, [user]);
 
   if (loading) return <div className="wrap" style={{ paddingTop: 60 }}><p className="muted">Chargement…</p></div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -44,17 +52,19 @@ export default function OrganizerProfile() {
     setSaving(true);
     setError(null);
     setSaved(false);
-    // .select() is required here — without it, Supabase reports success even
-    // when RLS silently matched zero rows, hiding a real failure.
-    const { data, error } = await supabase.from("profiles").update(form).eq("id", user.id).select();
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-    } else if (!data || data.length === 0) {
-      setError("Aucune ligne mise à jour. Vérifie que tu es bien connecté avec le bon compte, puis réessaie.");
+
+    let result;
+    if (organizerId) {
+      result = await supabase.from("organizers").update(form).eq("id", organizerId).select().single();
     } else {
+      result = await supabase.from("organizers").insert({ ...form, linked_profile_id: user.id }).select().single();
+    }
+
+    setSaving(false);
+    if (result.error) setError(result.error.message);
+    else {
+      setOrganizerId(result.data.id);
       setSaved(true);
-      refreshProfile();
     }
   };
 
@@ -76,7 +86,7 @@ export default function OrganizerProfile() {
             <label>{f.label}</label>
             <input
               type={f.type || "text"}
-              value={form[f.key]}
+              value={form[f.key] || ""}
               onChange={(e) => field(f.key, e.target.value)}
               placeholder={f.placeholder}
             />
