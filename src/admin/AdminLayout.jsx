@@ -29,6 +29,7 @@ export default function AdminLayout() {
     { to: "/admin/races", label: "Toutes les courses" },
     { to: "/admin/comments", label: "Commentaires" },
     { to: "/admin/users", label: "Utilisateurs" },
+    { to: "/admin/organizers", label: "Fiches organisateur" },
   ];
 
   return (

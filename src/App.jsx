@@ -9,6 +9,7 @@ import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
 import CommentsModeration from "./admin/CommentsModeration";
 import UsersManager from "./admin/UsersManager";
+import OrganizersManager from "./admin/OrganizersManager";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="races" element={<RacesManager />} />
           <Route path="comments" element={<CommentsModeration />} />
           <Route path="users" element={<UsersManager />} />
+          <Route path="organizers" element={<OrganizersManager />} />
         </Route>
       </Routes>
     </>
