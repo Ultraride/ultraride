@@ -78,3 +78,58 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .mono{font-family:var(--mono);}
 .error-box{background:rgba(193,84,63,0.15);border:1px solid var(--brick);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
 .success-box{background:rgba(124,154,121,0.15);border:1px solid var(--moss);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
+
+/* ---------- home page: hero ---------- */
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;}
+.hero-title{font-family:var(--disp);font-weight:700;font-size:38px;letter-spacing:-.01em;margin:0 0 12px;color:var(--paper);}
+@media(min-width:768px){.hero-title{font-size:58px;}}
+.hero-sub{max-width:560px;font-size:16px;color:var(--paperDim,var(--text-secondary));margin:0 0 24px;line-height:1.6;}
+.elev-svg{width:100%;height:112px;display:block;}
+@media(min-width:768px){.elev-svg{height:144px;}}
+@keyframes elevDraw{to{stroke-dashoffset:0;}}
+.elev-line{stroke-dasharray:1400;stroke-dashoffset:1400;animation:elevDraw 2.2s ease-out forwards;}
+.hero-stats{display:flex;gap:24px;flex-wrap:wrap;margin:12px 0 32px;}
+.hero-stat-num{font-family:var(--mono);font-weight:600;font-size:24px;color:var(--amber);}
+.hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--paperDim);}
+
+/* ---------- filter panel ---------- */
+.filter-panel{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:24px;}
+@media(min-width:768px){.filter-panel{padding:20px;}}
+.filter-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.filter-panel-head span{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--moss);}
+.filter-reset{font-size:12px;color:var(--paperDim);background:none;border:none;text-decoration:underline;padding:0;}
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center;}
+.filter-row:last-child{margin-bottom:0;}
+.filter-divider{width:1px;align-self:stretch;background:var(--line);}
+.filter-row select{font-size:13px;padding:7px 10px;border-radius:2px;background:var(--ink);border:1px solid var(--line);color:var(--paper);outline:none;}
+.chip{padding:6px 12px;font-size:13px;border-radius:2px;border:1px solid var(--line);color:var(--paperDim);background:transparent;}
+.chip-active{border-color:var(--amber);color:var(--amber);background:rgba(227,162,60,0.15);}
+
+/* ---------- map box (shared home + overview map) ---------- */
+.map-box{background:var(--panel2);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:24px;}
+.map-box-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--moss);}
+.map-box-head .muted{text-transform:none;letter-spacing:0;}
+.map-box-canvas{width:100%;height:260px;background:var(--ink);}
+@media(min-width:768px){.map-box-canvas{height:420px;}}
+.map-box-legend{display:flex;align-items:center;gap:16px;padding:10px 16px;font-size:11px;color:var(--paperDim);border-top:1px solid var(--line);}
+.map-box-legend .dot{width:8px;height:8px;border-radius:99px;display:inline-block;margin-right:6px;}
+.map-box-attrib{margin-left:auto;}
+
+/* ---------- results ---------- */
+.results-count{font-family:var(--mono);font-size:14px;color:var(--paperDim);margin-bottom:16px;}
+.empty-box{padding:64px 16px;text-align:center;border:1px dashed var(--line);border-radius:3px;}
+.race-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+@media(min-width:768px){.race-grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:1024px){.race-grid{grid-template-columns:1fr 1fr 1fr;}}
+
+/* ---------- race cue-card ---------- */
+.race-card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px;transition:border-color .2s, transform .2s, box-shadow .2s;}
+.race-card:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.25);}
+.race-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.race-card-loc{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
+.race-card-title{font-family:var(--disp);font-weight:600;font-size:18px;line-height:1.2;color:var(--paper);}
+.race-card-blurb{font-size:13px;color:var(--paperDim);line-height:1.5;margin:0 0 10px;}
+.race-card-stats{display:flex;align-items:center;gap:16px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;color:var(--paper);}
+.race-card-stats small{color:var(--paperDim);}
+.race-card-month{margin-left:auto;color:var(--paperDim);font-size:11px;}
+.race-card-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
