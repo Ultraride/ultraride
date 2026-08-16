@@ -67,10 +67,10 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 /* admin layout */
 .admin-shell{display:flex;min-height:calc(100vh - 60px);}
 .admin-sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--line);padding:20px 12px;}
-.admin-sidebar button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:13px;color:var(--paperDim);border:none;background:none;border-radius:2px;margin-bottom:2px;}
-.admin-sidebar button.active{background:var(--panel2);color:var(--amber);}
+.admin-sidebar a{display:block;width:100%;text-align:left;padding:10px 12px;font-size:13px;color:var(--paperDim);border:none;background:none;border-radius:2px;margin-bottom:2px;text-decoration:none;}
+.admin-sidebar a.active{background:var(--panel2);color:var(--amber);}
 .admin-main{flex:1;padding:24px 28px;overflow-x:auto;}
-@media(max-width:768px){.admin-shell{flex-direction:column;}.admin-sidebar{width:100%;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}.admin-sidebar button{white-space:nowrap;}}
+@media(max-width:768px){.admin-shell{flex-direction:column;}.admin-sidebar{width:100%;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}.admin-sidebar a{white-space:nowrap;}}
 
 .h1{font-family:var(--disp);font-weight:700;font-size:26px;margin:0 0 16px;}
 .h2{font-family:var(--disp);font-weight:600;font-size:18px;margin:0 0 10px;}
