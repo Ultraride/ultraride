@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 
 export default function Header() {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isOrganizer, signOut } = useAuth();
 
   return (
     <header className="site">
@@ -14,6 +14,9 @@ export default function Header() {
       </NavLink>
       <nav className="top-nav">
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Courses</NavLink>
+        {(isOrganizer || isAdmin) && (
+          <NavLink to="/organizer/profile" className={({ isActive }) => (isActive ? "active" : "")}>Fiche organisateur</NavLink>
+        )}
         {isAdmin && (
           <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>Admin</NavLink>
         )}

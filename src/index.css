@@ -133,3 +133,13 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-card-stats small{color:var(--paperDim);}
 .race-card-month{margin-left:auto;color:var(--paperDim);font-size:11px;}
 .race-card-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+
+/* ---------- organizer info box ---------- */
+.organizer-box{margin-top:24px;padding:16px 18px;background:var(--panel2);border:1px solid var(--line);border-radius:3px;}
+.organizer-box-head{display:flex;align-items:center;gap:12px;}
+.organizer-logo{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--ink);border:1px solid var(--line);}
+.organizer-box-label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);}
+.organizer-box-name{font-family:var(--disp);font-weight:600;font-size:17px;color:var(--paper);}
+.organizer-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.organizer-links .tag{text-decoration:none;cursor:pointer;}
+.organizer-links .tag:hover{border-color:var(--amber);color:var(--amber);}

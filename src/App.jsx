@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import RaceDetail from "./pages/RaceDetail";
 import Login from "./pages/Login";
+import OrganizerProfile from "./pages/OrganizerProfile";
 import AdminLayout from "./admin/AdminLayout";
 import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/courses/:id" element={<RaceDetail />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/organizer/profile" element={<OrganizerProfile />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<PendingRaces />} />

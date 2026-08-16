@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import OrganizerBox from "../components/OrganizerBox";
 
 function RaceMap({ race }) {
   const ref = useRef(null);
@@ -126,10 +127,15 @@ export default function RaceDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    supabase.from("races").select("*").eq("id", id).single().then(({ data, error }) => {
-      if (error) setError(error.message);
-      else setRace(data);
-    });
+    supabase
+      .from("races")
+      .select("*, organizer:profiles!races_created_by_fkey(org_name, org_website, org_email, org_instagram, org_facebook, org_strava, org_logo_url)")
+      .eq("id", id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        else setRace(data);
+      });
   }, [id]);
 
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
@@ -149,6 +155,8 @@ export default function RaceDetail() {
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mois</div><div className="mono">{race.month}</div></div>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mode</div><div className="mono">{race.mode}</div></div>
       </div>
+
+      <OrganizerBox race={race} />
 
       <Comments raceId={race.id} />
     </div>

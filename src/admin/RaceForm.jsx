@@ -167,8 +167,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="grid-2">
         <div className="field">
-          <label>Organisateur</label>
+          <label>Organisateur (nom affiché)</label>
           <input value={form.organizer_name || ""} onChange={(e) => field("organizer_name", e.target.value)} />
+          <div className="field-hint">Si la course est liée à un compte organisateur, ses coordonnées (site, réseaux) viennent automatiquement de sa fiche organisateur. Ce champ ne sert que si aucun compte n'est lié.</div>
         </div>
         <div className="field">
           <label>Prochaine édition</label>
