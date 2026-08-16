@@ -48,11 +48,9 @@ function RaceMap({ race }) {
 }
 
 function Comments({ raceId }) {
-  const { user, signInWithEmail } = useAuth();
+  const { user } = useAuth();
   const [comments, setComments] = useState([]);
   const [body, setBody] = useState("");
-  const [email, setEmail] = useState("");
-  const [sentLink, setSentLink] = useState(false);
   const [error, setError] = useState(null);
 
   const load = () => {
@@ -70,15 +68,6 @@ function Comments({ raceId }) {
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
-    if (!user) {
-      // No account yet: sending a magic link creates one automatically on
-      // confirmation (see the DB trigger) — ask them to come back and post
-      // after clicking the link.
-      const { error } = await signInWithEmail(email);
-      if (error) setError(error.message);
-      else setSentLink(true);
-      return;
-    }
     const { error } = await supabase.from("comments").insert({ race_id: raceId, author_id: user.id, body });
     if (error) setError(error.message);
     else { setBody(""); load(); }
@@ -99,23 +88,20 @@ function Comments({ raceId }) {
 
       {error && <div className="error-box">{error}</div>}
 
-      {sentLink ? (
-        <div className="success-box">Lien envoyé — clique dessus puis reviens ici pour publier ton avis.</div>
+      {!user ? (
+        <div className="panel">
+          <p className="muted" style={{ margin: 0 }}>
+            <Link to="/login" style={{ color: "var(--amber)", textDecoration: "underline" }}>Connecte-toi ou crée un compte</Link> pour laisser un avis.
+          </p>
+        </div>
       ) : (
         <form onSubmit={submit} className="panel">
-          {!user && (
-            <div className="field">
-              <label>Ton email (crée un compte automatiquement)</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-          )}
+
           <div className="field">
             <label>Ton avis</label>
             <textarea required rows={3} value={body} onChange={(e) => setBody(e.target.value)} />
           </div>
-          <button className="btn btn-primary" type="submit">
-            {user ? "Publier" : "Recevoir le lien pour publier"}
-          </button>
+          <button className="btn btn-primary" type="submit">Publier</button>
         </form>
       )}
     </div>
