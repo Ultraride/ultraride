@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
-import { parseGPXFile } from "../lib/gpx";
+import { parseTrackFile } from "../lib/gpx";
 
 function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMatch }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -98,7 +98,7 @@ function AddResultForm({ onSaved, onCancel }) {
     setParsing(true);
     setGpxError(null);
     try {
-      const result = await parseGPXFile(file);
+      const result = await parseTrackFile(file);
       setGpxInfo(result);
     } catch (err) {
       setGpxError(err.message);
@@ -109,6 +109,10 @@ function AddResultForm({ onSaved, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!raceName.trim()) return;
+    if (!gpxInfo) {
+      setError("Une trace GPX ou FIT est obligatoire pour ajouter un résultat au palmarès.");
+      return;
+    }
     setSaving(true);
     setError(null);
 
@@ -119,9 +123,9 @@ function AddResultForm({ onSaved, onCancel }) {
       organizer_name: organizerName.trim() || null,
       event_date: eventDate || null,
       notes: notes.trim() || null,
-      distance_km: gpxInfo?.distanceKm ?? null,
-      elevation_gain: gpxInfo?.elevationGain ?? null,
-      gpx_track: gpxInfo?.points ?? null,
+      distance_km: gpxInfo.distanceKm,
+      elevation_gain: gpxInfo.elevationGain,
+      gpx_track: gpxInfo.points,
     };
 
     const { error } = await supabase.from("race_results").insert(payload);
@@ -154,17 +158,18 @@ function AddResultForm({ onSaved, onCancel }) {
       </div>
 
       <div className="field">
-        <label>Trace GPX (optionnel)</label>
+        <label>Trace GPX ou FIT <span style={{ color: "var(--brick)" }}>*</span></label>
         <label className="btn image-upload-btn" style={{ display: "inline-flex" }}>
-          {parsing ? "Analyse…" : "Charger un fichier GPX"}
-          <input type="file" accept=".gpx" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
+          {parsing ? "Analyse…" : gpxInfo ? "Remplacer le fichier" : "Charger un fichier .gpx ou .fit"}
+          <input type="file" accept=".gpx,.fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
         </label>
         {gpxInfo && (
           <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
-            {gpxInfo.distanceKm} km · {gpxInfo.elevationGain.toLocaleString("fr-FR")} D+ · {gpxInfo.points.length} points
+            ✓ {gpxInfo.distanceKm} km · {gpxInfo.elevationGain.toLocaleString("fr-FR")} D+ · {gpxInfo.points.length} points
           </div>
         )}
         {gpxError && <div className="error-box" style={{ marginTop: 6 }}>{gpxError}</div>}
+        <div className="field-hint">Obligatoire — c'est ta trace qui prouve et illustre ta participation.</div>
       </div>
 
       <div className="field">
@@ -173,7 +178,7 @@ function AddResultForm({ onSaved, onCancel }) {
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <button className="btn btn-primary" type="submit" disabled={saving}>
+        <button className="btn btn-primary" type="submit" disabled={saving || parsing || !gpxInfo}>
           {saving ? "Enregistrement…" : "Ajouter au palmarès"}
         </button>
         <button className="btn" type="button" onClick={onCancel}>Annuler</button>
