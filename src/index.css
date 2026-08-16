@@ -144,6 +144,10 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .organizer-links .tag{text-decoration:none;cursor:pointer;}
 .organizer-links .tag:hover{border-color:var(--amber);color:var(--amber);}
 
+/* ---------- favorite star button ---------- */
+.favorite-btn{background:none;border:none;padding:2px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.favorite-btn:disabled{opacity:0.5;cursor:default;}
+
 /* ---------- palmares: race search / match field ---------- */
 .race-search-suggestions{position:absolute;top:100%;left:0;right:0;z-index:10;background:var(--ink);border:1px solid var(--line);border-radius:2px;margin-top:2px;max-height:220px;overflow-y:auto;}
 .race-search-suggestion{display:block;width:100%;text-align:left;padding:8px 10px;background:none;border:none;border-bottom:1px solid var(--line);color:var(--paper);font-size:13px;cursor:pointer;}

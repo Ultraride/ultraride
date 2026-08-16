@@ -4,6 +4,7 @@ import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import OrganizerBox from "../components/OrganizerBox";
+import FavoriteButton from "../components/FavoriteButton";
 
 function RaceMap({ race }) {
   const ref = useRef(null);
@@ -90,7 +91,7 @@ function Comments({ raceId }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
         {comments.map((c) => (
           <div key={c.id} className="card">
-            <div className="mono muted" style={{ fontSize: 11 }}>{c.author?.display_name || c.author?.email}</div>
+            <div className="mono muted" style={{ fontSize: 11 }}>{c.author?.display_name || c.author?.email || "Utilisateur supprimé"}</div>
             <p style={{ margin: "6px 0 0" }}>{c.body}</p>
           </div>
         ))}
@@ -144,7 +145,13 @@ export default function RaceDetail() {
   return (
     <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60, maxWidth: 800 }}>
       <Link to="/" className="muted" style={{ fontSize: 13 }}>← Toutes les courses</Link>
-      <h1 className="h1" style={{ marginTop: 12 }}>{race.name}</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+        <h1 className="h1" style={{ margin: 0 }}>{race.name}</h1>
+        <FavoriteButton raceId={race.id} size={22} />
+      </div>
+      {race.image_url && (
+        <img src={race.image_url} alt="" className="race-detail-image" />
+      )}
       <p className="muted">{race.long_blurb || race.blurb}</p>
 
       <RaceMap race={race} />
