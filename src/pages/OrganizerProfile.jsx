@@ -44,10 +44,15 @@ export default function OrganizerProfile() {
     setSaving(true);
     setError(null);
     setSaved(false);
-    const { error } = await supabase.from("profiles").update(form).eq("id", user.id);
+    // .select() is required here — without it, Supabase reports success even
+    // when RLS silently matched zero rows, hiding a real failure.
+    const { data, error } = await supabase.from("profiles").update(form).eq("id", user.id).select();
     setSaving(false);
-    if (error) setError(error.message);
-    else {
+    if (error) {
+      setError(error.message);
+    } else if (!data || data.length === 0) {
+      setError("Aucune ligne mise à jour. Vérifie que tu es bien connecté avec le bon compte, puis réessaie.");
+    } else {
       setSaved(true);
       refreshProfile();
     }
