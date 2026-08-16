@@ -35,9 +35,14 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
     <div className="field" style={{ position: "relative" }}>
       <label>Nom de la course</label>
       {matchedRace ? (
-        <div className="race-search-matched">
-          <span>✓ Rapprochée de <strong>{matchedRace.name}</strong></span>
-          <button type="button" className="filter-reset" onClick={onClearMatch}>Changer</button>
+        <div>
+          <div className="race-search-matched">
+            <span>✓ Rapprochée de <strong>{matchedRace.name}</strong></span>
+            <button type="button" className="filter-reset" onClick={onClearMatch}>Changer</button>
+          </div>
+          <div className="field-hint">
+            Le répertoire n'affiche qu'une édition à la fois — si tu as couru une autre année que celle actuellement listée, précise-le dans le champ "Année de réalisation" ci-dessous.
+          </div>
         </div>
       ) : (
         <>
@@ -143,8 +148,9 @@ function AddResultForm({ onSaved, onCancel }) {
       </div>
 
       <div className="field">
-        <label>Date</label>
+        <label>Année de réalisation</label>
         <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+        <div className="field-hint">La date précise si tu la connais, sinon le 1er janvier de l'année suffit — c'est surtout l'année qui compte pour situer ton édition.</div>
       </div>
 
       <div className="field">
