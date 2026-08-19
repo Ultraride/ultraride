@@ -7,6 +7,12 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Dev-only UI preview: lets a real admin see the site as another role,
+  // without touching their actual database role or Supabase permissions.
+  // Data operations always use the real admin rights underneath.
+  const [previewRole, setPreviewRoleState] = useState(() => {
+    try { return localStorage.getItem("ultraride_preview_role") || null; } catch { return null; }
+  });
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -42,6 +48,21 @@ export function AuthProvider({ children }) {
     return { error };
   };
 
+  // Sends a reset email with a recovery link pointing back to /reset-password.
+  const sendPasswordReset = async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  };
+
+  // Called from /reset-password once the recovery session is active, and
+  // from the account page for a normal voluntary password change.
+  const updatePassword = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error };
+  };
+
   // extraData carries signup-time consent flags (marketing_consent,
   // terms_accepted) through to raw_user_meta_data, read by the
   // handle_new_user() trigger when it creates the profile row.
@@ -56,16 +77,34 @@ export function AuthProvider({ children }) {
 
   const signOut = () => supabase.auth.signOut();
 
+  const setPreviewRole = (role) => {
+    setPreviewRoleState(role);
+    try {
+      if (role) localStorage.setItem("ultraride_preview_role", role);
+      else localStorage.removeItem("ultraride_preview_role");
+    } catch { /* localStorage unavailable, ignore */ }
+  };
+
+  const realRole = profile?.role || null;
+  // Only a genuine admin can preview as something else — a real organizer
+  // or participant can't use this to see admin-only UI.
+  const effectiveRole = realRole === "admin" && previewRole ? previewRole : realRole;
+
   const value = {
     session,
     user: session?.user || null,
     profile,
-    role: profile?.role || null,
-    isAdmin: profile?.role === "admin",
-    isOrganizer: profile?.role === "organizer",
+    role: effectiveRole,
+    realRole,
+    previewRole: realRole === "admin" ? previewRole : null,
+    setPreviewRole,
+    isAdmin: effectiveRole === "admin",
+    isOrganizer: effectiveRole === "organizer",
     loading,
     signInWithPassword,
     signUp,
+    sendPasswordReset,
+    updatePassword,
     signOut,
     refreshProfile: () => loadProfile(session?.user?.id),
   };

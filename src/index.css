@@ -154,3 +154,11 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-search-suggestion:last-child{border-bottom:none;}
 .race-search-suggestion:hover{background:var(--panel2);}
 .race-search-matched{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(124,154,121,0.12);border:1px solid var(--moss);border-radius:2px;font-size:13px;color:var(--paper);}
+
+/* ---------- dev-only role preview switcher ---------- */
+.role-switcher{position:relative;}
+.role-switcher-btn{font-size:12px;padding:5px 10px;border:1px dashed var(--amber);border-radius:2px;color:var(--amber);background:rgba(227,162,60,0.08);}
+.role-switcher-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--ink);border:1px solid var(--line);border-radius:2px;overflow:hidden;z-index:20;min-width:150px;}
+.role-switcher-menu button{display:block;width:100%;text-align:left;padding:8px 12px;font-size:13px;color:var(--paperDim);background:none;border:none;}
+.role-switcher-menu button:hover{background:var(--panel2);}
+.role-switcher-menu button.active{color:var(--amber);font-weight:600;}
