@@ -7,11 +7,15 @@ import PalmaresSection from "./PalmaresSection";
 function InfoSection() {
   const { user, profile, refreshProfile } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name || "");
+  const [marketingConsent, setMarketingConsent] = useState(profile?.marketing_consent || false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => { setDisplayName(profile?.display_name || ""); }, [profile]);
+  useEffect(() => {
+    setDisplayName(profile?.display_name || "");
+    setMarketingConsent(profile?.marketing_consent || false);
+  }, [profile]);
 
   const ROLE_LABEL = { participant: "Participant", organizer: "Organisateur", admin: "Administrateur" };
 
@@ -22,7 +26,7 @@ function InfoSection() {
     setSaved(false);
     const { data, error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName })
+      .update({ display_name: displayName, marketing_consent: marketingConsent })
       .eq("id", user.id)
       .select();
     setSaving(false);
@@ -52,8 +56,62 @@ function InfoSection() {
           <label>Nom affiché</label>
           <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ton nom ou pseudo" />
         </div>
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={marketingConsent}
+            onChange={(e) => setMarketingConsent(e.target.checked)}
+          />
+          <span>Recevoir des communications par email (nouvelles courses, actualités du site).</span>
+        </label>
         <button className="btn btn-primary" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function PasswordSection() {
+  const { updatePassword } = useAuth();
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    const { error } = await updatePassword(password);
+    setSaving(false);
+    if (error) setError(error.message);
+    else {
+      setSaved(true);
+      setPassword("");
+    }
+  };
+
+  return (
+    <div className="panel" style={{ marginBottom: 24 }}>
+      <div className="h2">Changer mon mot de passe</div>
+      {error && <div className="error-box">{error}</div>}
+      {saved && <div className="success-box">Mot de passe mis à jour.</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label>Nouveau mot de passe</label>
+          <input
+            type="password"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="6 caractères minimum"
+          />
+        </div>
+        <button className="btn btn-primary" type="submit" disabled={saving}>
+          {saving ? "Enregistrement…" : "Changer le mot de passe"}
         </button>
       </form>
     </div>
@@ -225,6 +283,7 @@ export default function Account() {
     <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60, maxWidth: 560 }}>
       <h1 className="h1">Mon compte</h1>
       <InfoSection />
+      <PasswordSection />
       <PalmaresSection />
       <FavoritesSection />
       <CommentsSection />

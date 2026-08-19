@@ -1,10 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
 
 export default function RaceCard({ race }) {
+  const navigate = useNavigate();
+
+  // The organizer footer sits inside the card's own <Link> (to the race),
+  // so a nested <Link> isn't valid HTML — navigate manually instead, and
+  // stop the click from also triggering the card's own link.
+  const goToOrganizer = (e) => {
+    if (!race.organizer?.id) return;
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/organizers/${race.organizer.id}`);
+  };
+
   return (
     <Link to={`/courses/${race.id}`} className="race-card">
       {race.image_url && (
@@ -39,7 +51,11 @@ export default function RaceCard({ race }) {
       </div>
 
       {race.organizer && (race.organizer.name || race.organizer.logo_url) && (
-        <div className="race-card-organizer">
+        <div
+          className="race-card-organizer"
+          onClick={goToOrganizer}
+          style={race.organizer.id ? { cursor: "pointer" } : undefined}
+        >
           {race.organizer.logo_url && (
             <img src={race.organizer.logo_url} alt="" className="race-card-organizer-logo" />
           )}

@@ -1,14 +1,5 @@
-function normalizeUrl(url) {
-  if (!url) return null;
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
-}
-
-function socialLink(handle, baseUrl) {
-  if (!handle) return null;
-  if (/^https?:\/\//i.test(handle)) return handle;
-  const clean = handle.replace(/^@/, "");
-  return `${baseUrl}${clean}`;
-}
+import { Link } from "react-router-dom";
+import { normalizeUrl, socialLink } from "../lib/organizerLinks";
 
 // `race.organizer` is the joined organizers row (via races.organizer_id) —
 // a standalone public profile that doesn't require the organizer to have
@@ -27,17 +18,27 @@ export default function OrganizerBox({ race }) {
   const hasAnything = displayName || website || email || instagram || facebook || strava;
   if (!hasAnything) return null;
 
+  const nameContent = (
+    <>
+      {org?.logo_url && (
+        <img src={org.logo_url} alt="" className="organizer-logo" />
+      )}
+      <div>
+        <div className="organizer-box-label">Organisé par</div>
+        <div className="organizer-box-name">{displayName || "Organisateur non précisé"}</div>
+      </div>
+    </>
+  );
+
   return (
     <div className="organizer-box">
-      <div className="organizer-box-head">
-        {org?.logo_url && (
-          <img src={org.logo_url} alt="" className="organizer-logo" />
-        )}
-        <div>
-          <div className="organizer-box-label">Organisé par</div>
-          <div className="organizer-box-name">{displayName || "Organisateur non précisé"}</div>
-        </div>
-      </div>
+      {race.organizer_id ? (
+        <Link to={`/organizers/${race.organizer_id}`} className="organizer-box-head organizer-box-head-link">
+          {nameContent}
+        </Link>
+      ) : (
+        <div className="organizer-box-head">{nameContent}</div>
+      )}
 
       {(website || email || instagram || facebook || strava) && (
         <div className="organizer-links">

@@ -13,7 +13,7 @@ const FIELDS = [
   { key: "strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
 ];
 
-const EMPTY_FORM = { name: "", website: "", email: "", instagram: "", facebook: "", strava: "", logo_url: "" };
+const EMPTY_FORM = { name: "", website: "", email: "", instagram: "", facebook: "", strava: "", logo_url: "", bio: "" };
 
 export default function OrganizerProfile() {
   const { user, loading } = useAuth();
@@ -93,6 +93,10 @@ export default function OrganizerProfile() {
             />
           </div>
         ))}
+        <div className="field">
+          <label>Résumé court</label>
+          <textarea rows={3} value={form.bio || ""} onChange={(e) => field("bio", e.target.value)} placeholder="Présentation de ton organisation, affichée en haut de ta page publique." />
+        </div>
         <button className="btn btn-primary" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>

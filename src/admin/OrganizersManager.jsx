@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import OrganizerQuickCreate from "./OrganizerQuickCreate";
 import ImageUploadField from "../components/ImageUploadField";
@@ -21,6 +22,7 @@ function OrganizerEditForm({ organizer, onSaved, onCancel }) {
     facebook: organizer.facebook || "",
     strava: organizer.strava || "",
     logo_url: organizer.logo_url || "",
+    bio: organizer.bio || "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -53,6 +55,10 @@ function OrganizerEditForm({ organizer, onSaved, onCancel }) {
           />
         </div>
       ))}
+      <div className="field">
+        <label>Résumé court</label>
+        <textarea rows={3} value={form.bio} onChange={(e) => field("bio", e.target.value)} placeholder="Présentation de l'organisateur, affichée en haut de sa page publique." />
+      </div>
       <div style={{ display: "flex", gap: 10 }}>
         <button className="btn btn-primary" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
@@ -141,6 +147,7 @@ export default function OrganizersManager() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
+                  <Link to={`/organizers/${o.id}`} className="btn" target="_blank">Voir la page</Link>
                   <button className="btn" onClick={() => setEditingId(editingId === o.id ? null : o.id)}>
                     {editingId === o.id ? "Fermer" : "Modifier"}
                   </button>
