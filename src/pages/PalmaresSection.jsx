@@ -77,7 +77,7 @@ function AddResultForm({ onSaved, onCancel }) {
   const [raceName, setRaceName] = useState("");
   const [matchedRace, setMatchedRace] = useState(null);
   const [organizerName, setOrganizerName] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [eventYear, setEventYear] = useState("");
   const [notes, setNotes] = useState("");
   const [gpxInfo, setGpxInfo] = useState(null);
   const [gpxError, setGpxError] = useState(null);
@@ -121,7 +121,7 @@ function AddResultForm({ onSaved, onCancel }) {
       race_id: matchedRace?.id || null,
       race_name: raceName.trim(),
       organizer_name: organizerName.trim() || null,
-      event_date: eventDate || null,
+      event_date: eventYear ? `${eventYear}-01-01` : null,
       notes: notes.trim() || null,
       distance_km: gpxInfo.distanceKm,
       elevation_gain: gpxInfo.elevationGain,
@@ -153,8 +153,15 @@ function AddResultForm({ onSaved, onCancel }) {
 
       <div className="field">
         <label>Année de réalisation</label>
-        <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-        <div className="field-hint">La date précise si tu la connais, sinon le 1er janvier de l'année suffit — c'est surtout l'année qui compte pour situer ton édition.</div>
+        <input
+          type="number"
+          min="1990"
+          max={new Date().getFullYear() + 1}
+          value={eventYear}
+          onChange={(e) => setEventYear(e.target.value)}
+          placeholder={String(new Date().getFullYear())}
+        />
+        <div className="field-hint">C'est l'année qui permet de situer ton édition — pas besoin du jour ni du mois exacts.</div>
       </div>
 
       <div className="field">
@@ -245,7 +252,7 @@ export default function PalmaresSection() {
                   </div>
                   <div className="muted mono" style={{ fontSize: 12 }}>
                     {r.organizer_name && `${r.organizer_name} · `}
-                    {r.event_date && `${new Date(r.event_date).toLocaleDateString("fr-FR")} · `}
+                    {r.event_date && `${new Date(r.event_date).getFullYear()} · `}
                     {r.distance_km ? `${r.distance_km} km` : ""}
                     {r.elevation_gain ? ` · ${r.elevation_gain.toLocaleString("fr-FR")} D+` : ""}
                   </div>
