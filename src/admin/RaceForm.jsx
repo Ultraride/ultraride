@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import OrganizerQuickCreate from "./OrganizerQuickCreate";
+import ImageUploadField from "../components/ImageUploadField";
 
 const EMPTY = {
   name: "", country: "", discipline: "Gravel", format: "course", mode: "Autonomie",
@@ -9,7 +10,7 @@ const EMPTY = {
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
-  status: "published", organizer_id: "",
+  status: "published", organizer_id: "", image_url: "",
 };
 
 export default function RaceForm({ race, onSaved, onCancel }) {
@@ -86,6 +87,13 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <label>Nom</label>
         <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
       </div>
+
+      <ImageUploadField
+        label="Image de la course"
+        value={form.image_url}
+        onChange={(v) => field("image_url", v)}
+        folder="races"
+      />
 
       <div className="grid-2">
         <div className="field">

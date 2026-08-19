@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import OrganizerQuickCreate from "./OrganizerQuickCreate";
+import ImageUploadField from "../components/ImageUploadField";
 
 const FIELDS = [
   { key: "name", label: "Nom de l'organisation" },
@@ -9,7 +10,6 @@ const FIELDS = [
   { key: "instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
   { key: "facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
   { key: "strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
-  { key: "logo_url", label: "Logo (URL image)", placeholder: "https://..." },
 ];
 
 function OrganizerEditForm({ organizer, onSaved, onCancel }) {
@@ -41,6 +41,7 @@ function OrganizerEditForm({ organizer, onSaved, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="panel" style={{ marginTop: 10 }}>
       {error && <div className="error-box">{error}</div>}
+      <ImageUploadField label="Logo" value={form.logo_url} onChange={(v) => field("logo_url", v)} folder="organizers" />
       {FIELDS.map((f) => (
         <div className="field" key={f.key}>
           <label>{f.label}</label>
@@ -119,20 +120,25 @@ export default function OrganizersManager() {
           {organizers.map((o) => (
             <div key={o.id} className="card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-                <div>
-                  <div className="h2" style={{ marginBottom: 2 }}>{o.name}</div>
-                  <div className="muted mono" style={{ fontSize: 12 }}>
-                    {o.linked_account ? `Lié à ${o.linked_account.email}` : "Aucun compte lié"}
-                  </div>
-                  {hasContact(o) && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                      {o.website && <span className="tag">{o.website}</span>}
-                      {o.email && <span className="tag">{o.email}</span>}
-                      {o.instagram && <span className="tag">Instagram</span>}
-                      {o.facebook && <span className="tag">Facebook</span>}
-                      {o.strava && <span className="tag">Strava</span>}
-                    </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  {o.logo_url && (
+                    <img src={o.logo_url} alt="" className="organizer-logo" />
                   )}
+                  <div>
+                    <div className="h2" style={{ marginBottom: 2 }}>{o.name}</div>
+                    <div className="muted mono" style={{ fontSize: 12 }}>
+                      {o.linked_account ? `Lié à ${o.linked_account.email}` : "Aucun compte lié"}
+                    </div>
+                    {hasContact(o) && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                        {o.website && <span className="tag">{o.website}</span>}
+                        {o.email && <span className="tag">{o.email}</span>}
+                        {o.instagram && <span className="tag">Instagram</span>}
+                        {o.facebook && <span className="tag">Facebook</span>}
+                        {o.strava && <span className="tag">Strava</span>}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn" onClick={() => setEditingId(editingId === o.id ? null : o.id)}>

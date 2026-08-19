@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import ImageUploadField from "../components/ImageUploadField";
 
 const FIELDS = [
   { key: "name", label: "Nom de l'organisation", placeholder: "Collectif Baronnies Gravel" },
@@ -10,7 +11,6 @@ const FIELDS = [
   { key: "instagram", label: "Instagram", placeholder: "@pseudo ou URL complète" },
   { key: "facebook", label: "Facebook", placeholder: "pseudo ou URL complète" },
   { key: "strava", label: "Club Strava", placeholder: "identifiant du club ou URL complète" },
-  { key: "logo_url", label: "Logo (URL image)", placeholder: "https://..." },
 ];
 
 const EMPTY_FORM = { name: "", website: "", email: "", instagram: "", facebook: "", strava: "", logo_url: "" };
@@ -81,6 +81,7 @@ export default function OrganizerProfile() {
       {saved && <div className="success-box">Fiche organisateur enregistrée.</div>}
 
       <form onSubmit={handleSubmit} className="panel">
+        <ImageUploadField label="Logo" value={form.logo_url} onChange={(v) => field("logo_url", v)} folder="organizers" />
         {FIELDS.map((f) => (
           <div className="field" key={f.key}>
             <label>{f.label}</label>
