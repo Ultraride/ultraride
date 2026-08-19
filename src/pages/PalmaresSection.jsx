@@ -32,7 +32,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
   };
 
   return (
-    <div className="field" style={{ position: "relative" }}>
+    <div className="field">
       <label>Nom de la course</label>
       {matchedRace ? (
         <div>
@@ -45,7 +45,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
           </div>
         </div>
       ) : (
-        <>
+        <div style={{ position: "relative" }}>
           <input
             value={value}
             onChange={(e) => handleType(e.target.value)}
@@ -63,7 +63,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
       <div className="field-hint">
         Si la course existe déjà dans le répertoire (édition passée ou future), sélectionne-la pour rapprocher ton résultat.
