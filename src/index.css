@@ -1,16 +1,16 @@
 :root{
-  --ink:#152420;
-  --panel:#1E332B;
-  --panel2:#25392F;
-  --line:#3A4F44;
+  --ink:#0F1D16;
+  --panel:#16261D;
+  --panel2:#1D3226;
+  --line:#33493C;
   --paper:#EDE6D6;
-  --paperDim:#B9C3B4;
-  --amber:#E3A23C;
+  --paperDim:#A9BBAE;
+  --amber:#C4622D;
   --brick:#C1543F;
-  --moss:#7C9A79;
+  --moss:#2FA05C;
   --sans:'IBM Plex Sans',sans-serif;
   --mono:'IBM Plex Mono',monospace;
-  --disp:'Oswald',sans-serif;
+  --disp:'Anton',sans-serif;
 }
 *{box-sizing:border-box;}
 html,body,#root{margin:0;padding:0;min-height:100vh;}
@@ -26,7 +26,8 @@ input,select,textarea{font-family:inherit;}
 /* header */
 header.site{position:sticky;top:0;z-index:20;background:rgba(21,36,32,0.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
 @media(min-width:768px){header.site{padding:16px 40px;}}
-.brand{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:.02em;}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:400;font-size:18px;letter-spacing:.02em;}
+.brand-logo{height:32px;width:auto;display:block;}
 nav.top-nav{display:flex;gap:20px;align-items:center;}
 nav.top-nav a, nav.top-nav button{font-size:14px;color:var(--paperDim);border:none;background:none;padding:0;}
 nav.top-nav a.active, nav.top-nav button.active{color:var(--amber);}
@@ -72,8 +73,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .admin-main{flex:1;padding:24px 28px;overflow-x:auto;}
 @media(max-width:768px){.admin-shell{flex-direction:column;}.admin-sidebar{width:100%;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}.admin-sidebar a{white-space:nowrap;}}
 
-.h1{font-family:var(--disp);font-weight:700;font-size:26px;margin:0 0 16px;}
-.h2{font-family:var(--disp);font-weight:600;font-size:18px;margin:0 0 10px;}
+.h1{font-family:var(--disp);font-weight:400;font-size:26px;margin:0 0 16px;}
+.h2{font-family:var(--disp);font-weight:400;font-size:18px;margin:0 0 10px;}
 .muted{color:var(--paperDim);font-size:13px;}
 .mono{font-family:var(--mono);}
 .error-box{background:rgba(193,84,63,0.15);border:1px solid var(--brick);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
@@ -81,7 +82,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 
 /* ---------- home page: hero ---------- */
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;}
-.hero-title{font-family:var(--disp);font-weight:700;font-size:38px;letter-spacing:-.01em;margin:0 0 12px;color:var(--paper);}
+.hero-title{font-family:var(--disp);font-weight:400;font-size:38px;letter-spacing:-.01em;margin:0 0 12px;color:var(--paper);}
 @media(min-width:768px){.hero-title{font-size:58px;}}
 .hero-sub{max-width:560px;font-size:16px;color:var(--paperDim,var(--text-secondary));margin:0 0 24px;line-height:1.6;}
 .elev-svg{width:100%;height:112px;display:block;}
@@ -127,7 +128,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-card:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.25);}
 .race-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
 .race-card-loc{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
-.race-card-title{font-family:var(--disp);font-weight:600;font-size:18px;line-height:1.2;color:var(--paper);}
+.race-card-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.2;color:var(--paper);}
 .race-card-blurb{font-size:13px;color:var(--paperDim);line-height:1.5;margin:0 0 10px;}
 .race-card-stats{display:flex;align-items:center;gap:16px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;color:var(--paper);}
 .race-card-stats small{color:var(--paperDim);}
@@ -139,7 +140,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .organizer-box-head{display:flex;align-items:center;gap:12px;}
 .organizer-logo{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--ink);border:1px solid var(--line);}
 .organizer-box-label{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);}
-.organizer-box-name{font-family:var(--disp);font-weight:600;font-size:17px;color:var(--paper);}
+.organizer-box-name{font-family:var(--disp);font-weight:400;font-size:17px;color:var(--paper);}
 .organizer-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
 .organizer-links .tag{text-decoration:none;cursor:pointer;}
 .organizer-links .tag:hover{border-color:var(--amber);color:var(--amber);}

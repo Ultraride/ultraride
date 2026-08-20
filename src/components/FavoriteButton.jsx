@@ -45,7 +45,7 @@ export default function FavoriteButton({ raceId, size = 18 }) {
       aria-label={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
       title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
     >
-      <svg width={size} height={size} viewBox="0 0 24 24" fill={isFav ? "#E3A23C" : "none"} stroke="#E3A23C" strokeWidth="1.8">
+      <svg width={size} height={size} viewBox="0 0 24 24" fill={isFav ? "#C4622D" : "none"} stroke="#C4622D" strokeWidth="1.8">
         <path d="M12 3l2.7 5.9 6.3.6-4.7 4.4 1.3 6.2L12 17l-5.6 3.1 1.3-6.2L3 9.5l6.3-.6L12 3z" strokeLinejoin="round" />
       </svg>
     </button>

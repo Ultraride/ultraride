@@ -8,10 +8,7 @@ export default function Header() {
   return (
     <header className="site">
       <NavLink to="/" className="brand">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M2 18 L7 10 L11 15 L15 6 L22 18" stroke="#E3A23C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        ULTRARIDE
+        <img src="/logo.png" alt="UltraRide" className="brand-logo" />
       </NavLink>
       <nav className="top-nav">
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Courses</NavLink>

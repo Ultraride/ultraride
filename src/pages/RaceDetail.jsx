@@ -26,13 +26,13 @@ function RaceMap({ race }) {
 
     if (race.gpx_track?.length > 1) {
       const latlngs = race.gpx_track.map((p) => [p.lat, p.lon]);
-      L.polyline(latlngs, { color: "#E3A23C", weight: 3.5 }).addTo(map);
+      L.polyline(latlngs, { color: "#C4622D", weight: 3.5 }).addTo(map);
       bounds.push(...latlngs);
     } else if (!isLoop) {
-      L.polyline([start, end], { color: "#7C9A79", weight: 2, dashArray: "6,6" }).addTo(map);
+      L.polyline([start, end], { color: "#2FA05C", weight: 2, dashArray: "6,6" }).addTo(map);
     }
 
-    L.circleMarker(start, { radius: 7, color: "#E3A23C", fillColor: "#E3A23C", fillOpacity: 0.9 })
+    L.circleMarker(start, { radius: 7, color: "#C4622D", fillColor: "#C4622D", fillOpacity: 0.9 })
       .bindTooltip(race.start_place || "Départ").addTo(map);
     if (!isLoop) {
       L.circleMarker(end, { radius: 7, color: "#C1543F", fillColor: "#C1543F", fillOpacity: 0.9 })
