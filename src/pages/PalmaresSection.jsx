@@ -4,6 +4,65 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { parseTrackFile } from "../lib/gpx";
 
+function OrganizerSearchField({ value, onChangeText, onMatch, matchedOrganizer, onClearMatch }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef(null);
+
+  const handleType = (text) => {
+    onChangeText(text);
+    if (matchedOrganizer) onClearMatch();
+    window.clearTimeout(timeoutRef.current);
+    if (text.trim().length < 2) { setSuggestions([]); setOpen(false); return; }
+    timeoutRef.current = window.setTimeout(async () => {
+      const { data } = await supabase
+        .from("organizers")
+        .select("id, name")
+        .ilike("name", `%${text.trim()}%`)
+        .limit(6);
+      setSuggestions(data || []);
+      setOpen((data || []).length > 0);
+    }, 300);
+  };
+
+  const pick = (o) => {
+    onMatch(o);
+    setOpen(false);
+  };
+
+  return (
+    <div className="field" style={{ position: "relative" }}>
+      <label>Organisateur</label>
+      {matchedOrganizer ? (
+        <div className="race-search-matched">
+          <span>✓ Lié à <strong>{matchedOrganizer.name}</strong></span>
+          <button type="button" className="filter-reset" onClick={onClearMatch}>Changer</button>
+        </div>
+      ) : (
+        <div style={{ position: "relative" }}>
+          <input
+            value={value}
+            onChange={(e) => handleType(e.target.value)}
+            onFocus={() => suggestions.length > 0 && setOpen(true)}
+            placeholder="Nom de l'organisateur"
+            autoComplete="off"
+          />
+          {open && suggestions.length > 0 && (
+            <div className="race-search-suggestions">
+              {suggestions.map((o) => (
+                <button type="button" key={o.id} className="race-search-suggestion" onClick={() => pick(o)}>
+                  <div>{o.name}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="field-hint">Si l'organisateur existe dans le répertoire, sélectionne-le pour rapprocher ton résultat.</div>
+    </div>
+  );
+}
+
 function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMatch }) {
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
@@ -77,6 +136,7 @@ function AddResultForm({ onSaved, onCancel }) {
   const [raceName, setRaceName] = useState("");
   const [matchedRace, setMatchedRace] = useState(null);
   const [organizerName, setOrganizerName] = useState("");
+  const [matchedOrganizer, setMatchedOrganizer] = useState(null);
   const [eventYear, setEventYear] = useState("");
   const [notes, setNotes] = useState("");
   const [gpxInfo, setGpxInfo] = useState(null);
@@ -88,9 +148,12 @@ function AddResultForm({ onSaved, onCancel }) {
   const handleMatch = (race) => {
     setMatchedRace(race);
     setRaceName(race.name);
-    if (race.organizer?.name) setOrganizerName(race.organizer.name);
+    if (race.organizer?.name && !matchedOrganizer) setOrganizerName(race.organizer.name);
   };
   const clearMatch = () => setMatchedRace(null);
+
+  const handleOrganizerMatch = (o) => { setMatchedOrganizer(o); setOrganizerName(o.name); };
+  const clearOrganizerMatch = () => setMatchedOrganizer(null);
 
   const handleGpx = async (e) => {
     const file = e.target.files?.[0];
@@ -146,10 +209,13 @@ function AddResultForm({ onSaved, onCancel }) {
         onClearMatch={clearMatch}
       />
 
-      <div className="field">
-        <label>Organisateur</label>
-        <input value={organizerName} onChange={(e) => setOrganizerName(e.target.value)} placeholder="Nom de l'organisateur" />
-      </div>
+      <OrganizerSearchField
+        value={organizerName}
+        onChangeText={setOrganizerName}
+        onMatch={handleOrganizerMatch}
+        matchedOrganizer={matchedOrganizer}
+        onClearMatch={clearOrganizerMatch}
+      />
 
       <div className="field">
         <label>Année de réalisation</label>

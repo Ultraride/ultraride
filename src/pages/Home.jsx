@@ -28,7 +28,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {

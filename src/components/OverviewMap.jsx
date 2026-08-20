@@ -1,11 +1,9 @@
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 
 export default function OverviewMap({ races }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -17,33 +15,47 @@ export default function OverviewMap({ races }) {
       maxZoom: 18,
     }).addTo(map);
 
-    const withCoords = races.filter((r) => r.lat != null && r.lon != null);
+    // Use start_lat/start_lon if available, fall back to generic lat/lon
+    const withCoords = races.filter((r) =>
+      (r.start_lat != null && r.start_lon != null) || (r.lat != null && r.lon != null)
+    );
 
     if (withCoords.length === 0) {
       map.setView([46.6, 2.5], 5);
     } else {
-      const bounds = L.latLngBounds(withCoords.map((r) => [r.lat, r.lon]));
+      const points = withCoords.map((r) => [r.start_lat ?? r.lat, r.start_lon ?? r.lon]);
+      const bounds = L.latLngBounds(points);
+
       withCoords.forEach((r) => {
-        const marker = L.circleMarker([r.lat, r.lon], {
+        const lat = r.start_lat ?? r.lat;
+        const lon = r.start_lon ?? r.lon;
+        const marker = L.circleMarker([lat, lon], {
           radius: 7,
           weight: 2,
           color: r.open ? "#C4622D" : "#C1543F",
           fillColor: r.open ? "#C4622D" : "#C1543F",
           fillOpacity: r.open ? 0.85 : 0.15,
         });
+
         marker.bindTooltip(
-          `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paperDim);margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString("fr-FR") : "—"} D+ · ${r.month ?? ""}</div>`,
+          `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString("fr-FR") : "—"} D+ · ${r.month ?? ""}</div>`,
           { direction: "top", offset: [0, -6] }
         );
-        marker.on("click", () => navigate(`/courses/${r.id}`));
+
+        // Use window.location for navigation to avoid React Router context issues inside Leaflet
+        marker.on("click", () => {
+          window.location.href = `/courses/${r.id}`;
+        });
+
         marker.addTo(map);
       });
+
       map.fitBounds(bounds.pad(0.3), { maxZoom: 11 });
     }
 
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
-  }, [races, navigate]);
+  }, [races]);
 
   return (
     <div className="map-box">

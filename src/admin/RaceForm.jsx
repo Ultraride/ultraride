@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import OrganizerQuickCreate from "./OrganizerQuickCreate";
 import ImageUploadField from "../components/ImageUploadField";
+import PlaceSearch from "../components/PlaceSearch";
+import { EMEA_COUNTRIES, MONTHS, NEXT_EDITION_YEARS } from "../lib/emea";
 
 const EMPTY = {
   name: "", country: "", discipline: "Gravel", format: "course", mode: "Autonomie",
@@ -34,11 +36,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   }, [isAdmin]);
 
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-
   const numOrNull = (v) => (v === "" || v === null ? null : Number(v));
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     setSaving(true);
     setError(null);
@@ -55,9 +55,6 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       end_lon: numOrNull(form.end_lon),
     };
 
-    // organizer_id (a standalone public entity, not tied to any login) can
-    // be picked freely by an admin. created_by (who submitted the race) is
-    // never client-settable — the server owns that entirely.
     payload.organizer_id = payload.organizer_id || null;
     delete payload.created_by;
     delete payload.reviewed_by;
@@ -98,7 +95,10 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       <div className="grid-2">
         <div className="field">
           <label>Pays</label>
-          <input value={form.country} onChange={(e) => field("country", e.target.value)} />
+          <select value={form.country} onChange={(e) => field("country", e.target.value)}>
+            <option value="">— Sélectionner —</option>
+            {EMEA_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
         <div className="field">
           <label>Discipline</label>
@@ -136,7 +136,10 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </div>
         <div className="field">
           <label>Mois</label>
-          <input value={form.month} onChange={(e) => field("month", e.target.value)} placeholder="Septembre" />
+          <select value={form.month} onChange={(e) => field("month", e.target.value)}>
+            <option value="">— Sélectionner —</option>
+            {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
         </div>
       </div>
 
@@ -163,33 +166,29 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </label>
       </div>
 
-      <div className="grid-2">
-        <div className="field">
-          <label>Départ (lieu)</label>
-          <input value={form.start_place || ""} onChange={(e) => field("start_place", e.target.value)} />
-        </div>
-        <div className="field">
-          <label>Arrivée (lieu)</label>
-          <input value={form.end_place || ""} onChange={(e) => field("end_place", e.target.value)} />
-        </div>
-      </div>
+      <PlaceSearch
+        label="Lieu de départ"
+        value={form.start_place}
+        placeholder="Place de la Cathédrale, Strasbourg…"
+        onSelect={({ name, lat, lon }) => setForm((f) => ({
+          ...f,
+          start_place: name,
+          start_lat: lat ?? f.start_lat,
+          start_lon: lon ?? f.start_lon,
+        }))}
+      />
 
-      <div className="grid-2">
-        <div className="field">
-          <label>Départ — lat / lon</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input value={form.start_lat ?? ""} onChange={(e) => field("start_lat", e.target.value)} placeholder="lat" />
-            <input value={form.start_lon ?? ""} onChange={(e) => field("start_lon", e.target.value)} placeholder="lon" />
-          </div>
-        </div>
-        <div className="field">
-          <label>Arrivée — lat / lon</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input value={form.end_lat ?? ""} onChange={(e) => field("end_lat", e.target.value)} placeholder="lat" />
-            <input value={form.end_lon ?? ""} onChange={(e) => field("end_lon", e.target.value)} placeholder="lon" />
-          </div>
-        </div>
-      </div>
+      <PlaceSearch
+        label="Lieu d'arrivée"
+        value={form.end_place}
+        placeholder="Esplanade, Argelès-sur-Mer…"
+        onSelect={({ name, lat, lon }) => setForm((f) => ({
+          ...f,
+          end_place: name,
+          end_lat: lat ?? f.end_lat,
+          end_lon: lon ?? f.end_lon,
+        }))}
+      />
 
       <div className="field">
         <label>Heure de départ</label>
@@ -206,7 +205,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
                 <option key={o.id} value={o.id}>{o.name}</option>
               ))}
             </select>
-            <div className="field-hint">Si un organisateur est sélectionné, ses coordonnées (site, réseaux) s'affichent automatiquement sur la fiche course — inutile de les ressaisir. Il n'a pas besoin d'avoir de compte.</div>
+            <div className="field-hint">Ses coordonnées (site, réseaux) s'affichent automatiquement sur la fiche course.</div>
             {showQuickCreate ? (
               <OrganizerQuickCreate
                 onCreated={(o) => {
@@ -223,7 +222,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             )}
           </div>
           <div className="field">
-            <label>Organisateur (nom affiché, si aucun organisateur lié)</label>
+            <label>Organisateur (nom libre, si aucun lié)</label>
             <input value={form.organizer_name || ""} onChange={(e) => field("organizer_name", e.target.value)} />
           </div>
         </div>
@@ -239,7 +238,10 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="field">
         <label>Prochaine édition</label>
-        <input value={form.next_edition || ""} onChange={(e) => field("next_edition", e.target.value)} />
+        <select value={form.next_edition || ""} onChange={(e) => field("next_edition", e.target.value)}>
+          <option value="">— Sélectionner —</option>
+          {NEXT_EDITION_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
       </div>
 
       <div className="field">

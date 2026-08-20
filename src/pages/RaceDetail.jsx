@@ -48,10 +48,11 @@ function RaceMap({ race }) {
 }
 
 function Comments({ raceId }) {
-  const { user } = useAuth();
+  const { user, isOrganizer } = useAuth();
   const [comments, setComments] = useState([]);
   const [body, setBody] = useState("");
   const [error, setError] = useState(null);
+  const [info, setInfo] = useState(null);
 
   const load = () => {
     supabase
@@ -68,9 +69,9 @@ function Comments({ raceId }) {
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
-    const { error } = await supabase.from("comments").insert({ race_id: raceId, author_id: user.id, body });
+    const { error } = await supabase.from("comments").insert({ race_id: raceId, author_id: user.id, body, status: "pending" });
     if (error) setError(error.message);
-    else { setBody(""); load(); }
+    else { setBody(""); setInfo("Avis envoyé — il sera visible après validation par un administrateur."); load(); }
   };
 
   return (
@@ -87,6 +88,7 @@ function Comments({ raceId }) {
       </div>
 
       {error && <div className="error-box">{error}</div>}
+      {info && <div className="success-box">{info}</div>}
 
       {!user ? (
         <div className="panel">
@@ -94,14 +96,18 @@ function Comments({ raceId }) {
             <Link to="/login" style={{ color: "var(--amber)", textDecoration: "underline" }}>Connecte-toi ou crée un compte</Link> pour laisser un avis.
           </p>
         </div>
+      ) : isOrganizer ? (
+        <div className="panel">
+          <p className="muted" style={{ margin: 0 }}>Les comptes organisateur ne peuvent pas laisser d'avis.</p>
+        </div>
       ) : (
         <form onSubmit={submit} className="panel">
-
           <div className="field">
             <label>Ton avis</label>
             <textarea required rows={3} value={body} onChange={(e) => setBody(e.target.value)} />
           </div>
-          <button className="btn btn-primary" type="submit">Publier</button>
+          <button className="btn btn-primary" type="submit">Envoyer</button>
+          <div className="field-hint" style={{ marginTop: 8 }}>Ton avis sera visible après validation par un administrateur.</div>
         </form>
       )}
     </div>

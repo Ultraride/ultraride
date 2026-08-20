@@ -274,7 +274,7 @@ function DangerZone() {
 }
 
 export default function Account() {
-  const { user, loading } = useAuth();
+  const { user, loading, isOrganizer } = useAuth();
 
   if (loading) return <div className="wrap" style={{ paddingTop: 60 }}><p className="muted">Chargement…</p></div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -284,9 +284,9 @@ export default function Account() {
       <h1 className="h1">Mon compte</h1>
       <InfoSection />
       <PasswordSection />
-      <PalmaresSection />
-      <FavoritesSection />
-      <CommentsSection />
+      {!isOrganizer && <PalmaresSection />}
+      {!isOrganizer && <FavoritesSection />}
+      {!isOrganizer && <CommentsSection />}
       <DangerZone />
     </div>
   );
