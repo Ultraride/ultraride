@@ -11,6 +11,7 @@ const EMPTY = {
   parcours: "boucle", month: "", km: "", dplus: "", open: true,
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
+  start_date: "", end_date: "",
   organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
   status: "published", organizer_id: "", image_url: "",
 };
@@ -193,6 +194,27 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       <div className="field">
         <label>Heure de départ</label>
         <input value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
+      </div>
+
+      <div className="grid-2">
+        <div className="field">
+          <label>Date de début</label>
+          <input
+            type="date"
+            value={form.start_date || ""}
+            onChange={(e) => field("start_date", e.target.value)}
+          />
+          <div className="field-hint">jj/mm/aaaa — date du jour de départ officiel</div>
+        </div>
+        <div className="field">
+          <label>Date de fin</label>
+          <input
+            type="date"
+            value={form.end_date || ""}
+            onChange={(e) => field("end_date", e.target.value)}
+          />
+          <div className="field-hint">jj/mm/aaaa — date limite d'arrivée</div>
+        </div>
       </div>
 
       {isAdmin ? (
