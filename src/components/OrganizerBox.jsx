@@ -1,13 +1,10 @@
 import { Link } from "react-router-dom";
 import { normalizeUrl, socialLink } from "../lib/organizerLinks";
 
-// `race.organizer` is the joined organizers row (via races.organizer_id) —
-// a standalone public profile that doesn't require the organizer to have
-// ever logged in. `race.organizer_name` is a plain fallback label for races
-// with no linked organizer entity at all.
 export default function OrganizerBox({ race }) {
   const org = race.organizer;
   const displayName = org?.name || race.organizer_name;
+  const orgId = org?.id || race.organizer_id;
 
   const website = normalizeUrl(org?.website);
   const instagram = socialLink(org?.instagram, "https://instagram.com/");
@@ -32,31 +29,20 @@ export default function OrganizerBox({ race }) {
 
   return (
     <div className="organizer-box">
-      {race.organizer_id ? (
-        <Link to={`/organizers/${race.organizer_id}`} className="organizer-box-head organizer-box-head-link">
+      {orgId ? (
+        <Link to={`/organizers/${orgId}`} className="organizer-box-head organizer-box-head-link">
           {nameContent}
         </Link>
       ) : (
         <div className="organizer-box-head">{nameContent}</div>
       )}
-
       {(website || email || instagram || facebook || strava) && (
         <div className="organizer-links">
-          {website && (
-            <a href={website} target="_blank" rel="noopener noreferrer" className="tag">Site web ↗</a>
-          )}
-          {email && (
-            <a href={`mailto:${email}`} className="tag">Email</a>
-          )}
-          {instagram && (
-            <a href={instagram} target="_blank" rel="noopener noreferrer" className="tag">Instagram ↗</a>
-          )}
-          {facebook && (
-            <a href={facebook} target="_blank" rel="noopener noreferrer" className="tag">Facebook ↗</a>
-          )}
-          {strava && (
-            <a href={strava} target="_blank" rel="noopener noreferrer" className="tag">Club Strava ↗</a>
-          )}
+          {website && <a href={website} target="_blank" rel="noopener noreferrer" className="tag">Site web ↗</a>}
+          {email && <a href={`mailto:${email}`} className="tag">Email</a>}
+          {instagram && <a href={instagram} target="_blank" rel="noopener noreferrer" className="tag">Instagram ↗</a>}
+          {facebook && <a href={facebook} target="_blank" rel="noopener noreferrer" className="tag">Facebook ↗</a>}
+          {strava && <a href={strava} target="_blank" rel="noopener noreferrer" className="tag">Club Strava ↗</a>}
         </div>
       )}
     </div>
