@@ -32,7 +32,7 @@ export default function OverviewMap({ races }) {
           fillOpacity: r.open ? 0.85 : 0.15,
         });
         marker.bindTooltip(
-          `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#A9BBAE;margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString("fr-FR") : "—"} D+ · ${r.month ?? ""}</div>`,
+          `<div style="font-family:'Anton',sans-serif;font-weight:400;font-size:13px;">${r.name}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paperDim);margin-top:2px;">${r.km ?? "—"} km · ${r.dplus ? r.dplus.toLocaleString("fr-FR") : "—"} D+ · ${r.month ?? ""}</div>`,
           { direction: "top", offset: [0, -6] }
         );
         marker.on("click", () => navigate(`/courses/${r.id}`));

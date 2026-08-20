@@ -1,13 +1,14 @@
 :root{
-  --ink:#0F1D16;
-  --panel:#16261D;
-  --panel2:#1D3226;
-  --line:#33493C;
-  --paper:#EDE6D6;
-  --paperDim:#A9BBAE;
+  --ink:#F5F1E6;
+  --panel:#FFFFFF;
+  --panel2:#EFEADA;
+  --line:#DDD5BE;
+  --paper:#1B2B20;
+  --paperDim:#6B6F60;
   --amber:#C4622D;
-  --brick:#C1543F;
-  --moss:#2FA05C;
+  --brick:#B8432E;
+  --moss:#15793F;
+  --onAccent:#1B2B20;
   --sans:'IBM Plex Sans',sans-serif;
   --mono:'IBM Plex Mono',monospace;
   --disp:'Anton',sans-serif;
@@ -18,13 +19,13 @@ body{background:var(--ink);color:var(--paper);font-family:var(--sans);}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 input,select,textarea{font-family:inherit;}
-::selection{background:var(--amber);color:var(--ink);}
+::selection{background:var(--amber);color:var(--onAccent);}
 
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px;}
 @media(min-width:768px){.wrap{padding:0 40px;}}
 
 /* header */
-header.site{position:sticky;top:0;z-index:20;background:rgba(21,36,32,0.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+header.site{position:sticky;top:0;z-index:20;background:rgba(245,241,230,0.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
 @media(min-width:768px){header.site{padding:16px 40px;}}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:400;font-size:18px;letter-spacing:.02em;}
 .brand-logo{height:32px;width:auto;display:block;}
@@ -34,7 +35,7 @@ nav.top-nav a.active, nav.top-nav button.active{color:var(--amber);}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 14px;border-radius:2px;border:1px solid var(--line);color:var(--paperDim);background:transparent;}
-.btn-primary{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:600;}
+.btn-primary{background:var(--amber);color:var(--onAccent);border-color:var(--amber);font-weight:600;}
 .btn-danger{border-color:var(--brick);color:var(--brick);}
 .btn:disabled{opacity:0.5;cursor:not-allowed;}
 
@@ -58,9 +59,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 
 /* badges */
 .badge{font-family:var(--mono);font-size:10px;text-transform:uppercase;padding:3px 8px;border-radius:2px;}
-.badge-pending{background:rgba(227,162,60,0.18);color:var(--amber);}
-.badge-published{background:rgba(124,154,121,0.25);color:var(--moss);}
-.badge-rejected{background:rgba(193,84,63,0.2);color:var(--brick);}
+.badge-pending{background:rgba(196,98,45,0.18);color:var(--amber);}
+.badge-published{background:rgba(21,121,63,0.25);color:var(--moss);}
+.badge-rejected{background:rgba(184,67,46,0.2);color:var(--brick);}
 .badge-draft{border:1px solid var(--line);color:var(--paperDim);}
 .badge-hidden{border:1px solid var(--brick);color:var(--brick);}
 .badge-visible{border:1px solid var(--moss);color:var(--moss);}
@@ -77,8 +78,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .h2{font-family:var(--disp);font-weight:400;font-size:18px;margin:0 0 10px;}
 .muted{color:var(--paperDim);font-size:13px;}
 .mono{font-family:var(--mono);}
-.error-box{background:rgba(193,84,63,0.15);border:1px solid var(--brick);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
-.success-box{background:rgba(124,154,121,0.15);border:1px solid var(--moss);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
+.error-box{background:rgba(184,67,46,0.15);border:1px solid var(--brick);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
+.success-box{background:rgba(21,121,63,0.15);border:1px solid var(--moss);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
 
 /* ---------- home page: hero ---------- */
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;}
@@ -104,7 +105,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .filter-divider{width:1px;align-self:stretch;background:var(--line);}
 .filter-row select{font-size:13px;padding:7px 10px;border-radius:2px;background:var(--ink);border:1px solid var(--line);color:var(--paper);outline:none;}
 .chip{padding:6px 12px;font-size:13px;border-radius:2px;border:1px solid var(--line);color:var(--paperDim);background:transparent;}
-.chip-active{border-color:var(--amber);color:var(--amber);background:rgba(227,162,60,0.15);}
+.chip-active{border-color:var(--amber);color:var(--amber);background:rgba(196,98,45,0.15);}
 
 /* ---------- map box (shared home + overview map) ---------- */
 .map-box{background:var(--panel2);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-bottom:24px;}
@@ -164,16 +165,16 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .favorite-btn:disabled{opacity:0.5;cursor:default;}
 
 /* ---------- palmares: race search / match field ---------- */
-.race-search-suggestions{position:absolute;top:100%;left:0;right:0;z-index:30;background:var(--ink);border:1px solid var(--line);border-radius:2px;margin-top:4px;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+.race-search-suggestions{position:absolute;top:100%;left:0;right:0;z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:2px;margin-top:4px;max-height:220px;overflow-y:auto;box-shadow:0 8px 20px rgba(27,43,32,0.15);}
 .race-search-suggestion{display:block;width:100%;text-align:left;padding:8px 10px;background:none;border:none;border-bottom:1px solid var(--line);color:var(--paper);font-size:13px;cursor:pointer;}
 .race-search-suggestion:last-child{border-bottom:none;}
 .race-search-suggestion:hover{background:var(--panel2);}
-.race-search-matched{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(124,154,121,0.12);border:1px solid var(--moss);border-radius:2px;font-size:13px;color:var(--paper);}
+.race-search-matched{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:rgba(21,121,63,0.12);border:1px solid var(--moss);border-radius:2px;font-size:13px;color:var(--paper);}
 
 /* ---------- auth: signin/signup toggle ---------- */
 .auth-mode-toggle{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--line);border-radius:2px;overflow:hidden;width:fit-content;}
 .auth-mode-toggle button{padding:8px 16px;font-size:13px;background:transparent;color:var(--paperDim);border:none;}
-.auth-mode-toggle button.active{background:var(--amber);color:var(--ink);font-weight:600;}
+.auth-mode-toggle button.active{background:var(--amber);color:var(--onAccent);font-weight:600;}
 
 /* ---------- checkbox rows (consent, preferences) ---------- */
 .checkbox-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;font-size:13px;color:var(--paperDim);line-height:1.5;cursor:pointer;}
@@ -182,8 +183,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 
 /* ---------- dev-only role preview switcher ---------- */
 .role-switcher{position:relative;}
-.role-switcher-btn{font-size:12px;padding:5px 10px;border:1px dashed var(--amber);border-radius:2px;color:var(--amber);background:rgba(227,162,60,0.08);}
-.role-switcher-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--ink);border:1px solid var(--line);border-radius:2px;overflow:hidden;z-index:20;min-width:150px;}
+.role-switcher-btn{font-size:12px;padding:5px 10px;border:1px dashed var(--amber);border-radius:2px;color:var(--amber);background:rgba(196,98,45,0.08);}
+.role-switcher-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:2px;overflow:hidden;z-index:20;min-width:150px;box-shadow:0 8px 20px rgba(27,43,32,0.15);}
 .role-switcher-menu button{display:block;width:100%;text-align:left;padding:8px 12px;font-size:13px;color:var(--paperDim);background:none;border:none;}
 .role-switcher-menu button:hover{background:var(--panel2);}
 .role-switcher-menu button.active{color:var(--amber);font-weight:600;}
@@ -194,3 +195,10 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .organizer-page-bio{max-width:640px;color:var(--paperDim);font-size:15px;line-height:1.6;margin-top:16px;}
 .organizer-box-head-link{text-decoration:none;cursor:pointer;}
 .organizer-box-head-link:hover .organizer-box-name{color:var(--amber);}
+
+/* ---------- leaflet tooltip theming (was unstyled — fixes a latent contrast bug) ---------- */
+.leaflet-tooltip{background:var(--panel);color:var(--paper);border:1px solid var(--line);border-radius:2px;box-shadow:0 4px 12px rgba(0,0,0,0.12);}
+.leaflet-tooltip-top:before{border-top-color:var(--panel);}
+.leaflet-tooltip-bottom:before{border-bottom-color:var(--panel);}
+.leaflet-tooltip-left:before{border-left-color:var(--panel);}
+.leaflet-tooltip-right:before{border-right-color:var(--panel);}
