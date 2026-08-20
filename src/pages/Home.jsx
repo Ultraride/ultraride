@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import ElevationProfile from "../components/ElevationProfile";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 
@@ -69,7 +68,6 @@ export default function Home() {
           Courses, aventures et défis d'endurance à vélo. Gravel, route, VTT — filtre par mode, terrain et calendrier
           pour construire ta prochaine sortie.
         </p>
-        <ElevationProfile />
 
         {races && (
           <div className="hero-stats">
