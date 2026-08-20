@@ -125,8 +125,12 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 @media(min-width:1024px){.race-grid{grid-template-columns:1fr 1fr 1fr;}}
 
 /* ---------- race cue-card ---------- */
-.race-card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:16px;transition:border-color .2s, transform .2s, box-shadow .2s;}
-.race-card:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.25);}
+.race-card-wrapper{display:flex;flex-direction:column;}
+.race-card{display:block;background:var(--panel);border:1px solid var(--line);border-top-left-radius:3px;border-top-right-radius:3px;padding:16px;transition:border-color .2s, transform .2s, box-shadow .2s;}
+.race-card:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:0 6px 16px rgba(27,43,32,0.12);}
+.race-card-organizer{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:var(--paperDim);background:var(--panel);border:1px solid var(--line);border-top:none;border-bottom-left-radius:3px;border-bottom-right-radius:3px;}
+.race-card-organizer-link{text-decoration:none;cursor:pointer;}
+.race-card-organizer-link:hover{color:var(--amber);}
 .race-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
 .race-card-loc{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
 .race-card-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.2;color:var(--paper);}
@@ -148,7 +152,6 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 
 /* ---------- race card image + organizer logo badge ---------- */
 .race-card-image{width:100%;height:140px;border-radius:2px;background-size:cover;background-position:center;margin-bottom:12px;background-color:var(--ink);}
-.race-card-organizer{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--paperDim);}
 .race-card-organizer-logo{width:22px;height:22px;border-radius:5px;object-fit:cover;background:var(--ink);border:1px solid var(--line);}
 
 /* ---------- race detail cover image ---------- */
