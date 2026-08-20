@@ -7,7 +7,7 @@ export default function Login() {
   const [mode, setMode] = useState("signin"); // "signin" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [consent, setConsent] = useState(true);
   const [accountType, setAccountType] = useState("participant"); // "participant" | "organizer"
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);

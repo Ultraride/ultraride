@@ -7,7 +7,7 @@ import PalmaresSection from "./PalmaresSection";
 function InfoSection() {
   const { user, profile, refreshProfile } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name || "");
-  const [marketingConsent, setMarketingConsent] = useState(profile?.marketing_consent || false);
+  const [marketingConsent, setMarketingConsent] = useState(profile?.marketing_consent ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
