@@ -163,7 +163,6 @@ export default function RaceDetail() {
       {race.image_url && (
         <img src={race.image_url} alt="" className="race-detail-image" />
       )}
-      <p className="muted">{race.long_blurb || race.blurb}</p>
 
       <RaceMap race={race} />
 
@@ -173,6 +172,8 @@ export default function RaceDetail() {
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mois</div><div className="mono">{race.month}</div></div>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mode</div><div className="mono">{race.mode}</div></div>
       </div>
+
+      <p className="muted" style={{ marginTop: 20 }}>{race.long_blurb || race.blurb}</p>
 
       <OrganizerBox race={race} />
 
