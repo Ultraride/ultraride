@@ -44,7 +44,7 @@ function RaceMap({ race }) {
     // zero-area box zooms to street level. Fall back to a fixed regional zoom instead.
     const isSinglePoint = latLngBounds.getNorthEast().distanceTo(latLngBounds.getSouthWest()) < 500;
     if (isSinglePoint) {
-      map.setView(start, 12);
+      map.setView(start, 8);
     } else {
       map.fitBounds(latLngBounds.pad(0.15));
     }
