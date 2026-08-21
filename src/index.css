@@ -314,3 +314,22 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
     scroll-behavior: auto;
   }
 }
+
+/* --- Bloc géolocalisé « Près de chez moi » --- */
+.geo-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.carousel-item-distance {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  margin-top: 6px;
+  opacity: 0.65;
+}
