@@ -5,6 +5,19 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { parseTrackFile, formatDuration } from "../lib/gpx";
 
+// Vitesse moyenne globale : distance divisée par le temps total, pauses
+// comprises. C'est la mesure qui fait foi en ultra-distance, et elle ne
+// dépend d'aucune heuristique de détection d'arrêt.
+function averageSpeed(distanceKm, totalSeconds) {
+  if (!distanceKm || !totalSeconds) return null;
+  return (distanceKm / (totalSeconds / 3600)).toFixed(1);
+}
+
+function formatSpeed(distanceKm, totalSeconds) {
+  const v = averageSpeed(distanceKm, totalSeconds);
+  return v == null ? "—" : `${v} km/h`;
+}
+
 // Carte affichant la trace d'un résultat. Montée à la demande (bouton
 // "Voir la trace") : instancier une carte Leaflet par résultat dès le
 // chargement de la page serait inutilement lourd.
@@ -284,8 +297,7 @@ function AddResultForm({ onSaved, onCancel }) {
               <>
                 <br />
                 ✓ {formatDuration(gpxInfo.totalSeconds)} au total ·{" "}
-                {formatDuration(gpxInfo.movingSeconds)} de roulage ·{" "}
-                {formatDuration(gpxInfo.totalSeconds - gpxInfo.movingSeconds)} de pause
+                {formatSpeed(gpxInfo.distanceKm, gpxInfo.totalSeconds)} de moyenne
               </>
             )}
             {gpxInfo.totalSeconds == null && (
@@ -351,10 +363,16 @@ function AthleteCard({ profile, user, results, stats }) {
           <div className="print-stat-label">Mètres de D+ cumulés</div>
         </div>
         {stats.totalSeconds > 0 && (
-          <div>
-            <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
-            <div className="print-stat-label">Temps total cumulé</div>
-          </div>
+          <>
+            <div>
+              <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
+              <div className="print-stat-label">Temps total cumulé</div>
+            </div>
+            <div>
+              <div className="print-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
+              <div className="print-stat-label">km/h de moyenne</div>
+            </div>
+          </>
         )}
       </div>
 
@@ -371,7 +389,7 @@ function AthleteCard({ profile, user, results, stats }) {
               <th>Distance</th>
               <th>D+</th>
               <th>Temps total</th>
-              <th>Roulage</th>
+              <th>Moyenne</th>
             </tr>
           </thead>
           <tbody>
@@ -383,7 +401,7 @@ function AthleteCard({ profile, user, results, stats }) {
                 <td>{r.distance_km ? `${r.distance_km} km` : "—"}</td>
                 <td>{r.elevation_gain ? `${r.elevation_gain.toLocaleString("fr-FR")} m` : "—"}</td>
                 <td>{formatDuration(r.total_seconds)}</td>
-                <td>{formatDuration(r.moving_seconds)}</td>
+                <td>{formatSpeed(r.distance_km, r.total_seconds)}</td>
               </tr>
             ))}
           </tbody>
@@ -426,7 +444,6 @@ export default function PalmaresSection() {
       km: results.reduce((sum, r) => sum + (r.distance_km || 0), 0),
       dplus: results.reduce((sum, r) => sum + (r.elevation_gain || 0), 0),
       totalSeconds: results.reduce((sum, r) => sum + (r.total_seconds || 0), 0),
-      movingSeconds: results.reduce((sum, r) => sum + (r.moving_seconds || 0), 0),
     };
   }, [results]);
 
@@ -468,8 +485,8 @@ export default function PalmaresSection() {
                   <div className="palmares-stat-label">Temps total cumulé</div>
                 </div>
                 <div>
-                  <div className="palmares-stat-num">{formatDuration(stats.movingSeconds)}</div>
-                  <div className="palmares-stat-label">Dont roulage</div>
+                  <div className="palmares-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
+                  <div className="palmares-stat-label">km/h de moyenne</div>
                 </div>
               </>
             )}
@@ -515,8 +532,7 @@ export default function PalmaresSection() {
                   {r.total_seconds != null && (
                     <div className="muted mono" style={{ fontSize: 12 }}>
                       {formatDuration(r.total_seconds)} au total ·{" "}
-                      {formatDuration(r.moving_seconds)} de roulage ·{" "}
-                      {formatDuration(r.total_seconds - (r.moving_seconds || 0))} de pause
+                      {formatSpeed(r.distance_km, r.total_seconds)} de moyenne
                     </div>
                   )}
                   {r.notes && <p style={{ margin: "6px 0 0", fontSize: 13 }}>{r.notes}</p>}
