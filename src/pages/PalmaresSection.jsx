@@ -1,8 +1,47 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { parseTrackFile } from "../lib/gpx";
+
+// Carte affichant la trace d'un résultat. Montée à la demande (bouton
+// "Voir la trace") : instancier une carte Leaflet par résultat dès le
+// chargement de la page serait inutilement lourd.
+function ResultTrackMap({ track }) {
+  const ref = useRef(null);
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    if (!track || track.length < 2 || !ref.current) return;
+    if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+
+    const map = L.map(ref.current, { scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+
+    const latlngs = track.map((p) => [p.lat, p.lon]);
+    const line = L.polyline(latlngs, { color: "#C4622D", weight: 3 }).addTo(map);
+
+    L.circleMarker(latlngs[0], {
+      radius: 6, color: "#15793F", fillColor: "#15793F", fillOpacity: 0.9,
+    }).bindTooltip("Départ").addTo(map);
+
+    L.circleMarker(latlngs[latlngs.length - 1], {
+      radius: 6, color: "#C1543F", fillColor: "#C1543F", fillOpacity: 0.9,
+    }).bindTooltip("Arrivée").addTo(map);
+
+    map.fitBounds(line.getBounds().pad(0.1));
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; };
+  }, [track]);
+
+  if (!track || track.length < 2) {
+    return <p className="muted" style={{ fontSize: 13 }}>Trace indisponible pour ce résultat.</p>;
+  }
+  return <div ref={ref} className="result-track-map" />;
+}
 
 function OrganizerSearchField({ value, onChangeText, onMatch, matchedOrganizer, onClearMatch }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -260,11 +299,81 @@ function AddResultForm({ onSaved, onCancel }) {
   );
 }
 
+// Fiche A4 verticale, masquée à l'écran et révélée uniquement à l'impression
+// (voir la règle @media print dans index.css). Le visiteur passe par la boîte
+// d'impression de son navigateur et choisit "Enregistrer au format PDF".
+function AthleteCard({ profile, user, results, stats }) {
+  const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+  return (
+    <div className="print-sheet">
+      <div className="print-head">
+        <div className="print-brand">ULTRARIDE</div>
+        <div className="print-doc-type">Fiche d'identité sportive</div>
+      </div>
+
+      <div className="print-identity">
+        <div className="print-name">{profile?.display_name || "—"}</div>
+        <div className="print-email">{user?.email}</div>
+      </div>
+
+      <div className="print-stats">
+        <div>
+          <div className="print-stat-num">{stats.count}</div>
+          <div className="print-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
+        </div>
+        <div>
+          <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
+          <div className="print-stat-label">Kilomètres cumulés</div>
+        </div>
+        <div>
+          <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
+          <div className="print-stat-label">Mètres de D+ cumulés</div>
+        </div>
+      </div>
+
+      <div className="print-section-title">Réalisations</div>
+      {results.length === 0 ? (
+        <p>Aucune réalisation enregistrée.</p>
+      ) : (
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th>Année</th>
+              <th>Épreuve</th>
+              <th>Organisateur</th>
+              <th>Distance</th>
+              <th>D+</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((r) => (
+              <tr key={r.id}>
+                <td>{r.event_date ? new Date(r.event_date).getFullYear() : "—"}</td>
+                <td>{r.race_name}</td>
+                <td>{r.organizer_name || "—"}</td>
+                <td>{r.distance_km ? `${r.distance_km} km` : "—"}</td>
+                <td>{r.elevation_gain ? `${r.elevation_gain.toLocaleString("fr-FR")} m` : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className="print-footer">
+        Fiche générée le {today} depuis ultraride.eu — chaque réalisation listée est associée à une trace GPS
+        déposée par le participant.
+      </div>
+    </div>
+  );
+}
+
 export default function PalmaresSection() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [openTrackId, setOpenTrackId] = useState(null);
 
   const load = () => {
     supabase
@@ -280,9 +389,19 @@ export default function PalmaresSection() {
 
   useEffect(() => { load(); }, []);
 
+  const stats = useMemo(() => {
+    if (!results) return null;
+    return {
+      count: results.length,
+      km: results.reduce((sum, r) => sum + (r.distance_km || 0), 0),
+      dplus: results.reduce((sum, r) => sum + (r.elevation_gain || 0), 0),
+    };
+  }, [results]);
+
   const remove = async (id) => {
     if (!window.confirm("Retirer ce résultat de ton palmarès ?")) return;
     await supabase.from("race_results").delete().eq("id", id);
+    setOpenTrackId(null);
     load();
   };
 
@@ -294,6 +413,33 @@ export default function PalmaresSection() {
           <button className="btn btn-primary" onClick={() => setAdding(true)}>+ Ajouter un résultat</button>
         )}
       </div>
+
+      {stats && stats.count > 0 && (
+        <>
+          <div className="palmares-stats">
+            <div>
+              <div className="palmares-stat-num">{stats.count}</div>
+              <div className="palmares-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
+            </div>
+            <div>
+              <div className="palmares-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
+              <div className="palmares-stat-label">km cumulés</div>
+            </div>
+            <div>
+              <div className="palmares-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
+              <div className="palmares-stat-label">m de D+ cumulés</div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <button className="btn" onClick={() => window.print()}>Télécharger ma fiche (PDF)</button>
+            <div className="field-hint" style={{ marginTop: 6 }}>
+              Ouvre la fenêtre d'impression de ton navigateur — choisis « Enregistrer au format PDF »
+              pour obtenir une fiche A4 à joindre à tes inscriptions.
+            </div>
+          </div>
+        </>
+      )}
 
       {adding && (
         <AddResultForm onSaved={() => { setAdding(false); load(); }} onCancel={() => setAdding(false)} />
@@ -324,11 +470,29 @@ export default function PalmaresSection() {
                   </div>
                   {r.notes && <p style={{ margin: "6px 0 0", fontSize: 13 }}>{r.notes}</p>}
                 </div>
-                <button className="btn btn-danger" onClick={() => remove(r.id)}>Retirer</button>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <button
+                    className="btn"
+                    onClick={() => setOpenTrackId(openTrackId === r.id ? null : r.id)}
+                  >
+                    {openTrackId === r.id ? "Masquer la trace" : "Voir la trace"}
+                  </button>
+                  <button className="btn btn-danger" onClick={() => remove(r.id)}>Retirer</button>
+                </div>
               </div>
+
+              {openTrackId === r.id && (
+                <div style={{ marginTop: 12 }}>
+                  <ResultTrackMap track={r.gpx_track} />
+                </div>
+              )}
             </div>
           ))}
         </div>
+      )}
+
+      {results && stats && (
+        <AthleteCard profile={profile} user={user} results={results} stats={stats} />
       )}
     </div>
   );

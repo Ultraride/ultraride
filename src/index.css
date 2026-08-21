@@ -333,3 +333,172 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   margin-top: 6px;
   opacity: 0.65;
 }
+
+/* --- Statistiques cumulées du palmarès --- */
+.palmares-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  margin-bottom: 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.palmares-stat-num {
+  font-family: "Anton", sans-serif;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.palmares-stat-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+
+/* --- Carte de trace d'un résultat --- */
+.result-track-map {
+  width: 100%;
+  height: 260px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+/* --- Fiche d'identité sportive (A4, impression uniquement) --- */
+.print-sheet {
+  display: none;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 14mm;
+}
+
+@media print {
+  /* On masque toute la page, puis on ne réaffiche que la fiche. */
+  body * {
+    visibility: hidden;
+  }
+
+  .print-sheet,
+  .print-sheet * {
+    visibility: visible;
+  }
+
+  .print-sheet {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #000;
+    background: #fff;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 11pt;
+  }
+
+  .print-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid #1B2B20;
+    padding-bottom: 8px;
+  }
+
+  .print-brand {
+    font-family: "Anton", sans-serif;
+    font-size: 22pt;
+    letter-spacing: 0.04em;
+  }
+
+  .print-doc-type {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .print-identity {
+    margin: 22pt 0;
+  }
+
+  .print-name {
+    font-family: "Anton", sans-serif;
+    font-size: 26pt;
+    line-height: 1.1;
+  }
+
+  .print-email {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10pt;
+    margin-top: 4pt;
+  }
+
+  .print-stats {
+    display: flex;
+    gap: 28pt;
+    padding: 12pt 0;
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+  }
+
+  .print-stat-num {
+    font-family: "Anton", sans-serif;
+    font-size: 20pt;
+    line-height: 1;
+  }
+
+  .print-stat-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 3pt;
+  }
+
+  .print-section-title {
+    font-family: "Anton", sans-serif;
+    font-size: 14pt;
+    margin: 22pt 0 8pt;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+
+  .print-table th {
+    text-align: left;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #1B2B20;
+    padding: 4pt 6pt 4pt 0;
+  }
+
+  .print-table td {
+    padding: 5pt 6pt 5pt 0;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+  }
+
+  /* Évite qu'une ligne du tableau soit coupée en bas de page. */
+  .print-table tr {
+    page-break-inside: avoid;
+  }
+
+  .print-footer {
+    margin-top: 24pt;
+    padding-top: 8pt;
+    border-top: 1px solid #999;
+    font-size: 8pt;
+    line-height: 1.5;
+  }
+}
