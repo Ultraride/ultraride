@@ -1,5 +1,8 @@
-// Europe + North Africa countries for the race form country dropdown.
+// Europe + North Africa countries for the race form country dropdown,
+// plus a few non-EMEA countries where listed races take place.
 export const EMEA_COUNTRIES = [
+  // Amérique du Nord
+  "Canada",
   // Europe
   "Allemagne","Andorre","Autriche","Belgique","Biélorussie","Bosnie-Herzégovine",
   "Bulgarie","Chypre","Croatie","Danemark","Espagne","Estonie","Finlande","France",
