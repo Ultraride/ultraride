@@ -14,6 +14,7 @@ const EMPTY = {
   start_date: "", end_date: "",
   organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
   status: "published", organizer_id: "", image_url: "",
+  registration_url: "",
 };
 
 export default function RaceForm({ race, onSaved, onCancel }) {
@@ -279,6 +280,17 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       <div className="field">
         <label>Description longue</label>
         <textarea rows={4} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)} />
+      </div>
+
+      <div className="field">
+        <label>Lien d'inscription</label>
+        <input
+          type="url"
+          value={form.registration_url || ""}
+          onChange={(e) => field("registration_url", e.target.value)}
+          placeholder="https://..."
+        />
+        <div className="field-hint">URL vers la page d'inscription du prestataire (HelloAsso, site officiel, etc.)</div>
       </div>
 
       {isAdmin && (

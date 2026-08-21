@@ -140,6 +140,17 @@ export default function RaceDetail() {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
         <h1 className="h1" style={{ margin: 0 }}>{race.name}</h1>
         <FavoriteButton raceId={race.id} size={22} />
+        {race.registration_url && (
+          <a
+            href={race.registration_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ marginLeft: "auto" }}
+          >
+            S'inscrire
+          </a>
+        )}
       </div>
       {race.image_url && (
         <img src={race.image_url} alt="" className="race-detail-image" />
