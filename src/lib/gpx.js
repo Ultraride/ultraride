@@ -1,3 +1,13 @@
+// Seuil au-delà duquel on considère que le vélo avance. En dessous, le temps
+// est compté comme pause : à l'échelle d'un ultra, un arrêt ravito de 20 min
+// et une heure de sommeil doivent sortir du temps de roulage.
+const MOVING_THRESHOLD_KMH = 3;
+
+// Au-delà de cette durée, un intervalle entre deux points est forcément un
+// arrêt (montre éteinte, perte de signal prolongée), quelle que soit la
+// distance apparente parcourue entre les deux.
+const MAX_MOVING_GAP_S = 300;
+
 // Shared by both GPX (XML) and FIT (binary) parsing.
 function haversineMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
@@ -13,6 +23,27 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
 function downsample(points, target = 300) {
   const stride = Math.max(1, Math.floor(points.length / target));
   return points.filter((_, i) => i % stride === 0).map((p) => ({ lat: p.lat, lon: p.lon }));
+}
+
+// Calcule le temps écoulé et le temps de roulage à partir des points bruts
+// (avant sous-échantillonnage : sous-échantillonner d'abord fausserait les
+// vitesses instantanées et donc la détection des arrêts).
+function computeTimes(points) {
+  const timed = points.filter((p) => p.time != null);
+  if (timed.length < 2) return { totalSeconds: null, movingSeconds: null };
+
+  const totalSeconds = Math.max(0, Math.round((timed[timed.length - 1].time - timed[0].time) / 1000));
+
+  let movingSeconds = 0;
+  for (let i = 1; i < timed.length; i++) {
+    const dt = (timed[i].time - timed[i - 1].time) / 1000;
+    if (dt <= 0 || dt > MAX_MOVING_GAP_S) continue;
+    const meters = haversineMeters(timed[i - 1].lat, timed[i - 1].lon, timed[i].lat, timed[i].lon);
+    const kmh = (meters / 1000) / (dt / 3600);
+    if (kmh >= MOVING_THRESHOLD_KMH) movingSeconds += dt;
+  }
+
+  return { totalSeconds, movingSeconds: Math.round(movingSeconds) };
 }
 
 export function parseGPXFile(file) {
@@ -33,10 +64,17 @@ export function parseGPXFile(file) {
         }
         const points = nodes.map((n) => {
           const eleEl = n.querySelector("ele");
+          const timeEl = n.querySelector("time");
+          let time = null;
+          if (timeEl) {
+            const parsed = Date.parse(timeEl.textContent);
+            if (!Number.isNaN(parsed)) time = parsed;
+          }
           return {
             lat: parseFloat(n.getAttribute("lat")),
             lon: parseFloat(n.getAttribute("lon")),
             ele: eleEl ? parseFloat(eleEl.textContent) : null,
+            time,
           };
         }).filter((p) => !Number.isNaN(p.lat) && !Number.isNaN(p.lon));
 
@@ -50,10 +88,14 @@ export function parseGPXFile(file) {
           }
         }
 
+        const { totalSeconds, movingSeconds } = computeTimes(points);
+
         resolve({
           points: downsample(points),
           distanceKm: Math.round((distanceM / 1000) * 10) / 10,
           elevationGain: Math.round(elevationGain),
+          totalSeconds,
+          movingSeconds,
         });
       } catch (err) {
         reject(err);
@@ -94,7 +136,12 @@ export function parseFITFile(file) {
           const lat = toDegrees(r.position_lat);
           const lon = toDegrees(r.position_long);
           if (lat != null && lon != null && !Number.isNaN(lat) && !Number.isNaN(lon)) {
-            points.push({ lat, lon });
+            let time = null;
+            if (r.timestamp != null) {
+              const parsed = r.timestamp instanceof Date ? r.timestamp.getTime() : Date.parse(r.timestamp);
+              if (!Number.isNaN(parsed)) time = parsed;
+            }
+            points.push({ lat, lon, time });
           }
           const ele = r.altitude ?? r.enhanced_altitude;
           if (ele != null) {
@@ -117,10 +164,14 @@ export function parseFITFile(file) {
         // than a GPS-derived estimate — prefer it when present.
         if (deviceDistance != null && deviceDistance > 0) distanceM = deviceDistance;
 
+        const { totalSeconds, movingSeconds } = computeTimes(points);
+
         resolve({
           points: downsample(points),
           distanceKm: Math.round((distanceM / 1000) * 10) / 10,
           elevationGain: Math.round(elevationGain),
+          totalSeconds,
+          movingSeconds,
         });
       });
     };
@@ -134,4 +185,16 @@ export function parseTrackFile(file) {
   if (ext === "fit") return parseFITFile(file);
   if (ext === "gpx") return parseGPXFile(file);
   return Promise.reject(new Error("Format non reconnu — utilise un fichier .gpx ou .fit."));
+}
+
+// "2 j 05h12" au-delà de 24 h, "14h07" en dessous, "48 min" sous l'heure.
+export function formatDuration(seconds) {
+  if (seconds == null || Number.isNaN(seconds)) return "—";
+  const total = Math.max(0, Math.round(seconds));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days > 0) return `${days} j ${String(hours).padStart(2, "0")}h${String(minutes).padStart(2, "0")}`;
+  if (hours > 0) return `${hours}h${String(minutes).padStart(2, "0")}`;
+  return `${minutes} min`;
 }

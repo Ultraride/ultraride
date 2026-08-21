@@ -502,3 +502,21 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
     line-height: 1.5;
   }
 }
+
+@media print {
+  /* Le tableau passe à 7 colonnes : on resserre pour rester sur une A4. */
+  .print-table {
+    font-size: 8.5pt;
+  }
+
+  .print-table th,
+  .print-table td {
+    padding-right: 4pt;
+  }
+
+  /* Les statistiques peuvent désormais être au nombre de quatre. */
+  .print-stats {
+    gap: 18pt;
+    flex-wrap: wrap;
+  }
+}

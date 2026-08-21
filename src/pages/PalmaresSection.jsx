@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
-import { parseTrackFile } from "../lib/gpx";
+import { parseTrackFile, formatDuration } from "../lib/gpx";
 
 // Carte affichant la trace d'un résultat. Montée à la demande (bouton
 // "Voir la trace") : instancier une carte Leaflet par résultat dès le
@@ -227,6 +227,8 @@ function AddResultForm({ onSaved, onCancel }) {
       notes: notes.trim() || null,
       distance_km: gpxInfo.distanceKm,
       elevation_gain: gpxInfo.elevationGain,
+      total_seconds: gpxInfo.totalSeconds,
+      moving_seconds: gpxInfo.movingSeconds,
       gpx_track: gpxInfo.points,
     };
 
@@ -278,6 +280,20 @@ function AddResultForm({ onSaved, onCancel }) {
         {gpxInfo && (
           <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
             ✓ {gpxInfo.distanceKm} km · {gpxInfo.elevationGain.toLocaleString("fr-FR")} D+ · {gpxInfo.points.length} points
+            {gpxInfo.totalSeconds != null && (
+              <>
+                <br />
+                ✓ {formatDuration(gpxInfo.totalSeconds)} au total ·{" "}
+                {formatDuration(gpxInfo.movingSeconds)} de roulage ·{" "}
+                {formatDuration(gpxInfo.totalSeconds - gpxInfo.movingSeconds)} de pause
+              </>
+            )}
+            {gpxInfo.totalSeconds == null && (
+              <>
+                <br />
+                ⚠ Ce fichier ne contient pas d'horodatage : les temps ne seront pas enregistrés.
+              </>
+            )}
           </div>
         )}
         {gpxError && <div className="error-box" style={{ marginTop: 6 }}>{gpxError}</div>}
@@ -330,6 +346,12 @@ function AthleteCard({ profile, user, results, stats }) {
           <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
           <div className="print-stat-label">Mètres de D+ cumulés</div>
         </div>
+        {stats.totalSeconds > 0 && (
+          <div>
+            <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
+            <div className="print-stat-label">Temps total cumulé</div>
+          </div>
+        )}
       </div>
 
       <div className="print-section-title">Réalisations</div>
@@ -344,6 +366,8 @@ function AthleteCard({ profile, user, results, stats }) {
               <th>Organisateur</th>
               <th>Distance</th>
               <th>D+</th>
+              <th>Temps total</th>
+              <th>Roulage</th>
             </tr>
           </thead>
           <tbody>
@@ -354,6 +378,8 @@ function AthleteCard({ profile, user, results, stats }) {
                 <td>{r.organizer_name || "—"}</td>
                 <td>{r.distance_km ? `${r.distance_km} km` : "—"}</td>
                 <td>{r.elevation_gain ? `${r.elevation_gain.toLocaleString("fr-FR")} m` : "—"}</td>
+                <td>{formatDuration(r.total_seconds)}</td>
+                <td>{formatDuration(r.moving_seconds)}</td>
               </tr>
             ))}
           </tbody>
@@ -395,6 +421,8 @@ export default function PalmaresSection() {
       count: results.length,
       km: results.reduce((sum, r) => sum + (r.distance_km || 0), 0),
       dplus: results.reduce((sum, r) => sum + (r.elevation_gain || 0), 0),
+      totalSeconds: results.reduce((sum, r) => sum + (r.total_seconds || 0), 0),
+      movingSeconds: results.reduce((sum, r) => sum + (r.moving_seconds || 0), 0),
     };
   }, [results]);
 
@@ -429,6 +457,18 @@ export default function PalmaresSection() {
               <div className="palmares-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
               <div className="palmares-stat-label">m de D+ cumulés</div>
             </div>
+            {stats.totalSeconds > 0 && (
+              <>
+                <div>
+                  <div className="palmares-stat-num">{formatDuration(stats.totalSeconds)}</div>
+                  <div className="palmares-stat-label">Temps total cumulé</div>
+                </div>
+                <div>
+                  <div className="palmares-stat-num">{formatDuration(stats.movingSeconds)}</div>
+                  <div className="palmares-stat-label">Dont roulage</div>
+                </div>
+              </>
+            )}
           </div>
 
           <div style={{ marginBottom: 16 }}>
@@ -468,6 +508,13 @@ export default function PalmaresSection() {
                     {r.distance_km ? `${r.distance_km} km` : ""}
                     {r.elevation_gain ? ` · ${r.elevation_gain.toLocaleString("fr-FR")} D+` : ""}
                   </div>
+                  {r.total_seconds != null && (
+                    <div className="muted mono" style={{ fontSize: 12 }}>
+                      {formatDuration(r.total_seconds)} au total ·{" "}
+                      {formatDuration(r.moving_seconds)} de roulage ·{" "}
+                      {formatDuration(r.total_seconds - (r.moving_seconds || 0))} de pause
+                    </div>
+                  )}
                   {r.notes && <p style={{ margin: "6px 0 0", fontSize: 13 }}>{r.notes}</p>}
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
