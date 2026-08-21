@@ -180,11 +180,21 @@ export function parseFITFile(file) {
   });
 }
 
+// Seul le FIT est accepté à l'import : il garantit la présence des
+// horodatages (donc des temps d'épreuve) et embarque la distance mesurée
+// par l'appareil, plus fiable qu'une distance recalculée depuis les points
+// GPS. parseGPXFile reste exportée si le besoin d'accepter le GPX revient.
 export function parseTrackFile(file) {
   const ext = file.name.split(".").pop().toLowerCase();
   if (ext === "fit") return parseFITFile(file);
-  if (ext === "gpx") return parseGPXFile(file);
-  return Promise.reject(new Error("Format non reconnu — utilise un fichier .gpx ou .fit."));
+  if (ext === "gpx") {
+    return Promise.reject(
+      new Error(
+        "Les fichiers GPX ne sont pas acceptés. Exporte le fichier .fit d'origine depuis ton compteur ou ta montre."
+      )
+    );
+  }
+  return Promise.reject(new Error("Format non reconnu — utilise un fichier .fit."));
 }
 
 // "2 j 05h12" au-delà de 24 h, "14h07" en dessous, "48 min" sous l'heure.

@@ -272,10 +272,10 @@ function AddResultForm({ onSaved, onCancel }) {
       </div>
 
       <div className="field">
-        <label>Trace GPX ou FIT <span style={{ color: "var(--brick)" }}>*</span></label>
+        <label>Trace FIT <span style={{ color: "var(--brick)" }}>*</span></label>
         <label className="btn image-upload-btn" style={{ display: "inline-flex" }}>
-          {parsing ? "Analyse…" : gpxInfo ? "Remplacer le fichier" : "Charger un fichier .gpx ou .fit"}
-          <input type="file" accept=".gpx,.fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
+          {parsing ? "Analyse…" : gpxInfo ? "Remplacer le fichier" : "Charger un fichier .fit"}
+          <input type="file" accept=".fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
         </label>
         {gpxInfo && (
           <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>
@@ -291,13 +291,17 @@ function AddResultForm({ onSaved, onCancel }) {
             {gpxInfo.totalSeconds == null && (
               <>
                 <br />
-                ⚠ Ce fichier ne contient pas d'horodatage : les temps ne seront pas enregistrés.
+                ⚠ Ce fichier .fit ne contient pas d'horodatage exploitable : les temps ne seront pas enregistrés.
               </>
             )}
           </div>
         )}
         {gpxError && <div className="error-box" style={{ marginTop: 6 }}>{gpxError}</div>}
-        <div className="field-hint">Obligatoire — c'est ta trace qui prouve et illustre ta participation.</div>
+        <div className="field-hint">
+          Obligatoire — c'est ta trace qui prouve et illustre ta participation. Seul le format .fit est accepté :
+          il garantit l'horodatage nécessaire au calcul des temps. Tu le trouveras dans l'export de ton compteur
+          ou de ta montre (Garmin, Wahoo, Coros…).
+        </div>
       </div>
 
       <div className="field">
