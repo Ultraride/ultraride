@@ -139,6 +139,15 @@ export default function RaceDetail() {
       });
   }, [id]);
 
+  // Comptage des vues, séparé du chargement de la fiche : si l'incrément
+  // échoue, ça ne doit jamais empêcher l'affichage de la course.
+  useEffect(() => {
+    if (!id) return;
+    supabase.rpc("increment_race_views", { race_id: id }).then(({ error }) => {
+      if (error) console.warn("increment_race_views:", error.message);
+    });
+  }, [id]);
+
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
   if (!race) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">Chargement…</p></div>;
 
