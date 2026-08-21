@@ -17,6 +17,24 @@ const PARCOURS = [
 const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
+// Position chronologique d'une course dans l'année.
+// On utilise start_date quand elle existe, sinon on retombe sur le mois
+// pour que les fiches sans date restent mêlées aux autres au bon endroit.
+function monthIndex(month) {
+  const i = MONTHS.indexOf(month);
+  return i === -1 ? 12 : i;
+}
+
+function chronoKey(race) {
+  if (race.start_date) {
+    const d = new Date(race.start_date);
+    if (!Number.isNaN(d.getTime())) {
+      return d.getMonth() + d.getDate() / 100;
+    }
+  }
+  return monthIndex(race.month);
+}
+
 const EMPTY_FILTERS = { discipline: null, format: null, parcours: null, mode: "", country: "", month: "", reg: "" };
 
 function normalize(str) {
@@ -36,9 +54,8 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, start_date, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
-      .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) setError(error.message);
         else setRaces(data);
@@ -53,7 +70,7 @@ export default function Home() {
   const filtered = useMemo(() => {
     if (!races) return [];
     const q = normalize(search.trim());
-    return races.filter((r) => {
+    const result = races.filter((r) => {
       if (filters.discipline && r.discipline !== filters.discipline) return false;
       if (filters.format && r.format !== filters.format) return false;
       if (filters.parcours && r.parcours !== filters.parcours) return false;
@@ -79,6 +96,12 @@ export default function Home() {
       }
 
       return true;
+    });
+
+    return result.sort((a, b) => {
+      const diff = chronoKey(a) - chronoKey(b);
+      if (diff !== 0) return diff;
+      return (a.name || "").localeCompare(b.name || "");
     });
   }, [races, filters, search]);
 
