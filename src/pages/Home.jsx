@@ -164,9 +164,18 @@ export default function Home() {
       const label = MONTHS[idx];
       const list = races.filter((r) => monthIndex(r.month) === idx).sort(byChrono);
       if (list.length > 0) {
+        const picked = list.slice(0, 12);
+        // L'année vient des courses elles-mêmes quand start_date est
+        // renseignée : c'est plus fiable que de la calculer, et ça reste
+        // juste quand le bloc bascule sur janvier de l'année suivante.
+        const dated = picked.find((r) => r.start_date);
+        const year = dated
+          ? new Date(dated.start_date).getFullYear()
+          : new Date().getFullYear() + (idx < start ? 1 : 0);
         return {
           label,
-          races: list.slice(0, 12),
+          year,
+          races: picked,
           isCurrent: offset === 0,
         };
       }
@@ -291,7 +300,7 @@ export default function Home() {
             <div className="wrap">
               {monthlyBlock && (
                 <RaceCarousel
-                  title={monthlyBlock.isCurrent ? `Ce mois-ci · ${monthlyBlock.label}` : `Prochainement · ${monthlyBlock.label}`}
+                  title={monthlyBlock.isCurrent ? `Ce mois-ci · ${monthlyBlock.label} ${monthlyBlock.year}` : `Prochainement · ${monthlyBlock.label} ${monthlyBlock.year}`}
                   subtitle={monthlyBlock.isCurrent ? "Les départs du mois en cours" : "Aucun départ ce mois-ci, voici la suite"}
                   races={monthlyBlock.races}
                 />
