@@ -19,10 +19,19 @@ const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Aoû
 
 const EMPTY_FILTERS = { discipline: null, format: null, parcours: null, mode: "", country: "", month: "", reg: "" };
 
+function normalize(str) {
+  return (str || "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 export default function Home() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     supabase
@@ -43,6 +52,7 @@ export default function Home() {
 
   const filtered = useMemo(() => {
     if (!races) return [];
+    const q = normalize(search.trim());
     return races.filter((r) => {
       if (filters.discipline && r.discipline !== filters.discipline) return false;
       if (filters.format && r.format !== filters.format) return false;
@@ -52,12 +62,28 @@ export default function Home() {
       if (filters.month && r.month !== filters.month) return false;
       if (filters.reg === "open" && !r.open) return false;
       if (filters.reg === "closed" && r.open) return false;
+
+      if (q) {
+        const haystack = normalize([
+          r.name,
+          r.country,
+          r.discipline,
+          r.format,
+          r.parcours,
+          r.mode,
+          r.month,
+          r.blurb,
+          r.organizer?.name,
+        ].filter(Boolean).join(" "));
+        if (!haystack.includes(q)) return false;
+      }
+
       return true;
     });
-  }, [races, filters]);
+  }, [races, filters, search]);
 
   const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: f[key] === value ? (typeof value === "string" ? "" : null) : value }));
-  const resetFilters = () => setFilters(EMPTY_FILTERS);
+  const resetFilters = () => { setFilters(EMPTY_FILTERS); setSearch(""); };
 
   return (
     <div>
@@ -84,6 +110,23 @@ export default function Home() {
         <div className="wrap"><p className="muted">Chargement…</p></div>
       ) : (
         <>
+          <div className="wrap">
+            <div className="search-bar">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher une course, un lieu, un organisateur…"
+                aria-label="Rechercher"
+              />
+              {search && (
+                <button type="button" className="filter-reset" onClick={() => setSearch("")}>
+                  Effacer
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="wrap">
             <div className="filter-panel">
               <div className="filter-panel-head">
