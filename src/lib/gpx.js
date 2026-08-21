@@ -3,10 +3,16 @@
 // et une heure de sommeil doivent sortir du temps de roulage.
 const MOVING_THRESHOLD_KMH = 3;
 
-// Au-delà de cette durée, un intervalle entre deux points est forcément un
-// arrêt (montre éteinte, perte de signal prolongée), quelle que soit la
-// distance apparente parcourue entre les deux.
-const MAX_MOVING_GAP_S = 300;
+// Au-delà de cette durée, un intervalle mérite une vérification de
+// vraisemblance : les compteurs en « enregistrement intelligent » espacent
+// parfois les points de plusieurs minutes tout en roulant, on ne peut donc
+// pas écarter ces intervalles sur leur seule durée.
+const SPARSE_GAP_S = 300;
+
+// Vitesse au-delà de laquelle un long intervalle ne peut pas correspondre à
+// du vélo : c'est un appareil éteint puis rallumé plus loin. On ne l'applique
+// qu'aux longs intervalles, pour ne pas écarter les pointes en descente.
+const MAX_PLAUSIBLE_KMH = 45;
 
 // Shared by both GPX (XML) and FIT (binary) parsing.
 function haversineMeters(lat1, lon1, lat2, lon2) {
@@ -37,10 +43,18 @@ function computeTimes(points) {
   let movingSeconds = 0;
   for (let i = 1; i < timed.length; i++) {
     const dt = (timed[i].time - timed[i - 1].time) / 1000;
-    if (dt <= 0 || dt > MAX_MOVING_GAP_S) continue;
+    if (dt <= 0) continue;
+
     const meters = haversineMeters(timed[i - 1].lat, timed[i - 1].lon, timed[i].lat, timed[i].lon);
     const kmh = (meters / 1000) / (dt / 3600);
-    if (kmh >= MOVING_THRESHOLD_KMH) movingSeconds += dt;
+
+    // Trop lent : arrêt ravito, sommeil, attente à un contrôle.
+    if (kmh < MOVING_THRESHOLD_KMH) continue;
+
+    // Long intervalle à vitesse impossible : l'appareil était éteint.
+    if (dt > SPARSE_GAP_S && kmh > MAX_PLAUSIBLE_KMH) continue;
+
+    movingSeconds += dt;
   }
 
   return { totalSeconds, movingSeconds: Math.round(movingSeconds) };
