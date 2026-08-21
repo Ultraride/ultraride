@@ -7,12 +7,6 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Dev-only UI preview: lets a real admin see the site as another role,
-  // without touching their actual database role or Supabase permissions.
-  // Data operations always use the real admin rights underneath.
-  const [previewRole, setPreviewRoleState] = useState(() => {
-    try { return localStorage.getItem("ultraride_preview_role") || null; } catch { return null; }
-  });
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -77,29 +71,15 @@ export function AuthProvider({ children }) {
 
   const signOut = () => supabase.auth.signOut();
 
-  const setPreviewRole = (role) => {
-    setPreviewRoleState(role);
-    try {
-      if (role) localStorage.setItem("ultraride_preview_role", role);
-      else localStorage.removeItem("ultraride_preview_role");
-    } catch { /* localStorage unavailable, ignore */ }
-  };
-
-  const realRole = profile?.role || null;
-  // Only a genuine admin can preview as something else — a real organizer
-  // or participant can't use this to see admin-only UI.
-  const effectiveRole = realRole === "admin" && previewRole ? previewRole : realRole;
+  const role = profile?.role || null;
 
   const value = {
     session,
     user: session?.user || null,
     profile,
-    role: effectiveRole,
-    realRole,
-    previewRole: realRole === "admin" ? previewRole : null,
-    setPreviewRole,
-    isAdmin: effectiveRole === "admin",
-    isOrganizer: effectiveRole === "organizer",
+    role,
+    isAdmin: role === "admin",
+    isOrganizer: role === "organizer",
     loading,
     signInWithPassword,
     signUp,

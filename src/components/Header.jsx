@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
-import RoleSwitcher from "./RoleSwitcher";
 
 export default function Header() {
   const { user, isAdmin, isOrganizer, signOut } = useAuth();
@@ -21,7 +20,6 @@ export default function Header() {
         {isAdmin && (
           <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>Admin</NavLink>
         )}
-        <RoleSwitcher />
         {user ? (
           <button onClick={signOut}>Déconnexion</button>
         ) : (
