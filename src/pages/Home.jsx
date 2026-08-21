@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
@@ -17,24 +17,6 @@ const PARCOURS = [
 const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
-// Position chronologique d'une course dans l'année.
-// On utilise start_date quand elle existe, sinon on retombe sur le mois
-// pour que les fiches sans date restent mêlées aux autres au bon endroit.
-function monthIndex(month) {
-  const i = MONTHS.indexOf(month);
-  return i === -1 ? 12 : i;
-}
-
-function chronoKey(race) {
-  if (race.start_date) {
-    const d = new Date(race.start_date);
-    if (!Number.isNaN(d.getTime())) {
-      return d.getMonth() + d.getDate() / 100;
-    }
-  }
-  return monthIndex(race.month);
-}
-
 const EMPTY_FILTERS = { discipline: null, format: null, parcours: null, mode: "", country: "", month: "", reg: "" };
 
 function normalize(str) {
@@ -43,6 +25,77 @@ function normalize(str) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+// Position chronologique d'une course dans l'année. On utilise start_date
+// quand elle existe, sinon on retombe sur le mois pour que les fiches sans
+// date restent mêlées aux autres au bon endroit.
+function monthIndex(month) {
+  const i = MONTHS.indexOf(month);
+  return i === -1 ? 12 : i;
+}
+
+function chronoKey(race) {
+  if (race.start_date) {
+    const d = new Date(race.start_date);
+    if (!Number.isNaN(d.getTime())) return d.getMonth() + d.getDate() / 100;
+  }
+  return monthIndex(race.month);
+}
+
+function byChrono(a, b) {
+  const diff = chronoKey(a) - chronoKey(b);
+  if (diff !== 0) return diff;
+  return (a.name || "").localeCompare(b.name || "");
+}
+
+// Carrousel horizontal en scroll-snap natif : pas de librairie, tactile sur
+// mobile, navigable au clavier. Les flèches sont masquées quand tout tient
+// déjà à l'écran.
+function RaceCarousel({ title, subtitle, races }) {
+  const trackRef = useRef(null);
+  const [overflowing, setOverflowing] = useState(false);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const check = () => setOverflowing(el.scrollWidth > el.clientWidth + 8);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [races]);
+
+  const scrollBy = (dir) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
+  };
+
+  if (!races || races.length === 0) return null;
+
+  return (
+    <section className="carousel-section">
+      <div className="carousel-head">
+        <div>
+          <h2 className="carousel-title">{title}</h2>
+          {subtitle && <div className="carousel-sub">{subtitle}</div>}
+        </div>
+        {overflowing && (
+          <div className="carousel-nav">
+            <button type="button" onClick={() => scrollBy(-1)} aria-label="Voir les courses précédentes">←</button>
+            <button type="button" onClick={() => scrollBy(1)} aria-label="Voir les courses suivantes">→</button>
+          </div>
+        )}
+      </div>
+      <div className="carousel-track" ref={trackRef}>
+        {races.map((r) => (
+          <div className="carousel-item" key={r.id}>
+            <RaceCard race={r} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function Home() {
@@ -54,7 +107,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, start_date, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, start_date, view_count, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
       .then(({ data, error }) => {
         if (error) setError(error.message);
@@ -82,28 +135,57 @@ export default function Home() {
 
       if (q) {
         const haystack = normalize([
-          r.name,
-          r.country,
-          r.discipline,
-          r.format,
-          r.parcours,
-          r.mode,
-          r.month,
-          r.blurb,
-          r.organizer?.name,
+          r.name, r.country, r.discipline, r.format, r.parcours,
+          r.mode, r.month, r.blurb, r.organizer?.name,
         ].filter(Boolean).join(" "));
         if (!haystack.includes(q)) return false;
       }
-
       return true;
     });
 
-    return result.sort((a, b) => {
-      const diff = chronoKey(a) - chronoKey(b);
-      if (diff !== 0) return diff;
-      return (a.name || "").localeCompare(b.name || "");
-    });
+    return result.sort(byChrono);
   }, [races, filters, search]);
+
+  // Les carrousels sont une vitrine éditoriale : dès que le visiteur filtre
+  // ou cherche, ils laissent place à la seule liste qui l'intéresse.
+  const isBrowsing = useMemo(
+    () =>
+      search.trim() === "" &&
+      Object.keys(EMPTY_FILTERS).every((k) => filters[k] === EMPTY_FILTERS[k]),
+    [filters, search]
+  );
+
+  // Mois en cours, ou le prochain mois qui contient des courses.
+  const monthlyBlock = useMemo(() => {
+    if (!races || races.length === 0) return null;
+    const start = new Date().getMonth();
+    for (let offset = 0; offset < 12; offset++) {
+      const idx = (start + offset) % 12;
+      const label = MONTHS[idx];
+      const list = races.filter((r) => monthIndex(r.month) === idx).sort(byChrono);
+      if (list.length > 0) {
+        return {
+          label,
+          races: list.slice(0, 12),
+          isCurrent: offset === 0,
+        };
+      }
+    }
+    return null;
+  }, [races]);
+
+  const mostViewed = useMemo(() => {
+    if (!races) return [];
+    return races
+      .filter((r) => (r.view_count || 0) > 0)
+      .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+      .slice(0, 12);
+  }, [races]);
+
+  const adventures = useMemo(() => {
+    if (!races) return [];
+    return races.filter((r) => r.format === "aventure").sort(byChrono).slice(0, 12);
+  }, [races]);
 
   const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: f[key] === value ? (typeof value === "string" ? "" : null) : value }));
   const resetFilters = () => { setFilters(EMPTY_FILTERS); setSearch(""); };
@@ -205,7 +287,32 @@ export default function Home() {
             <OverviewMap races={filtered} />
           </div>
 
+          {isBrowsing && (
+            <div className="wrap">
+              {monthlyBlock && (
+                <RaceCarousel
+                  title={monthlyBlock.isCurrent ? `Ce mois-ci · ${monthlyBlock.label}` : `Prochainement · ${monthlyBlock.label}`}
+                  subtitle={monthlyBlock.isCurrent ? "Les départs du mois en cours" : "Aucun départ ce mois-ci, voici la suite"}
+                  races={monthlyBlock.races}
+                />
+              )}
+
+              <RaceCarousel
+                title="Les plus consultées"
+                subtitle="Ce que regardent les autres coureurs"
+                races={mostViewed}
+              />
+
+              <RaceCarousel
+                title="Aventures"
+                subtitle="Les formats au long cours, loin du chrono"
+                races={adventures}
+              />
+            </div>
+          )}
+
           <div className="wrap" style={{ paddingBottom: 60 }}>
+            {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Toutes les courses</h2>}
             <div className="results-count">
               {filtered.length} course{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
             </div>
