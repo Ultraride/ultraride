@@ -39,7 +39,15 @@ function RaceMap({ race }) {
         .bindTooltip(race.end_place || "Arrivée").addTo(map);
     }
 
-    map.fitBounds(L.latLngBounds(bounds).pad(0.15));
+    const latLngBounds = L.latLngBounds(bounds);
+    // A loop with no GPX track collapses start/end to the same point — fitBounds on a
+    // zero-area box zooms to street level. Fall back to a fixed regional zoom instead.
+    const isSinglePoint = latLngBounds.getNorthEast().distanceTo(latLngBounds.getSouthWest()) < 500;
+    if (isSinglePoint) {
+      map.setView(start, 12);
+    } else {
+      map.fitBounds(latLngBounds.pad(0.15));
+    }
     mapRef.current = map;
     return () => map.remove();
   }, [race]);
