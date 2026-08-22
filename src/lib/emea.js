@@ -3,6 +3,9 @@
 export const EMEA_COUNTRIES = [
   // Amérique du Nord
   "Canada",
+  // Amérique du Sud
+  "Brésil",
+  "Pérou",
   // Europe
   "Allemagne","Andorre","Autriche","Belgique","Biélorussie","Bosnie-Herzégovine",
   "Bulgarie","Chypre","Croatie","Danemark","Espagne","Estonie","Finlande","France",
