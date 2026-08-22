@@ -410,10 +410,13 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
     padding-bottom: 8px;
   }
 
-  .print-brand {
-    font-family: "Anton", sans-serif;
-    font-size: 22pt;
-    letter-spacing: 0.04em;
+  .print-logo {
+    height: 16mm;
+    width: auto;
+    /* Sans cette propriété, les navigateurs convertissent les couleurs à
+       l'impression et le logo ressort délavé ou en niveaux de gris. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .print-doc-type {
@@ -442,8 +445,10 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   .print-stats {
     display: flex;
     gap: 28pt;
+    /* Le bandeau suit désormais le tableau : on l'en écarte, et on retire
+       la bordure haute que la dernière ligne du tableau fournit déjà. */
+    margin-top: 18pt;
     padding: 12pt 0;
-    border-top: 1px solid #999;
     border-bottom: 1px solid #999;
   }
 
@@ -464,7 +469,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   .print-section-title {
     font-family: "Anton", sans-serif;
     font-size: 14pt;
-    margin: 22pt 0 8pt;
+    /* L'identité n'est plus suivie du bandeau de stats : on récupère
+       l'espacement qu'il apportait. */
+    margin: 10pt 0 8pt;
   }
 
   .print-table {

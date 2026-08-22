@@ -331,7 +331,8 @@ function AddResultForm({ onSaved, onCancel }) {
   );
 }
 
-// Fiche A4 verticale, masquée à l'écran et révélée uniquement à l'impression
+// Passeport Ultra : fiche A4 verticale, masquée à l'écran et révélée
+// uniquement à l'impression
 // (voir la règle @media print dans index.css). Le visiteur passe par la boîte
 // d'impression de son navigateur et choisit "Enregistrer au format PDF".
 function AthleteCard({ profile, user, results, stats }) {
@@ -340,40 +341,13 @@ function AthleteCard({ profile, user, results, stats }) {
   return (
     <div className="print-sheet">
       <div className="print-head">
-        <div className="print-brand">ULTRARIDE</div>
-        <div className="print-doc-type">Fiche d'identité sportive</div>
+        <img src="/logo.png" alt="UltraRide" className="print-logo" />
+        <div className="print-doc-type">Passeport Ultra</div>
       </div>
 
       <div className="print-identity">
         <div className="print-name">{profile?.display_name || "—"}</div>
         <div className="print-email">{user?.email}</div>
-      </div>
-
-      <div className="print-stats">
-        <div>
-          <div className="print-stat-num">{stats.count}</div>
-          <div className="print-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
-        </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Kilomètres cumulés</div>
-        </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Mètres de D+ cumulés</div>
-        </div>
-        {stats.totalSeconds > 0 && (
-          <>
-            <div>
-              <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
-              <div className="print-stat-label">Temps total cumulé</div>
-            </div>
-            <div>
-              <div className="print-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
-              <div className="print-stat-label">km/h de moyenne</div>
-            </div>
-          </>
-        )}
       </div>
 
       <div className="print-section-title">Réalisations</div>
@@ -407,6 +381,33 @@ function AthleteCard({ profile, user, results, stats }) {
           </tbody>
         </table>
       )}
+
+      <div className="print-stats">
+        <div>
+          <div className="print-stat-num">{stats.count}</div>
+          <div className="print-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
+        </div>
+        <div>
+          <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
+          <div className="print-stat-label">Kilomètres cumulés</div>
+        </div>
+        <div>
+          <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
+          <div className="print-stat-label">Mètres de D+ cumulés</div>
+        </div>
+        {stats.totalSeconds > 0 && (
+          <>
+            <div>
+              <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
+              <div className="print-stat-label">Temps total cumulé</div>
+            </div>
+            <div>
+              <div className="print-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
+              <div className="print-stat-label">km/h de moyenne</div>
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="print-footer">
         Fiche générée le {today} depuis ultraride.eu — chaque réalisation listée est associée à une trace GPS
@@ -493,10 +494,10 @@ export default function PalmaresSection() {
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <button className="btn" onClick={() => window.print()}>Télécharger ma fiche (PDF)</button>
+            <button className="btn" onClick={() => window.print()}>Télécharger mon Passeport Ultra (PDF)</button>
             <div className="field-hint" style={{ marginTop: 6 }}>
               Ouvre la fenêtre d'impression de ton navigateur — choisis « Enregistrer au format PDF »
-              pour obtenir une fiche A4 à joindre à tes inscriptions.
+              pour obtenir un document A4 à joindre à tes inscriptions.
             </div>
           </div>
         </>
