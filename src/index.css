@@ -664,3 +664,78 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   gap: 6px;
   margin-top: 10px;
 }
+
+/* --- Relecture d'une course en attente de validation --- */
+.review-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.review-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+/* Deux colonnes : libellé fixe à gauche, valeur à droite. */
+.review-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 4px 16px;
+  margin: 0 0 14px;
+}
+
+.review-grid dt {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding-top: 1px;
+}
+
+.review-grid dd {
+  margin: 0;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.review-text {
+  margin-bottom: 14px;
+}
+
+.review-text-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.review-text p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.review-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 600px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+  .review-grid dd {
+    margin-bottom: 8px;
+  }
+}
