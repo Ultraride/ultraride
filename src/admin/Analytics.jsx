@@ -39,6 +39,12 @@ function Histogram({ data, seriesKey, days }) {
           const value = d[seriesKey] || 0;
           return (
             <div className="chart-col" key={d.day}>
+              {/* Au-delà de 30 colonnes, les barres deviennent trop étroites
+                  pour accueillir un chiffre lisible : on s'en remet alors à
+                  l'infobulle et au tableau du détail quotidien. */}
+              {value > 0 && days <= 30 && (
+                <div className="chart-value">{value}</div>
+              )}
               <div
                 className="chart-bar"
                 style={{ height: `${(value / max) * 100}%` }}

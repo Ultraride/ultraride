@@ -601,6 +601,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   align-items: flex-end;
   gap: 2px;
   height: 180px;
+  /* Dégage la zone haute : sans cela, l'indication « max » et les valeurs
+     des barres les plus hautes se chevauchent. */
+  margin-top: 14px;
 }
 
 .chart-col {
@@ -617,6 +620,17 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   border-radius: 2px 2px 0 0;
   min-height: 1px;
   transition: height 0.2s ease;
+}
+
+.chart-value {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2px;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .chart-label {
