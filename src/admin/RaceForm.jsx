@@ -6,6 +6,17 @@ import ImageUploadField from "../components/ImageUploadField";
 import PlaceSearch from "../components/PlaceSearch";
 import { EMEA_COUNTRIES, MONTHS, NEXT_EDITION_YEARS } from "../lib/emea";
 
+// L'identifiant d'URL est dérivé du libellé : le saisir à la main ouvrirait
+// la porte aux divergences entre deux courses du même événement.
+function slugify(str) {
+  return (str || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 const EMPTY = {
   name: "", country: "", discipline: "Gravel", format: "course", mode: "Autonomie",
   parcours: "boucle", month: "", km: "", dplus: "", open: true,
@@ -13,6 +24,7 @@ const EMPTY = {
   start_place: "", end_place: "", departure_time: "",
   start_date: "", end_date: "",
   organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
+  event_name: "",
   status: "published", organizer_id: "", image_url: "",
 };
 
@@ -57,6 +69,8 @@ export default function RaceForm({ race, onSaved, onCancel }) {
     };
 
     payload.organizer_id = payload.organizer_id || null;
+    payload.event_name = form.event_name?.trim() || null;
+    payload.event_slug = payload.event_name ? slugify(payload.event_name) : null;
     delete payload.created_by;
     delete payload.reviewed_by;
     delete payload.created_at;
@@ -257,6 +271,20 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           )}
         </div>
       )}
+
+      <div className="field">
+        <label>Événement</label>
+        <input
+          value={form.event_name || ""}
+          onChange={(e) => field("event_name", e.target.value)}
+          placeholder="Race Across France"
+        />
+        <div className="field-hint">
+          Laisse vide si la course est isolée. Renseigné à l'identique sur plusieurs courses, ce
+          libellé les regroupe en une seule carte dans le répertoire, avec une page dédiée listant
+          les formats.
+        </div>
+      </div>
 
       <div className="field">
         <label>Prochaine édition</label>

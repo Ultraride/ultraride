@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
+import EventCard from "../components/EventCard";
 
 const DISCIPLINES = ["Gravel", "Route", "VTT"];
 const FORMATS = [
@@ -63,6 +64,45 @@ function byChrono(a, b) {
   const diff = chronoKey(a) - chronoKey(b);
   if (diff !== 0) return diff;
   return (a.name || "").localeCompare(b.name || "");
+}
+
+// Regroupe la liste filtrée en entrées de grille : soit une course seule,
+// soit un événement rassemblant ses formats. Le regroupement s'applique à
+// la liste déjà filtrée, donc un filtre « Gravel » ne fait apparaître que
+// les formats gravel dans la carte événement — ce qui est le comportement
+// attendu. Un événement réduit à un seul format s'affiche comme une course
+// normale : une carte « 1 format » n'apporterait rien.
+function groupByEvent(list) {
+  const entries = [];
+  const index = new Map();
+
+  list.forEach((race) => {
+    if (!race.event_slug) {
+      entries.push({ type: "race", key: race.id, race });
+      return;
+    }
+    const existing = index.get(race.event_slug);
+    if (existing) {
+      existing.races.push(race);
+      return;
+    }
+    const entry = {
+      type: "event",
+      key: race.event_slug,
+      slug: race.event_slug,
+      name: race.event_name || race.name,
+      races: [race],
+    };
+    index.set(race.event_slug, entry);
+    entries.push(entry);
+  });
+
+  return entries.map((e) => {
+    if (e.type !== "event") return e;
+    if (e.races.length === 1) return { type: "race", key: e.races[0].id, race: e.races[0] };
+    e.races.sort((a, b) => (a.km || 0) - (b.km || 0));
+    return e;
+  });
 }
 
 // Carrousel horizontal en scroll-snap natif : pas de librairie, tactile sur
@@ -161,7 +201,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, start_date, view_count, blurb, image_url, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, open, lat, lon, start_lat, start_lon, start_date, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
       .then(({ data, error }) => {
         if (error) setError(error.message);
@@ -253,6 +293,8 @@ export default function Home() {
       .sort((a, b) => a._distanceKm - b._distanceKm)
       .slice(0, NEARBY_LIMIT);
   }, [races, coords]);
+
+  const gridEntries = useMemo(() => groupByEvent(filtered), [filtered]);
 
   const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: f[key] === value ? (typeof value === "string" ? "" : null) : value }));
   const resetFilters = () => { setFilters(EMPTY_FILTERS); setSearch(""); };
@@ -431,6 +473,7 @@ export default function Home() {
             {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Toutes les courses</h2>}
             <div className="results-count">
               {filtered.length} course{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
+              {gridEntries.length !== filtered.length && ` · ${gridEntries.length} entrée${gridEntries.length !== 1 ? "s" : ""}`}
             </div>
             {filtered.length === 0 ? (
               <div className="empty-box">
@@ -439,7 +482,11 @@ export default function Home() {
               </div>
             ) : (
               <div className="race-grid">
-                {filtered.map((r) => <RaceCard key={r.id} race={r} />)}
+                {gridEntries.map((e) =>
+                  e.type === "event"
+                    ? <EventCard key={e.key} event={e} />
+                    : <RaceCard key={e.key} race={e.race} />
+                )}
               </div>
             )}
           </div>

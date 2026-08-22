@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import RaceDetail from "./pages/RaceDetail";
+import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import OrganizerProfile from "./pages/OrganizerProfile";
@@ -24,6 +25,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses/:id" element={<RaceDetail />} />
+        <Route path="/evenements/:slug" element={<EventPage />} />
         <Route path="/organizers/:id" element={<OrganizerPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
