@@ -368,12 +368,6 @@ export default function Home() {
                 />
               )}
 
-              <RaceCarousel
-                title="Les plus consultées"
-                subtitle="Ce que regardent les autres coureurs"
-                races={mostViewed}
-              />
-
               {geoStatus === "granted" && nearby.length > 0 ? (
                 <RaceCarousel
                   title="Près de chez moi"
@@ -424,6 +418,12 @@ export default function Home() {
                   </div>
                 </section>
               )}
+
+              <RaceCarousel
+                title="Les plus consultées"
+                subtitle="Ce que regardent les autres coureurs"
+                races={mostViewed}
+              />
             </div>
           )}
 
