@@ -739,3 +739,18 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
     margin-bottom: 8px;
   }
 }
+
+/* --- Demande de suppression d'une course --- */
+.deletion-request {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.deletion-request-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--brick);
+}

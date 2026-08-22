@@ -94,15 +94,21 @@ export default function PendingRaces() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null);
   const [openId, setOpenId] = useState(null);
+  const [deletions, setDeletions] = useState(null);
 
   const load = async () => {
-    const { data, error } = await supabase
-      .from("races")
-      .select("*, created_by:profiles!races_created_by_fkey(email, display_name), organizer:organizers!races_organizer_id_fkey(name)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-    if (error) setError(error.message);
-    else setRaces(data);
+    const select = "*, created_by:profiles!races_created_by_fkey(email, display_name), organizer:organizers!races_organizer_id_fkey(name)";
+
+    const [pendingRes, deletionRes] = await Promise.all([
+      supabase.from("races").select(select).eq("status", "pending").order("created_at", { ascending: true }),
+      supabase.from("races").select(select).eq("deletion_requested", true).order("created_at", { ascending: true }),
+    ]);
+
+    if (pendingRes.error) setError(pendingRes.error.message);
+    else setRaces(pendingRes.data);
+
+    if (deletionRes.error) setError(deletionRes.error.message);
+    else setDeletions(deletionRes.data);
   };
 
   useEffect(() => { load(); }, []);
@@ -129,6 +135,26 @@ export default function PendingRaces() {
     setBusy(null);
     if (error) setError(error.message);
     else { setOpenId(null); load(); }
+  };
+
+  const confirmDeletion = async (race) => {
+    if (!window.confirm(`Supprimer définitivement « ${race.name} » ? Cette action est irréversible.`)) return;
+    setBusy(race.id);
+    const { error } = await supabase.from("races").delete().eq("id", race.id);
+    setBusy(null);
+    if (error) setError(error.message);
+    else load();
+  };
+
+  const dismissDeletion = async (race) => {
+    setBusy(race.id);
+    const { error } = await supabase
+      .from("races")
+      .update({ deletion_requested: false, deletion_reason: null })
+      .eq("id", race.id);
+    setBusy(null);
+    if (error) setError(error.message);
+    else load();
   };
 
   return (
@@ -173,6 +199,45 @@ export default function PendingRaces() {
             </div>
           ))}
         </div>
+      )}
+
+      {deletions && deletions.length > 0 && (
+        <>
+          <h2 className="h2" style={{ marginTop: 36 }}>
+            Demandes de suppression ({deletions.length})
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {deletions.map((race) => (
+              <div key={race.id} className="card" style={{ borderColor: "var(--brick)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div>
+                    <div className="h2" style={{ marginBottom: 4 }}>
+                      {race.name}
+                      <span className={`badge badge-${race.status}`} style={{ marginLeft: 8 }}>
+                        {race.status}
+                      </span>
+                    </div>
+                    <div className="muted mono" style={{ fontSize: 12 }}>
+                      {race.organizer?.name || race.organizer_name || "—"} · demandé par{" "}
+                      {race.created_by?.display_name || race.created_by?.email || "—"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-danger" disabled={busy === race.id} onClick={() => confirmDeletion(race)}>
+                      Supprimer
+                    </button>
+                    <button className="btn" disabled={busy === race.id} onClick={() => dismissDeletion(race)}>
+                      Rejeter la demande
+                    </button>
+                  </div>
+                </div>
+                <div className="error-box" style={{ marginTop: 10, marginBottom: 0 }}>
+                  <strong>Motif :</strong> {race.deletion_reason || "aucun motif indiqué"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

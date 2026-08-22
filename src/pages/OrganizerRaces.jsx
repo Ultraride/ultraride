@@ -124,6 +124,11 @@ export default function OrganizerRaces() {
                     <span className={`badge badge-${r.status}`} style={{ marginLeft: 8 }}>
                       {STATUS_LABEL[r.status] || r.status}
                     </span>
+                    {r.deletion_requested && (
+                      <span className="badge badge-rejected" style={{ marginLeft: 6 }}>
+                        Suppression demandée
+                      </span>
+                    )}
                   </div>
                   <div className="muted mono" style={{ fontSize: 12, marginTop: 4 }}>
                     {r.country}

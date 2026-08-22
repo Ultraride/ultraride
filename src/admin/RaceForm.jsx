@@ -36,6 +36,8 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   const [organizerList, setOrganizerList] = useState([]);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [linkedOrganizer, setLinkedOrganizer] = useState(null);
+  const [deletionRequested, setDeletionRequested] = useState(!!race?.deletion_requested);
+  const [requestingDeletion, setRequestingDeletion] = useState(false);
 
   const loadOrganizers = () => {
     supabase
@@ -110,6 +112,46 @@ export default function RaceForm({ race, onSaved, onCancel }) {
     setSaving(false);
     if (result.error) setError(result.error.message);
     else onSaved();
+  };
+
+  // L'organisateur ne peut pas supprimer lui-même : la politique RLS réserve
+  // le DELETE à l'admin. Il signale donc la fiche, avec un motif, et
+  // l'administrateur tranche. L'exception posée dans le trigger évite que
+  // cette mise à jour renvoie la course en validation.
+  const requestDeletion = async () => {
+    const reason = window.prompt(
+      "Pourquoi cette course doit-elle être retirée du répertoire ?\n(édition annulée, doublon, erreur de saisie…)",
+      ""
+    );
+    if (reason === null) return;
+    if (!reason.trim()) {
+      setError("Merci d'indiquer un motif : il aide l'administrateur à traiter la demande.");
+      return;
+    }
+
+    setRequestingDeletion(true);
+    setError(null);
+    const { error } = await supabase
+      .from("races")
+      .update({ deletion_requested: true, deletion_reason: reason.trim() })
+      .eq("id", race.id);
+    setRequestingDeletion(false);
+
+    if (error) setError(error.message);
+    else setDeletionRequested(true);
+  };
+
+  const cancelDeletionRequest = async () => {
+    setRequestingDeletion(true);
+    setError(null);
+    const { error } = await supabase
+      .from("races")
+      .update({ deletion_requested: false, deletion_reason: null })
+      .eq("id", race.id);
+    setRequestingDeletion(false);
+
+    if (error) setError(error.message);
+    else setDeletionRequested(false);
   };
 
   return (
@@ -359,6 +401,44 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </button>
         <button className="btn" type="button" onClick={onCancel}>Annuler</button>
       </div>
+
+      {!isAdmin && race?.id && (
+        <div className="deletion-request">
+          {deletionRequested ? (
+            <>
+              <div className="deletion-request-label">Suppression demandée</div>
+              <p className="muted" style={{ fontSize: 13, margin: "4px 0 10px" }}>
+                Un administrateur va examiner ta demande. La course reste visible dans le répertoire
+                jusqu'à ce qu'il la traite.
+              </p>
+              <button
+                type="button"
+                className="btn"
+                disabled={requestingDeletion}
+                onClick={cancelDeletionRequest}
+              >
+                Annuler ma demande
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="deletion-request-label">Cette course ne doit plus figurer au répertoire ?</div>
+              <p className="muted" style={{ fontSize: 13, margin: "4px 0 10px" }}>
+                Tu ne peux pas la supprimer toi-même : signale-la avec un motif, un administrateur
+                s'en chargera.
+              </p>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={requestingDeletion}
+                onClick={requestDeletion}
+              >
+                {requestingDeletion ? "Envoi…" : "Demander la suppression"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </form>
   );
 }

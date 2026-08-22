@@ -14,11 +14,15 @@ export default function AdminLayout() {
   const loadCounts = useCallback(async () => {
     if (!isAdmin) return;
 
-    const [racesRes, commentsRes] = await Promise.all([
+    const [racesRes, deletionRes, commentsRes] = await Promise.all([
       supabase
         .from("races")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending"),
+      supabase
+        .from("races")
+        .select("id", { count: "exact", head: true })
+        .eq("deletion_requested", true),
       supabase
         .from("comments")
         .select("id", { count: "exact", head: true })
@@ -26,7 +30,8 @@ export default function AdminLayout() {
     ]);
 
     setCounts({
-      races: racesRes.count || 0,
+      // Les deux files atterrissent sur le même écran : la pastille les cumule.
+      races: (racesRes.count || 0) + (deletionRes.count || 0),
       comments: commentsRes.count || 0,
     });
   }, [isAdmin]);
