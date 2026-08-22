@@ -754,3 +754,54 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   text-transform: uppercase;
   color: var(--brick);
 }
+
+/* --- Groupes par organisateur dans l'admin --- */
+.org-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.org-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  flex-wrap: wrap;
+}
+
+.org-group-head:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.org-group-caret {
+  font-size: 11px;
+  opacity: 0.6;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.org-group-name {
+  font-family: "Anton", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.org-group-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  opacity: 0.55;
+  margin-right: auto;
+}
+
+/* Le tableau vient se loger dans le cadre du groupe. */
+.org-group .admin-table {
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
