@@ -54,6 +54,7 @@ export default function AdminLayout() {
     { to: "/admin/comments", label: "Commentaires", count: counts.comments },
     { to: "/admin/users", label: "Utilisateurs" },
     { to: "/admin/organizers", label: "Fiches organisateur" },
+    { to: "/admin/analytics", label: "Supervision" },
   ];
 
   return (
