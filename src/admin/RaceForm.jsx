@@ -4,7 +4,7 @@ import { useAuth } from "../lib/AuthContext";
 import OrganizerQuickCreate from "./OrganizerQuickCreate";
 import ImageUploadField from "../components/ImageUploadField";
 import PlaceSearch from "../components/PlaceSearch";
-import { EMEA_COUNTRIES, MONTHS, NEXT_EDITION_YEARS } from "../lib/emea";
+import { EMEA_COUNTRIES, MONTHS } from "../lib/emea";
 
 // L'identifiant d'URL est dérivé du libellé : le saisir à la main ouvrirait
 // la porte aux divergences entre deux courses du même événement.
@@ -23,7 +23,7 @@ const EMPTY = {
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   start_date: "", end_date: "",
-  organizer_name: "", terrain: "", next_edition: "", blurb: "", long_blurb: "",
+  organizer_name: "", blurb: "", long_blurb: "",
   event_name: "",
   status: "published", organizer_id: "", image_url: "",
 };
@@ -35,6 +35,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   const [error, setError] = useState(null);
   const [organizerList, setOrganizerList] = useState([]);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [linkedOrganizer, setLinkedOrganizer] = useState(null);
 
   const loadOrganizers = () => {
     supabase
@@ -47,6 +48,27 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   useEffect(() => {
     if (isAdmin) loadOrganizers();
   }, [isAdmin]);
+
+  // Un organisateur ne choisit pas son organisation : c'est celle liée à son
+  // compte. Sans ce rattachement automatique, la course partirait sans
+  // organizer_id et n'afficherait ni logo ni liens sur sa fiche publique.
+  useEffect(() => {
+    if (isAdmin || !user) return;
+    supabase
+      .from("organizers")
+      .select("id, name")
+      .eq("linked_profile_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setLinkedOrganizer(data);
+        setForm((f) => ({
+          ...f,
+          organizer_id: f.organizer_id || data.id,
+          organizer_name: f.organizer_name || data.name,
+        }));
+      });
+  }, [isAdmin, user]);
 
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const numOrNull = (v) => (v === "" || v === null ? null : Number(v));
@@ -269,10 +291,28 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </div>
       ) : (
         <div className="field">
-          <label>Organisateur (nom affiché)</label>
-          <input value={form.organizer_name || ""} onChange={(e) => field("organizer_name", e.target.value)} />
-          {isOrganizer && (
-            <div className="field-hint">Connecté en tant que {user?.email}.</div>
+          <label>Organisateur</label>
+          {linkedOrganizer ? (
+            <>
+              <input value={linkedOrganizer.name} disabled />
+              <div className="field-hint">
+                Cette course sera rattachée à ta fiche organisateur : ton logo et tes liens
+                s'afficheront automatiquement dessus.
+              </div>
+            </>
+          ) : (
+            <>
+              <input
+                value={form.organizer_name || ""}
+                onChange={(e) => field("organizer_name", e.target.value)}
+                placeholder="Nom affiché"
+              />
+              <div className="error-box" style={{ marginTop: 8 }}>
+                Aucune fiche organisateur n'est liée à ce compte ({user?.email}). Renseigne-la dans
+                « Fiche organisateur » avant de soumettre : sans elle, ni ton logo ni tes liens
+                n'apparaîtront sur la course.
+              </div>
+            </>
           )}
         </div>
       )}
@@ -289,19 +329,6 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           libellé les regroupe en une seule carte dans le répertoire, avec une page dédiée listant
           les formats.
         </div>
-      </div>
-
-      <div className="field">
-        <label>Prochaine édition</label>
-        <select value={form.next_edition || ""} onChange={(e) => field("next_edition", e.target.value)}>
-          <option value="">— Sélectionner —</option>
-          {NEXT_EDITION_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-      </div>
-
-      <div className="field">
-        <label>Terrain</label>
-        <input value={form.terrain || ""} onChange={(e) => field("terrain", e.target.value)} />
       </div>
 
       <div className="field">
