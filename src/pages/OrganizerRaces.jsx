@@ -20,17 +20,31 @@ export default function OrganizerRaces() {
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null); // objet course, ou {} pour une création
 
-  const load = () => {
+  // Deux chemins mènent à « mes courses » : celles que ce compte a
+  // soumises (created_by), et celles rattachées à sa fiche organisateur
+  // — typiquement saisies par l'administrateur avant que l'organisateur
+  // ait un compte. Seules les premières sont modifiables : la politique
+  // RLS d'écriture repose sur created_by.
+  const load = async () => {
     if (!user) return;
-    supabase
+
+    const { data: org } = await supabase
+      .from("organizers")
+      .select("id")
+      .eq("linked_profile_id", user.id)
+      .maybeSingle();
+
+    const filters = [`created_by.eq.${user.id}`];
+    if (org?.id) filters.push(`organizer_id.eq.${org.id}`);
+
+    const { data, error } = await supabase
       .from("races")
       .select("*")
-      .eq("created_by", user.id)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else setRaces(data);
-      });
+      .or(filters.join(","))
+      .order("created_at", { ascending: false });
+
+    if (error) setError(error.message);
+    else setRaces(data);
   };
 
   useEffect(() => { load(); }, [user]);
@@ -79,7 +93,9 @@ export default function OrganizerRaces() {
       <p className="muted" style={{ marginTop: 12, marginBottom: 24 }}>
         Les courses que tu soumets sont relues par un administrateur avant publication. Tu peux les
         corriger à tout moment — une modification, même sur une course déjà publiée, la renvoie en
-        validation et la retire temporairement du répertoire.
+        validation et la retire temporairement du répertoire. Les épreuves saisies par
+        l'administrateur avant la création de ton compte apparaissent ici en lecture seule ;
+        demande-lui de t'en transférer la gestion si tu souhaites les tenir à jour.
       </p>
 
       {error && <div className="error-box">{error}</div>}
@@ -116,7 +132,13 @@ export default function OrganizerRaces() {
                     {r.month && ` · ${r.month}`}
                   </div>
                 </div>
-                <button className="btn" onClick={() => setEditing(r)}>Modifier</button>
+                {r.created_by === user.id ? (
+                  <button className="btn" onClick={() => setEditing(r)}>Modifier</button>
+                ) : (
+                  <span className="muted mono" style={{ fontSize: 11, alignSelf: "center" }}>
+                    Gérée par l'administrateur
+                  </span>
+                )}
               </div>
 
               {r.status === "rejected" && (
