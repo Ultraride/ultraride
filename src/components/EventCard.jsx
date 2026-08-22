@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PriceTag from "./PriceTag";
 
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
@@ -14,6 +15,10 @@ export default function EventCard({ event }) {
   const months = [...new Set(races.map((r) => r.month).filter(Boolean))]
     .sort((a, b) => MONTHS.indexOf(a) - MONTHS.indexOf(b));
   const anyOpen = races.some((r) => r.open);
+  // Un événement à plusieurs formats a plusieurs tarifs : on annonce le
+  // plus bas, comme le font les organisateurs eux-mêmes.
+  const prices = races.map((r) => r.price).filter((p) => p != null);
+  const minPrice = prices.length ? Math.min(...prices) : null;
   const image = races.find((r) => r.image_url)?.image_url;
   const organizer = races.find((r) => r.organizer)?.organizer;
 
@@ -46,6 +51,13 @@ export default function EventCard({ event }) {
           {distanceLabel ? ` · ${distanceLabel}` : ""}
           {months.length > 0 ? ` · ${months.join(", ")}` : ""}
         </p>
+
+        {minPrice != null && (
+          <div style={{ marginTop: 8 }}>
+            <span className="muted mono" style={{ fontSize: 11, marginRight: 6 }}>à partir de</span>
+            <PriceTag price={minPrice} showAmount />
+          </div>
+        )}
 
         <div className="event-card-formats">
           {races.map((r) => (

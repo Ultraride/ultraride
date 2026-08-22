@@ -19,7 +19,7 @@ function slugify(str) {
 
 const EMPTY = {
   name: "", country: "", discipline: "Gravel", format: "course", mode: "Autonomie",
-  parcours: "boucle", month: "", km: "", dplus: "", open: true,
+  parcours: "boucle", month: "", km: "", dplus: "", price: "", open: true,
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
   start_date: "", end_date: "",
@@ -84,6 +84,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       ...form,
       km: numOrNull(form.km),
       dplus: numOrNull(form.dplus),
+      price: numOrNull(form.price),
       lat: numOrNull(form.lat),
       lon: numOrNull(form.lon),
       start_lat: numOrNull(form.start_lat),
@@ -235,6 +236,22 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <div className="field">
           <label>Dénivelé + (m)</label>
           <input type="number" value={form.dplus ?? ""} onChange={(e) => field("dplus", e.target.value)} />
+        </div>
+      </div>
+
+      <div className="field">
+        <label>Prix d'inscription (€)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={form.price ?? ""}
+          onChange={(e) => field("price", e.target.value)}
+          placeholder="149"
+        />
+        <div className="field-hint">
+          Le tarif le plus bas. Laisse vide s'il n'est pas encore fixé : le répertoire n'affichera
+          alors aucune indication de prix, plutôt qu'un montant faux.
         </div>
       </div>
 

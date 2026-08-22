@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
+import PriceTag from "./PriceTag";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -31,6 +32,7 @@ export default function RaceCard({ race }) {
           <span>{race.km ?? "—"} <small>km</small></span>
           <span>{race.dplus ? race.dplus.toLocaleString("fr-FR") : "—"} <small>D+</small></span>
           <span className="race-card-month">{race.month}</span>
+          <PriceTag price={race.price} />
         </div>
 
         <div className="race-card-tags">

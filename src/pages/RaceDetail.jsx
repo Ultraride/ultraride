@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import OrganizerBox from "../components/OrganizerBox";
 import FavoriteButton from "../components/FavoriteButton";
+import { priceTier, formatPrice } from "../lib/price";
 
 function RaceMap({ race }) {
   const ref = useRef(null);
@@ -175,11 +176,26 @@ export default function RaceDetail() {
 
       <RaceMap race={race} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginTop: 20 }}>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Distance</div><div className="mono">{race.km} km</div></div>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Dénivelé +</div><div className="mono">{race.dplus} m</div></div>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mois</div><div className="mono">{race.month}</div></div>
         <div className="card"><div className="mono muted" style={{ fontSize: 11 }}>Mode</div><div className="mono">{race.mode}</div></div>
+        {priceTier(race.price) && (
+          <div className="card">
+            <div className="mono muted" style={{ fontSize: 11 }}>Tarif</div>
+            <div className="price-detail">
+              <span className="price-signs">
+                {[1, 2, 3, 4].map((n) => (
+                  <span key={n} className={n <= priceTier(race.price).signs ? "price-sign-on" : "price-sign-off"}>€</span>
+                ))}
+              </span>
+              {/* Le montant exact complète le barème quand il est connu ;
+                  sinon la fourchette suffit à situer l'épreuve. */}
+              <span className="mono">{formatPrice(race.price)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <p className="muted" style={{ marginTop: 20 }}>{race.long_blurb || race.blurb}</p>

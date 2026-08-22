@@ -805,3 +805,39 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   margin: 0;
   border-top: 1px solid var(--line);
 }
+
+/* --- Barème de prix --- */
+.price-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.price-signs {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.price-sign-on {
+  color: var(--moss, #15793F);
+}
+
+/* Les symboles inactifs restent visibles pour matérialiser l'échelle :
+   sans eux, « €€ » ne dirait pas sur quelle base on se situe. */
+.price-sign-off {
+  opacity: 0.22;
+}
+
+.price-amount {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.price-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
