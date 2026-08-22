@@ -93,6 +93,11 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="panel">
       <div className="h2">{race?.id ? "Modifier la course" : "Nouvelle course"}</div>
+      {!isAdmin && (
+        <p className="muted" style={{ fontSize: 13, marginTop: -4 }}>
+          Ta soumission sera relue par un administrateur avant d'apparaître dans le répertoire.
+        </p>
+      )}
       {error && <div className="error-box">{error}</div>}
 
       <div className="field">
@@ -323,7 +328,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div style={{ display: "flex", gap: 10 }}>
         <button className="btn btn-primary" type="submit" disabled={saving}>
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? "Enregistrement…" : isAdmin ? "Enregistrer" : "Envoyer pour validation"}
         </button>
         <button className="btn" type="button" onClick={onCancel}>Annuler</button>
       </div>

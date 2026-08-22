@@ -6,6 +6,7 @@ import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import OrganizerProfile from "./pages/OrganizerProfile";
+import OrganizerRaces from "./pages/OrganizerRaces";
 import OrganizerPage from "./pages/OrganizerPage";
 import Account from "./pages/Account";
 import Rules from "./pages/Rules";
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/organizer/profile" element={<OrganizerProfile />} />
+        <Route path="/organizer/races" element={<OrganizerRaces />} />
         <Route path="/account" element={<Account />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/cookies" element={<Cookies />} />

@@ -15,6 +15,9 @@ export default function Header() {
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>Mon compte</NavLink>
         )}
         {(isOrganizer || isAdmin) && (
+          <NavLink to="/organizer/races" className={({ isActive }) => (isActive ? "active" : "")}>Mes courses</NavLink>
+        )}
+        {(isOrganizer || isAdmin) && (
           <NavLink to="/organizer/profile" className={({ isActive }) => (isActive ? "active" : "")}>Fiche organisateur</NavLink>
         )}
         {isAdmin && (
