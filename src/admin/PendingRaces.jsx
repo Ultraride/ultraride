@@ -178,9 +178,17 @@ export default function PendingRaces() {
                     {race.created_by?.display_name || race.created_by?.email || "—"}
                   </div>
                 </div>
-                <button className="btn" onClick={() => setOpenId(openId === race.id ? null : race.id)}>
-                  {openId === race.id ? "Masquer" : "Voir"}
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn btn-primary" disabled={busy === race.id} onClick={() => publish(race)}>
+                    Valider
+                  </button>
+                  <button className="btn btn-danger" disabled={busy === race.id} onClick={() => reject(race)}>
+                    Refuser
+                  </button>
+                  <button className="btn" disabled={busy === race.id} onClick={() => setOpenId(openId === race.id ? null : race.id)}>
+                    {openId === race.id ? "Masquer" : "Voir"}
+                  </button>
+                </div>
               </div>
 
               {openId === race.id && (
