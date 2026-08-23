@@ -94,6 +94,19 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .hero-stat-num{font-family:var(--mono);font-weight:600;font-size:24px;color:var(--amber);}
 .hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--paperDim);}
 
+/* ---------- home page: "how to read a race card" tutorial ---------- */
+.htr-section{margin:8px 0 32px;}
+.htr-grid{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:28px;align-items:start;}
+@media(max-width:768px){.htr-grid{grid-template-columns:1fr;}}
+.htr-demo{position:relative;max-width:320px;}
+.htr-demo-overlay{position:absolute;inset:0;z-index:5;cursor:default;}
+.htr-pin{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);z-index:6;box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
+.htr-legend{display:flex;flex-direction:column;gap:12px;}
+.htr-legend-item{display:flex;gap:10px;align-items:flex-start;}
+.htr-legend-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.htr-legend-title{font-weight:600;font-size:13px;color:var(--paper);}
+.htr-legend-desc{font-size:12px;color:var(--paperDim);line-height:1.4;margin-top:2px;}
+
 /* ---------- filter panel ---------- */
 .filter-panel{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:24px;}
 @media(min-width:768px){.filter-panel{padding:20px;}}

@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
+import HowToReadCard from "../components/HowToReadCard";
 
 const DISCIPLINES = ["Gravel", "Route", "VTT"];
 const FORMATS = [
@@ -316,6 +317,10 @@ export default function Home() {
             <div><div className="hero-stat-num">{DISCIPLINES.length}</div><div className="hero-stat-label">Disciplines</div></div>
           </div>
         )}
+      </div>
+
+      <div className="wrap">
+        <HowToReadCard />
       </div>
 
       {error && <div className="wrap"><div className="error-box">{error}</div></div>}
