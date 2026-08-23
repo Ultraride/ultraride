@@ -6,7 +6,7 @@ import L from "leaflet";
 // sur l'ensemble des points. La vue par défaut reste donc bornée à
 // l'Europe — les courses hors zone restent sur la carte, juste hors champ
 // tant qu'on ne s'y déplace pas.
-const EUROPE_BOUNDS = [[34, -11], [71, 40]];
+const EUROPE_BOUNDS = [[38, -9], [58, 24]];
 
 export default function OverviewMap({ races }) {
   const containerRef = useRef(null);
