@@ -100,10 +100,50 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 @media(max-width:768px){.htr-grid{grid-template-columns:1fr;}}
 .htr-demo{position:relative;max-width:320px;}
 .htr-demo-overlay{position:absolute;inset:0;z-index:5;cursor:default;}
-.htr-pin{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);z-index:6;box-shadow:0 0 0 2px var(--panel);pointer-events:none;}
+
+/* Pastilles numérotées : ancrées en ::after sur les vrais éléments de la
+   RaceCard (ciblés par leurs classes existantes, jamais des coordonnées
+   pixel figées), scopées à .htr-demo pour ne pas affecter les RaceCard
+   réelles ailleurs sur le site. RaceCard.jsx n'est pas modifié. */
+.htr-demo .badge,
+.htr-demo .race-card-loc,
+.htr-demo .race-card-month,
+.htr-demo .race-card-stats > span:nth-child(1),
+.htr-demo .race-card-stats > span:nth-child(2){
+  position:relative;
+}
+.htr-demo .badge::after,
+.htr-demo .race-card-loc::after,
+.htr-demo .race-card-month::after,
+.htr-demo .race-card-stats > span:nth-child(1)::after,
+.htr-demo .race-card-stats > span:nth-child(2)::after{
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--amber);
+  color:#fff;
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 0 2px var(--panel);
+  z-index:6;
+  pointer-events:none;
+}
+.htr-demo .badge::after{content:"1";}
+.htr-demo .race-card-loc::after{content:"2";}
+.htr-demo .race-card-month::after{content:"3";}
+.htr-demo .race-card-stats > span:nth-child(1)::after{content:"4";}
+.htr-demo .race-card-stats > span:nth-child(2)::after{content:"5";}
+
 .htr-legend{display:flex;flex-direction:column;gap:12px;}
 .htr-legend-item{display:flex;gap:10px;align-items:flex-start;}
-.htr-legend-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.htr-legend-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--amber);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;}
 .htr-legend-title{font-weight:600;font-size:13px;color:var(--paper);}
 .htr-legend-desc{font-size:12px;color:var(--paperDim);line-height:1.4;margin-top:2px;}
 

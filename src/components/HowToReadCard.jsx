@@ -16,37 +16,17 @@ const DEMO_RACE = {
   mode: "Autonomie",
 };
 
+// Les pastilles 1 à 5 ne sont pas positionnées ici : elles sont ancrées en
+// CSS (::after) directement sur les vrais éléments de la RaceCard, ciblés
+// par leurs classes réelles et scopés à .htr-demo — voir index.css. Ça
+// évite des coordonnées pixel figées qui se désynchronisent dès que la
+// carte réelle change de mise en page, sans avoir à toucher RaceCard.jsx.
 const LEGEND = [
-  {
-    n: 1,
-    title: "Statut d'inscription",
-    desc: "Vert = ouvertes, gris = fermées. Visible sans ouvrir la fiche.",
-    pin: { top: 26, right: 22 },
-  },
-  {
-    n: 2,
-    title: "Discipline",
-    desc: "Gravel, Route ou VTT — le type de vélo attendu.",
-    pin: { top: 22, left: 107 },
-  },
-  {
-    n: 3,
-    title: "Pays et mois",
-    desc: "Où et quand a lieu le départ.",
-    pin: { top: 22, left: 45 },
-  },
-  {
-    n: 4,
-    title: "Distance",
-    desc: "Longueur totale du parcours, en kilomètres.",
-    pin: { top: 85, left: 36 },
-  },
-  {
-    n: 5,
-    title: "Dénivelé positif (D+)",
-    desc: "Cumul de montée sur tout le parcours.",
-    pin: { top: 85, left: 120 },
-  },
+  { n: 1, title: "Statut d'inscription", desc: "Vert = ouvertes, gris = fermées. Visible sans ouvrir la fiche." },
+  { n: 2, title: "Discipline", desc: "Gravel, Route ou VTT — le type de vélo attendu." },
+  { n: 3, title: "Pays et mois", desc: "Où et quand a lieu le départ." },
+  { n: 4, title: "Distance", desc: "Longueur totale du parcours, en kilomètres." },
+  { n: 5, title: "Dénivelé positif (D+)", desc: "Cumul de montée sur tout le parcours." },
 ];
 
 export default function HowToReadCard() {
@@ -62,11 +42,6 @@ export default function HowToReadCard() {
           <RaceCard race={DEMO_RACE} />
           {/* Capte le clic avant la carte : cette fiche est un exemple, pas un lien réel. */}
           <div className="htr-demo-overlay" onClick={(e) => e.preventDefault()} />
-          {LEGEND.map((item) => (
-            <span key={item.n} className="htr-pin" style={item.pin}>
-              {item.n}
-            </span>
-          ))}
         </div>
 
         <div className="htr-legend">
