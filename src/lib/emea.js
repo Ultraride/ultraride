@@ -6,8 +6,10 @@ export const EMEA_COUNTRIES = [
   // Amérique du Sud
   "Brésil",
   "Pérou",
+  // Afrique subsaharienne
+  "Ouganda",
   // Europe
-  "Allemagne","Andorre","Autriche","Belgique","Biélorussie","Bosnie-Herzégovine",
+  "Albanie","Allemagne","Andorre","Autriche","Belgique","Biélorussie","Bosnie-Herzégovine",
   "Bulgarie","Chypre","Croatie","Danemark","Espagne","Estonie","Finlande","France",
   "Géorgie","Grèce","Hongrie","Irlande","Islande","Italie","Kosovo","Lettonie",
   "Liechtenstein","Lituanie","Luxembourg","Macédoine du Nord","Malte","Moldavie",
