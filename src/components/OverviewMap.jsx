@@ -4,9 +4,9 @@ import L from "leaflet";
 // La plupart des courses sont en Europe ; quelques-unes (Canada, Brésil,
 // Pérou…) sont bien plus loin et forceraient un dézoom massif si on cadrait
 // sur l'ensemble des points. La vue par défaut reste donc bornée à
-// l'Europe — les courses hors zone restent sur la carte, juste hors champ
-// tant qu'on ne s'y déplace pas.
-const EUROPE_BOUNDS = [[38, -9], [58, 24]];
+// l'Europe, centrée sur Strasbourg — les courses hors zone restent sur la
+// carte, juste hors champ tant qu'on ne s'y déplace pas.
+const EUROPE_BOUNDS = [[38.57, -8.75], [58.57, 24.25]];
 
 export default function OverviewMap({ races }) {
   const containerRef = useRef(null);
