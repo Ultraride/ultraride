@@ -198,7 +198,7 @@ export default function RaceDetail() {
         )}
       </div>
 
-      <p className="muted" style={{ marginTop: 20 }}>{race.long_blurb || race.blurb}</p>
+      <p className="muted" style={{ marginTop: 20, whiteSpace: "pre-line" }}>{race.long_blurb || race.blurb}</p>
 
       <OrganizerBox race={race} />
 
