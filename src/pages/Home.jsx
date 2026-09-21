@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
-import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
+import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 
 const DISCIPLINES = ["Gravel", "Route", "VTT"];
 const FORMATS = [
@@ -127,8 +127,9 @@ function DisciplineFilterButton({ discipline, active, onClick }) {
         display: "inline-block",
         padding: "6px 20px",
         borderRadius: "999px",
-        border: `1.5px solid ${color}`,
+        border: `2px solid ${darken(color, 0.25)}`,
         color: "#FFFFFF",
+        textShadow: "0 1px 2px rgba(0,0,0,0.35)",
         background: `${color}E6`,
         fontSize: "0.95rem",
         fontWeight: 600,

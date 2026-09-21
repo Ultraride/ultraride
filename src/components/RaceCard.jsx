@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
 import { getFlagEmoji } from "../lib/emea";
-import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
+import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -15,8 +15,9 @@ function DisciplineBadge({ discipline }) {
         display: "inline-block",
         padding: "3px 10px",
         borderRadius: "999px",
-        border: `1.5px solid ${color}`,
+        border: `2px solid ${darken(color, 0.25)}`,
         color: "#FFFFFF",
+        textShadow: "0 1px 2px rgba(0,0,0,0.35)",
         background: `${color}E6`,
         fontSize: "0.75rem",
         fontWeight: 600,
