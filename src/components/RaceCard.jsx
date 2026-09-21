@@ -3,7 +3,7 @@ import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
 import { getFlagEmoji } from "../lib/emea";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
-import { getCheckerStyle, FORMAT_CHECKER_COLORS } from "../lib/formatStyles";
+import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -35,33 +35,26 @@ function DisciplineBadge({ discipline }) {
 }
 
 function FormatBadge({ format }) {
-  const color = FORMAT_CHECKER_COLORS[format] || "#000000";
+  const color = FORMAT_COLORS[format] || "#6E6E66";
+  const emoji = FORMAT_EMOJI[format] || "";
   return (
     <span
       style={{
         display: "inline-block",
-        padding: "3px",
+        padding: "2px 10px",
         borderRadius: "999px",
-        ...getCheckerStyle(color),
+        border: `2px solid ${darken(color, 0.25)}`,
+        color: "#FFFFFF",
+        textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+        background: color,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.03em",
+        whiteSpace: "nowrap",
       }}
     >
-      <span
-        style={{
-          display: "block",
-          padding: "2px 10px",
-          borderRadius: "999px",
-          backgroundColor: color,
-          color: "#FFFFFF",
-          textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-          fontSize: "0.75rem",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.03em",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {format}
-      </span>
+      {emoji} {format}
     </span>
   );
 }
