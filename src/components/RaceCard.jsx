@@ -18,7 +18,7 @@ function DisciplineBadge({ discipline }) {
     <span
       style={{
         display: "inline-block",
-        padding: "2px 10px",
+        padding: "3px 10px",
         borderRadius: "999px",
         border: `1.5px solid ${color}`,
         color: "#FFFFFF",
@@ -27,6 +27,9 @@ function DisciplineBadge({ discipline }) {
         fontWeight: 600,
         textTransform: "uppercase",
         letterSpacing: "0.03em",
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+        flexShrink: 0,
       }}
     >
       {discipline}
@@ -44,10 +47,14 @@ export default function RaceCard({ race }) {
 
         <div className="race-card-top">
           <div>
-            <div className="race-card-loc" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span>
-                {getFlagEmoji(race.country) && <span>{getFlagEmoji(race.country)} </span>}
-                {race.country}
+            <div className="race-card-loc" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              {getFlagEmoji(race.country) && (
+                <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>
+                  {getFlagEmoji(race.country)}
+                </span>
+              )}
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.03em", lineHeight: 1 }}>
+                {race.country?.toUpperCase()}
               </span>
               {race.discipline && <DisciplineBadge discipline={race.discipline} />}
             </div>
