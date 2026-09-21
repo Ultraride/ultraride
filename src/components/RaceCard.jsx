@@ -113,24 +113,25 @@ export default function RaceCard({ race }) {
           <div
             style={{
               display: "flex",
-              gap: "16px",
+              gap: "12px",
               padding: "6px 12px",
               borderRadius: "8px",
               background: "#F9F7F0",
               border: "1px solid #E5E0D0",
               marginTop: "8px",
               marginBottom: "8px",
-              fontSize: "0.9rem",
+              fontSize: "0.82rem",
               color: "#3A3A32",
+              flexWrap: "nowrap",
             }}
           >
             {race.parcours && (
-              <span>
+              <span style={{ whiteSpace: "nowrap" }}>
                 {PARCOURS_EMOJI[race.parcours]} {PARCOURS_LABEL[race.parcours] || race.parcours}
               </span>
             )}
             {race.mode && (
-              <span>
+              <span style={{ whiteSpace: "nowrap" }}>
                 {MODE_EMOJI[race.mode]} {race.mode}
               </span>
             )}
