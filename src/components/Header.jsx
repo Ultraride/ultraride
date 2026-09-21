@@ -11,6 +11,7 @@ export default function Header() {
       </NavLink>
       <nav className="top-nav">
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Courses</NavLink>
+        <NavLink to="/proposer-course" className={({ isActive }) => (isActive ? "active" : "")}>Proposer une course</NavLink>
         {user && (
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>Mon compte</NavLink>
         )}

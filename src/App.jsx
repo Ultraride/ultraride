@@ -11,12 +11,14 @@ import OrganizerPage from "./pages/OrganizerPage";
 import Account from "./pages/Account";
 import Rules from "./pages/Rules";
 import Cookies from "./pages/Cookies";
+import SubmitRace from "./pages/SubmitRace";
 import AdminLayout from "./admin/AdminLayout";
 import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
 import CommentsModeration from "./admin/CommentsModeration";
 import UsersManager from "./admin/UsersManager";
 import OrganizersManager from "./admin/OrganizersManager";
+import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
 
 export default function App() {
@@ -35,6 +37,7 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/cookies" element={<Cookies />} />
+        <Route path="/proposer-course" element={<SubmitRace />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<PendingRaces />} />
@@ -43,6 +46,7 @@ export default function App() {
           <Route path="comments" element={<CommentsModeration />} />
           <Route path="users" element={<UsersManager />} />
           <Route path="organizers" element={<OrganizersManager />} />
+          <Route path="submissions" element={<RaceSubmissions />} />
         </Route>
       </Routes>
     </>

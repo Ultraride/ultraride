@@ -6,7 +6,7 @@ import { useAuth } from "../lib/AuthContext";
 export default function AdminLayout() {
   const { user, profile, isAdmin, loading } = useAuth();
   const location = useLocation();
-  const [counts, setCounts] = useState({ races: 0, comments: 0 });
+  const [counts, setCounts] = useState({ races: 0, comments: 0, submissions: 0 });
 
   // Les compteurs sont relus à chaque changement de page de l'admin : après
   // avoir validé une course ou modéré un avis, la pastille se met à jour
@@ -14,7 +14,7 @@ export default function AdminLayout() {
   const loadCounts = useCallback(async () => {
     if (!isAdmin) return;
 
-    const [racesRes, deletionRes, commentsRes] = await Promise.all([
+    const [racesRes, deletionRes, commentsRes, submissionsRes] = await Promise.all([
       supabase
         .from("races")
         .select("id", { count: "exact", head: true })
@@ -27,12 +27,17 @@ export default function AdminLayout() {
         .from("comments")
         .select("id", { count: "exact", head: true })
         .or("status.eq.pending,deletion_requested.eq.true"),
+      supabase
+        .from("race_submissions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new"),
     ]);
 
     setCounts({
       // Les deux files atterrissent sur le même écran : la pastille les cumule.
       races: (racesRes.count || 0) + (deletionRes.count || 0),
       comments: commentsRes.count || 0,
+      submissions: submissionsRes.count || 0,
     });
   }, [isAdmin]);
 
@@ -57,6 +62,7 @@ export default function AdminLayout() {
     { to: "/admin", label: "À valider", end: true, count: counts.races },
     { to: "/admin/races", label: "Toutes les courses" },
     { to: "/admin/comments", label: "Commentaires", count: counts.comments },
+    { to: "/admin/submissions", label: "Propositions de course", count: counts.submissions },
     { to: "/admin/users", label: "Utilisateurs" },
     { to: "/admin/organizers", label: "Fiches organisateur" },
     { to: "/admin/analytics", label: "Supervision" },
