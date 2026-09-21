@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
+import { getFlagEmoji } from "../lib/emea";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -44,7 +45,10 @@ export default function RaceCard({ race }) {
         <div className="race-card-top">
           <div>
             <div className="race-card-loc" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span>{race.country}</span>
+              <span>
+                {getFlagEmoji(race.country) && <span>{getFlagEmoji(race.country)} </span>}
+                {race.country}
+              </span>
               {race.discipline && <DisciplineBadge discipline={race.discipline} />}
             </div>
             <div className="race-card-title">{race.name}</div>
