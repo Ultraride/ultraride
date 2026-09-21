@@ -5,6 +5,34 @@ import PriceTag from "./PriceTag";
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
 
+const DISCIPLINE_COLORS = {
+  Route: "#6E6E66",
+  Gravel: "#15793F",
+  VTT: "#C4622D",
+};
+
+function DisciplineBadge({ discipline }) {
+  const color = DISCIPLINE_COLORS[discipline] || "#6E6E66";
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 10px",
+        borderRadius: "999px",
+        border: `1.5px solid ${color}`,
+        color: color,
+        background: "transparent",
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.03em",
+      }}
+    >
+      {discipline}
+    </span>
+  );
+}
+
 export default function RaceCard({ race }) {
   return (
     <div className="race-card-wrapper">
@@ -15,7 +43,10 @@ export default function RaceCard({ race }) {
 
         <div className="race-card-top">
           <div>
-            <div className="race-card-loc">{race.country} · {race.discipline}</div>
+            <div className="race-card-loc" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span>{race.country}</span>
+              {race.discipline && <DisciplineBadge discipline={race.discipline} />}
+            </div>
             <div className="race-card-title">{race.name}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
