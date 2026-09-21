@@ -226,6 +226,11 @@ export default function Home() {
     [races]
   );
 
+  const organizerCount = useMemo(
+    () => (races ? new Set(races.map((r) => r.organizer?.id).filter(Boolean)).size : 0),
+    [races]
+  );
+
   const filtered = useMemo(() => {
     if (!races) return [];
     const q = normalize(search.trim());
@@ -333,6 +338,7 @@ export default function Home() {
             <div><div className="hero-stat-num">{races.length}</div><div className="hero-stat-label">Courses référencées</div></div>
             <div><div className="hero-stat-num">{countries.length}</div><div className="hero-stat-label">Pays couverts</div></div>
             <div><div className="hero-stat-num">{DISCIPLINES.length}</div><div className="hero-stat-label">Disciplines</div></div>
+            <div><div className="hero-stat-num">{organizerCount}</div><div className="hero-stat-label">Organisateurs</div></div>
           </div>
         )}
       </div>
