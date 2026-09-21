@@ -168,7 +168,7 @@ function FormatFilterButton({ format, active, onClick }) {
         whiteSpace: "nowrap",
       }}
     >
-      {emoji} {format}
+      {format} {emoji}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 export const FORMAT_COLORS = {
   Course: "#000000",
-  Aventure: "#15793F",
+  Aventure: "#C08A2E",
   Endurance: "#B3382C",
 };
 

@@ -54,7 +54,7 @@ function FormatBadge({ format }) {
         whiteSpace: "nowrap",
       }}
     >
-      {emoji} {format}
+      {format} {emoji}
     </span>
   );
 }
