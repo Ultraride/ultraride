@@ -146,27 +146,37 @@ function DisciplineFilterButton({ discipline, active, onClick }) {
 }
 
 function FormatFilterButton({ format, active, onClick }) {
-  const checkerColor = FORMAT_CHECKER_COLORS[format] || "#000000";
+  const color = FORMAT_CHECKER_COLORS[format] || "#000000";
   return (
     <button
       onClick={onClick}
       style={{
         display: "inline-block",
-        padding: "6px 20px",
+        padding: "3px",
         borderRadius: "999px",
-        border: `2px solid ${checkerColor}`,
-        color: "#FFFFFF",
-        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-        fontSize: "0.95rem",
-        fontWeight: 600,
+        border: "none",
         cursor: "pointer",
         opacity: active ? 1 : 0.55,
         boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
         transition: "opacity 0.15s ease",
-        ...getCheckerStyle(checkerColor),
+        ...getCheckerStyle(color),
       }}
     >
-      {format}
+      <span
+        style={{
+          display: "block",
+          padding: "6px 20px",
+          borderRadius: "999px",
+          backgroundColor: color,
+          color: "#FFFFFF",
+          textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {format}
+      </span>
     </button>
   );
 }
