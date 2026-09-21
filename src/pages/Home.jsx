@@ -118,6 +118,31 @@ function groupByEvent(list) {
   });
 }
 
+function DisciplineFilterButton({ discipline, active, onClick }) {
+  const color = DISCIPLINE_COLORS[discipline] || "#6E6E66";
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-block",
+        padding: "6px 20px",
+        borderRadius: "999px",
+        border: `1.5px solid ${color}`,
+        color: "#FFFFFF",
+        background: `${color}E6`,
+        fontSize: "0.95rem",
+        fontWeight: 600,
+        cursor: "pointer",
+        opacity: active ? 1 : 0.55,
+        boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
+        transition: "opacity 0.15s ease",
+      }}
+    >
+      {discipline}
+    </button>
+  );
+}
+
 // Carrousel horizontal en scroll-snap natif : pas de librairie, tactile sur
 // mobile, navigable au clavier. Les flèches sont masquées quand tout tient
 // déjà à l'écran.
@@ -415,24 +440,14 @@ export default function Home() {
               </div>
 
               <div className="filter-row">
-                {DISCIPLINES.map((d) => {
-                  const color = DISCIPLINE_COLORS[d] || "#6E6E66";
-                  const active = filters.discipline === d;
-                  return (
-                    <button
-                      key={d}
-                      className="chip"
-                      style={{
-                        borderColor: color,
-                        color: active ? "#FFFFFF" : color,
-                        background: active ? color : "transparent",
-                      }}
-                      onClick={() => setFilter("discipline", d)}
-                    >
-                      {d}
-                    </button>
-                  );
-                })}
+                {DISCIPLINES.map((d) => (
+                  <DisciplineFilterButton
+                    key={d}
+                    discipline={d}
+                    active={filters.discipline === d}
+                    onClick={() => setFilter("discipline", d)}
+                  />
+                ))}
               </div>
 
               <div className="filter-row">
