@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
+import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
 
 const DISCIPLINES = ["Gravel", "Route", "VTT"];
 const FORMATS = [
@@ -414,11 +415,24 @@ export default function Home() {
               </div>
 
               <div className="filter-row">
-                {DISCIPLINES.map((d) => (
-                  <button key={d} className={`chip ${filters.discipline === d ? "chip-active" : ""}`} onClick={() => setFilter("discipline", d)}>
-                    {d}
-                  </button>
-                ))}
+                {DISCIPLINES.map((d) => {
+                  const color = DISCIPLINE_COLORS[d] || "#6E6E66";
+                  const active = filters.discipline === d;
+                  return (
+                    <button
+                      key={d}
+                      className="chip"
+                      style={{
+                        borderColor: color,
+                        color: active ? "#FFFFFF" : color,
+                        background: active ? color : "transparent",
+                      }}
+                      onClick={() => setFilter("discipline", d)}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="filter-row">

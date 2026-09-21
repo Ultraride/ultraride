@@ -2,15 +2,10 @@ import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
 import { getFlagEmoji } from "../lib/emea";
+import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
-
-const DISCIPLINE_COLORS = {
-  Route: "#6E6E66",
-  Gravel: "#15793F",
-  VTT: "#C4622D",
-};
 
 function DisciplineBadge({ discipline }) {
   const color = DISCIPLINE_COLORS[discipline] || "#6E6E66";
