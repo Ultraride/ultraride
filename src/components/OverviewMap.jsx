@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
 
 // La plupart des courses sont en Europe ; quelques-unes (Canada, Brésil,
 // Pérou…) sont bien plus loin et forceraient un dézoom massif si on cadrait
@@ -42,10 +43,10 @@ export default function OverviewMap({ races }) {
       const lon = r.start_lon ?? r.lon;
       const marker = L.circleMarker([lat, lon], {
         radius: markerRadius,
-        weight: 2,
-        color: r.open ? "#C4622D" : "#C1543F",
-        fillColor: r.open ? "#C4622D" : "#C1543F",
-        fillOpacity: r.open ? 0.85 : 0.15,
+        color: "#FFFFFF",
+        weight: 1.5,
+        fillColor: DISCIPLINE_COLORS[r.discipline] || "#6E6E66",
+        fillOpacity: 0.9,
       });
 
       marker.bindTooltip(
@@ -75,8 +76,9 @@ export default function OverviewMap({ races }) {
       </div>
       <div ref={containerRef} className="map-box-canvas" />
       <div className="map-box-legend">
-        <span><span className="dot" style={{ background: "var(--amber)" }} /> Inscription ouverte</span>
-        <span><span className="dot" style={{ border: "1.5px solid var(--brick)" }} /> Fermée</span>
+        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.Gravel }} /> Gravel</span>
+        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.Route }} /> Route</span>
+        <span><span className="dot" style={{ background: DISCIPLINE_COLORS.VTT }} /> VTT</span>
         <span className="map-box-attrib">© OpenStreetMap contributors</span>
       </div>
     </div>
