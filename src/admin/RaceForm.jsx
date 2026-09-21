@@ -22,7 +22,7 @@ const EMPTY = {
   parcours: "boucle", month: "", km: "", dplus: "", price: "", open: true,
   lat: "", lon: "", start_lat: "", start_lon: "", end_lat: "", end_lon: "",
   start_place: "", end_place: "", departure_time: "",
-  start_date: "", end_date: "",
+  start_date: "", end_date: "", registration_url: "",
   organizer_name: "", blurb: "", long_blurb: "",
   event_name: "",
   status: "published", organizer_id: "", image_url: "",
@@ -265,6 +265,19 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           />
           Inscriptions ouvertes
         </label>
+      </div>
+
+      <div className="field">
+        <label>Lien d'inscription</label>
+        <input
+          type="url"
+          value={form.registration_url || ""}
+          onChange={(e) => field("registration_url", e.target.value)}
+          placeholder="https://..."
+        />
+        <div className="field-hint">
+          URL vers la page d'inscription du prestataire (HelloAsso, site officiel, etc.)
+        </div>
       </div>
 
       <PlaceSearch
