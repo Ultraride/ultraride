@@ -66,6 +66,18 @@ function byChrono(a, b) {
   return (a.name || "").localeCompare(b.name || "");
 }
 
+// Priorise les courses illustrées dans les carrousels mis en avant : une
+// fiche sans image casse la vitrine, elle passe donc après — le tri déjà
+// en place continue de s'appliquer à l'intérieur de chaque groupe.
+function withImageFirst(compare) {
+  return (a, b) => {
+    const aHas = a.image_url ? 0 : 1;
+    const bHas = b.image_url ? 0 : 1;
+    if (aHas !== bHas) return aHas - bHas;
+    return compare(a, b);
+  };
+}
+
 // Regroupe la liste filtrée en entrées de grille : soit une course seule,
 // soit un événement rassemblant ses formats. Le regroupement s'applique à
 // la liste déjà filtrée, donc un filtre « Gravel » ne fait apparaître que
@@ -256,7 +268,7 @@ export default function Home() {
     for (let offset = 0; offset < 12; offset++) {
       const idx = (start + offset) % 12;
       const label = MONTHS[idx];
-      const list = races.filter((r) => monthIndex(r.month) === idx).sort(byChrono);
+      const list = races.filter((r) => monthIndex(r.month) === idx).sort(withImageFirst(byChrono));
       if (list.length > 0) {
         const picked = list.slice(0, 12);
         // L'année vient des courses elles-mêmes quand start_date est
@@ -276,7 +288,7 @@ export default function Home() {
     if (!races) return [];
     return races
       .filter((r) => (r.view_count || 0) > 0)
-      .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+      .sort(withImageFirst((a, b) => (b.view_count || 0) - (a.view_count || 0)))
       .slice(0, 12);
   }, [races]);
 
@@ -290,7 +302,7 @@ export default function Home() {
         return { ...r, _distanceKm: haversineKm(coords.lat, coords.lon, lat, lon) };
       })
       .filter((r) => r && r._distanceKm <= NEARBY_RADIUS_KM)
-      .sort((a, b) => a._distanceKm - b._distanceKm)
+      .sort(withImageFirst((a, b) => a._distanceKm - b._distanceKm))
       .slice(0, NEARBY_LIMIT);
   }, [races, coords]);
 
