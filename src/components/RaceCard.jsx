@@ -3,6 +3,7 @@ import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
 import { getFlagEmoji } from "../lib/emea";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
+import { getCheckerStyle, FORMAT_CHECKER_COLORS } from "../lib/formatStyles";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -29,6 +30,29 @@ function DisciplineBadge({ discipline }) {
       }}
     >
       {discipline}
+    </span>
+  );
+}
+
+function FormatBadge({ format }) {
+  const checkerColor = FORMAT_CHECKER_COLORS[format] || "#000000";
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 10px",
+        borderRadius: "999px",
+        border: `2px solid ${checkerColor}`,
+        color: "#FFFFFF",
+        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.03em",
+        ...getCheckerStyle(checkerColor),
+      }}
+    >
+      {format}
     </span>
   );
 }
@@ -74,7 +98,7 @@ export default function RaceCard({ race }) {
         </div>
 
         <div className="race-card-tags">
-          {race.format && <span className="tag">{FORMAT_LABEL[race.format] || race.format}</span>}
+          {race.format && <FormatBadge format={FORMAT_LABEL[race.format] || race.format} />}
           {race.parcours && <span className="tag">{PARCOURS_LABEL[race.parcours] || race.parcours}</span>}
           {race.mode && <span className="tag">{race.mode}</span>}
         </div>

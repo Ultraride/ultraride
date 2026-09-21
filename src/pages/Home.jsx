@@ -4,6 +4,7 @@ import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
+import { getCheckerStyle, FORMAT_CHECKER_COLORS } from "../lib/formatStyles";
 
 const DISCIPLINES = ["Gravel", "Route", "VTT"];
 const FORMATS = [
@@ -140,6 +141,32 @@ function DisciplineFilterButton({ discipline, active, onClick }) {
       }}
     >
       {discipline}
+    </button>
+  );
+}
+
+function FormatFilterButton({ format, active, onClick }) {
+  const checkerColor = FORMAT_CHECKER_COLORS[format] || "#000000";
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-block",
+        padding: "6px 20px",
+        borderRadius: "999px",
+        border: `2px solid ${checkerColor}`,
+        color: "#FFFFFF",
+        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+        fontSize: "0.95rem",
+        fontWeight: 600,
+        cursor: "pointer",
+        opacity: active ? 1 : 0.55,
+        boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
+        transition: "opacity 0.15s ease",
+        ...getCheckerStyle(checkerColor),
+      }}
+    >
+      {format}
     </button>
   );
 }
@@ -463,9 +490,12 @@ export default function Home() {
 
               <div className="filter-row">
                 {FORMATS.map((f) => (
-                  <button key={f.id} className={`chip ${filters.format === f.id ? "chip-active" : ""}`} onClick={() => setFilter("format", f.id)}>
-                    {f.label}
-                  </button>
+                  <FormatFilterButton
+                    key={f.id}
+                    format={f.label}
+                    active={filters.format === f.id}
+                    onClick={() => setFilter("format", f.id)}
+                  />
                 ))}
                 <span className="filter-divider" />
                 {PARCOURS.map((p) => (
