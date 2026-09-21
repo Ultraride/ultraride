@@ -200,6 +200,17 @@ export default function RaceDetail() {
 
       <p className="muted" style={{ marginTop: 20, whiteSpace: "pre-line" }}>{race.long_blurb || race.blurb}</p>
 
+      {race.registration_url && (
+        <a
+          href={race.registration_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary"
+        >
+          S'inscrire
+        </a>
+      )}
+
       <OrganizerBox race={race} />
 
       <Comments raceId={race.id} />
