@@ -123,14 +123,24 @@ function groupByEvent(list) {
 function RaceCarousel({ title, subtitle, races }) {
   const trackRef = useRef(null);
   const [overflowing, setOverflowing] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
-    const check = () => setOverflowing(el.scrollWidth > el.clientWidth + 8);
+    const check = () => {
+      setOverflowing(el.scrollWidth > el.clientWidth + 8);
+      setCanScrollLeft(el.scrollLeft > 4);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
     check();
     window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    el.addEventListener("scroll", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      el.removeEventListener("scroll", check);
+    };
   }, [races]);
 
   const scrollBy = (dir) => {
@@ -155,17 +165,47 @@ function RaceCarousel({ title, subtitle, races }) {
           </div>
         )}
       </div>
-      <div className="carousel-track" ref={trackRef}>
-        {races.map((r) => (
-          <div className="carousel-item" key={r.id}>
-            <RaceCard race={r} />
-            {r._distanceKm != null && (
-              <div className="carousel-item-distance">
-                à {Math.round(r._distanceKm)} km de toi
-              </div>
-            )}
-          </div>
-        ))}
+      <div style={{ position: "relative" }}>
+        <div className="carousel-track" ref={trackRef}>
+          {races.map((r) => (
+            <div className="carousel-item" key={r.id}>
+              <RaceCard race={r} />
+              {r._distanceKm != null && (
+                <div className="carousel-item-distance">
+                  à {Math.round(r._distanceKm)} km de toi
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {canScrollLeft && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: "70px",
+              background: "linear-gradient(to left, transparent, var(--ink))",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
+        {canScrollRight && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "70px",
+              background: "linear-gradient(to right, transparent, var(--ink))",
+              pointerEvents: "none",
+            }}
+          />
+        )}
       </div>
     </section>
   );
