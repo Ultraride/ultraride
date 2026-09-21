@@ -144,8 +144,8 @@ export default function RaceDetail() {
   // échoue, ça ne doit jamais empêcher l'affichage de la course.
   useEffect(() => {
     if (!id) return;
-    supabase.rpc("increment_race_views", { race_id: id }).then(({ error }) => {
-      if (error) console.warn("increment_race_views:", error.message);
+    supabase.rpc("increment_race_view", { p_race_id: id }).then(({ error }) => {
+      if (error) console.warn("increment_race_view:", error.message);
     });
   }, [id]);
 
