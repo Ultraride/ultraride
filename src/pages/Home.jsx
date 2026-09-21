@@ -20,7 +20,7 @@ const PARCOURS = [
 const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
-const EMPTY_FILTERS = { discipline: null, format: null, parcours: null, mode: "", country: "", month: "", reg: "" };
+const EMPTY_FILTERS = { discipline: null, format: null, parcours: "", mode: "", country: "", month: "", reg: "" };
 
 // Rayon maximum et nombre de fiches du bloc « Près de chez moi ».
 const NEARBY_RADIUS_KM = 400;
@@ -503,22 +503,20 @@ export default function Home() {
                     onClick={() => setFilter("format", f.id)}
                   />
                 ))}
-                <span className="filter-divider" />
-                {PARCOURS.map((p) => (
-                  <button key={p.id} className={`chip ${filters.parcours === p.id ? "chip-active" : ""}`} onClick={() => setFilter("parcours", p.id)}>
-                    {p.label}
-                  </button>
-                ))}
               </div>
 
               <div className="filter-row">
+                <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
+                  <option value="">Pays : tous</option>
+                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
                 <select value={filters.mode} onChange={(e) => setFilters((f) => ({ ...f, mode: e.target.value }))}>
                   <option value="">Mode : tous</option>
                   {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
-                <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
-                  <option value="">Pays : tous</option>
-                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                <select value={filters.parcours} onChange={(e) => setFilters((f) => ({ ...f, parcours: e.target.value }))}>
+                  <option value="">Parcours : tous</option>
+                  {PARCOURS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
                 <select value={filters.month} onChange={(e) => setFilters((f) => ({ ...f, month: e.target.value }))}>
                   <option value="">Mois : tous</option>
