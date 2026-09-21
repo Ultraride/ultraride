@@ -152,7 +152,9 @@ function FormatFilterButton({ format, active, onClick }) {
     <button
       onClick={onClick}
       style={{
-        display: "inline-block",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
         padding: "6px 20px",
         borderRadius: "999px",
         border: `2px solid ${darken(color, 0.25)}`,
@@ -165,10 +167,12 @@ function FormatFilterButton({ format, active, onClick }) {
         opacity: active ? 1 : 0.55,
         boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
         transition: "opacity 0.15s ease",
+        lineHeight: 1,
         whiteSpace: "nowrap",
       }}
     >
-      {format} {emoji}
+      {format}
+      <span style={{ fontSize: "0.85em" }}>{emoji}</span>
     </button>
   );
 }

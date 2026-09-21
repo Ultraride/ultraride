@@ -40,8 +40,10 @@ function FormatBadge({ format }) {
   return (
     <span
       style={{
-        display: "inline-block",
-        padding: "2px 10px",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "3px 10px",
         borderRadius: "999px",
         border: `2px solid ${darken(color, 0.25)}`,
         color: "#FFFFFF",
@@ -51,10 +53,12 @@ function FormatBadge({ format }) {
         fontWeight: 600,
         textTransform: "uppercase",
         letterSpacing: "0.03em",
+        lineHeight: 1,
         whiteSpace: "nowrap",
       }}
     >
-      {format} {emoji}
+      {format}
+      <span style={{ fontSize: "0.85em" }}>{emoji}</span>
     </span>
   );
 }
