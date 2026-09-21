@@ -501,11 +501,11 @@ export default function Home() {
 
           <div className="wrap">
             <div className="filter-panel">
-              <div className="filter-panel-head">
-                <span>Filtres</span>
+              <div className="filter-panel-head" style={{ justifyContent: "flex-end" }}>
                 <button onClick={resetFilters} className="filter-reset">Réinitialiser</button>
               </div>
 
+              <div className="filter-section-title">Discipline</div>
               <div className="filter-row">
                 {DISCIPLINES.map((d) => (
                   <DisciplineFilterButton
@@ -517,6 +517,7 @@ export default function Home() {
                 ))}
               </div>
 
+              <div className="filter-section-title" style={{ marginTop: "16px" }}>Format</div>
               <div className="filter-row">
                 {FORMATS.map((f) => (
                   <FormatFilterButton
@@ -528,7 +529,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="filter-row">
+              <div className="filter-row" style={{ marginTop: "16px" }}>
                 <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
                   <option value="">Pays : tous</option>
                   {countries.map((c) => <option key={c} value={c}>{c}</option>)}
