@@ -152,6 +152,16 @@ function RaceCarousel({ title, subtitle, races }) {
   const [overflowing, setOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [fadeWidth, setFadeWidth] = useState(70);
+
+  useEffect(() => {
+    const updateFadeWidth = () => {
+      setFadeWidth(window.innerWidth < 640 ? 28 : 70);
+    };
+    updateFadeWidth();
+    window.addEventListener("resize", updateFadeWidth);
+    return () => window.removeEventListener("resize", updateFadeWidth);
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -213,7 +223,7 @@ function RaceCarousel({ title, subtitle, races }) {
               top: 0,
               left: 0,
               bottom: 0,
-              width: "70px",
+              width: fadeWidth,
               background: "linear-gradient(to left, transparent, var(--ink))",
               pointerEvents: "none",
             }}
@@ -227,7 +237,7 @@ function RaceCarousel({ title, subtitle, races }) {
               top: 0,
               right: 0,
               bottom: 0,
-              width: "70px",
+              width: fadeWidth,
               background: "linear-gradient(to right, transparent, var(--ink))",
               pointerEvents: "none",
             }}
