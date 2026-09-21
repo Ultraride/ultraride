@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 
 // La plupart des courses sont en Europe ; quelques-unes (Canada, Brésil,
@@ -11,6 +11,16 @@ const EUROPE_BOUNDS = [[38.57, -8.75], [58.57, 24.25]];
 export default function OverviewMap({ races }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const [markerRadius, setMarkerRadius] = useState(7);
+
+  useEffect(() => {
+    const updateRadius = () => {
+      setMarkerRadius(window.innerWidth < 640 ? 5 : 7);
+    };
+    updateRadius();
+    window.addEventListener("resize", updateRadius);
+    return () => window.removeEventListener("resize", updateRadius);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -31,7 +41,7 @@ export default function OverviewMap({ races }) {
       const lat = r.start_lat ?? r.lat;
       const lon = r.start_lon ?? r.lon;
       const marker = L.circleMarker([lat, lon], {
-        radius: 7,
+        radius: markerRadius,
         weight: 2,
         color: r.open ? "#C4622D" : "#C1543F",
         fillColor: r.open ? "#C4622D" : "#C1543F",
@@ -55,7 +65,7 @@ export default function OverviewMap({ races }) {
 
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
-  }, [races]);
+  }, [races, markerRadius]);
 
   return (
     <div className="map-box">
