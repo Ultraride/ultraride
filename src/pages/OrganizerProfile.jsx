@@ -40,7 +40,11 @@ export default function OrganizerProfile() {
           setForm(EMPTY_FORM);
         }
       });
-  }, [user]);
+    // Depend on user.id (stable) rather than the user object: Supabase
+    // refreshes the session object (new reference, same user) whenever the
+    // tab regains focus, which would otherwise re-run this fetch and wipe
+    // out unsaved edits.
+  }, [user?.id]);
 
   if (loading) return <div className="wrap" style={{ paddingTop: 60 }}><p className="muted">Chargement…</p></div>;
   if (!user) return <Navigate to="/login" replace />;
