@@ -213,7 +213,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_date, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_date, created_at, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
       .then(({ data, error }) => {
         if (error) setError(error.message);
@@ -290,6 +290,13 @@ export default function Home() {
       .filter((r) => (r.view_count || 0) > 0)
       .sort(withImageFirst((a, b) => (b.view_count || 0) - (a.view_count || 0)))
       .slice(0, 12);
+  }, [races]);
+
+  const latestAdditions = useMemo(() => {
+    if (!races) return [];
+    return [...races]
+      .sort(withImageFirst((a, b) => new Date(b.created_at) - new Date(a.created_at)))
+      .slice(0, 10);
   }, [races]);
 
   const nearby = useMemo(() => {
@@ -477,6 +484,12 @@ export default function Home() {
                 title="Les plus consultées"
                 subtitle="Ce que regardent les autres coureurs"
                 races={mostViewed}
+              />
+
+              <RaceCarousel
+                title="Derniers ajouts"
+                subtitle="Les nouvelles aventures qui viennent d'arriver"
+                races={latestAdditions}
               />
             </div>
           )}
