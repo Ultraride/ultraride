@@ -54,6 +54,28 @@ function monthIndex(month) {
   return i === -1 ? 12 : i;
 }
 
+// Vrai si la course a lieu ce mois-ci, en tenant compte de l'année quand
+// start_date est renseignée — évite qu'une édition future du même mois
+// (ex: septembre 2027) ne remonte dans "Ce mois-ci" de l'année en cours.
+function isThisMonth(race) {
+  const now = new Date();
+
+  if (race.start_date) {
+    const start = new Date(race.start_date);
+    return (
+      start.getFullYear() === now.getFullYear() &&
+      start.getMonth() === now.getMonth()
+    );
+  }
+
+  // Repli : pas de start_date renseignée pour cette course, on ne peut pas
+  // vérifier l'année — on garde l'ancien comportement (match sur le mois texte).
+  // Le risque de faux positif (mauvaise année) reste présent pour ces courses-là
+  // tant que leur start_date n'est pas complétée en base.
+  const currentMonthName = MONTHS[now.getMonth()];
+  return race.month === currentMonthName;
+}
+
 function chronoKey(race) {
   if (race.start_date) {
     const d = new Date(race.start_date);
@@ -383,7 +405,8 @@ export default function Home() {
     for (let offset = 0; offset < 12; offset++) {
       const idx = (start + offset) % 12;
       const label = MONTHS[idx];
-      const list = races.filter((r) => monthIndex(r.month) === idx).sort(withImageFirst(byChrono));
+      const list = (offset === 0 ? races.filter(isThisMonth) : races.filter((r) => monthIndex(r.month) === idx))
+        .sort(withImageFirst(byChrono));
       if (list.length > 0) {
         const picked = list.slice(0, 12);
         // L'année vient des courses elles-mêmes quand start_date est
