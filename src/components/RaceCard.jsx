@@ -7,6 +7,8 @@ import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
 
 const FORMAT_LABEL = { course: "Course", aventure: "Aventure", endurance: "Endurance" };
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
+const PARCOURS_EMOJI = { boucle: "🔁", point: "📌", ar: "🔄" };
+const MODE_EMOJI = { Autonomie: "🎒", "Semi-autonomie": "🧳", Assisté: "🚚" };
 
 function DisciplineBadge({ discipline }) {
   const color = DISCIPLINE_COLORS[discipline] || "#6E6E66";
@@ -105,9 +107,35 @@ export default function RaceCard({ race }) {
 
         <div className="race-card-tags">
           {race.format && <FormatBadge format={FORMAT_LABEL[race.format] || race.format} />}
-          {race.parcours && <span className="tag">{PARCOURS_LABEL[race.parcours] || race.parcours}</span>}
-          {race.mode && <span className="tag">{race.mode}</span>}
         </div>
+
+        {(race.parcours || race.mode) && (
+          <div
+            style={{
+              display: "flex",
+              gap: "16px",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              background: "#F9F7F0",
+              border: "1px solid #E5E0D0",
+              marginTop: "8px",
+              marginBottom: "8px",
+              fontSize: "0.9rem",
+              color: "#3A3A32",
+            }}
+          >
+            {race.parcours && (
+              <span>
+                {PARCOURS_EMOJI[race.parcours]} {PARCOURS_LABEL[race.parcours] || race.parcours}
+              </span>
+            )}
+            {race.mode && (
+              <span>
+                {MODE_EMOJI[race.mode]} {race.mode}
+              </span>
+            )}
+          </div>
+        )}
       </Link>
 
       {/* Organizer footer lives OUTSIDE the race Link to avoid click conflicts */}
