@@ -35,24 +35,33 @@ function DisciplineBadge({ discipline }) {
 }
 
 function FormatBadge({ format }) {
-  const checkerColor = FORMAT_CHECKER_COLORS[format] || "#000000";
+  const color = FORMAT_CHECKER_COLORS[format] || "#000000";
   return (
     <span
       style={{
         display: "inline-block",
-        padding: "2px 10px",
+        padding: "3px",
         borderRadius: "999px",
-        border: `2px solid ${checkerColor}`,
-        color: "#FFFFFF",
-        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.03em",
-        ...getCheckerStyle(checkerColor),
+        ...getCheckerStyle(color),
       }}
     >
-      {format}
+      <span
+        style={{
+          display: "block",
+          padding: "2px 10px",
+          borderRadius: "999px",
+          backgroundColor: color,
+          color: "#FFFFFF",
+          textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+          fontSize: "0.75rem",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.03em",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {format}
+      </span>
     </span>
   );
 }
