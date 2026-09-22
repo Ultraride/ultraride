@@ -497,8 +497,8 @@ export default function Home() {
         <div className="eyebrow">Répertoire ultra-distance · France &amp; Europe</div>
         <h1 className="hero-title">Trouve ta trace.</h1>
         <p className="hero-sub">
-          Ultras, aventures et défis d'endurance à vélo. Gravel, route, VTT — filtre par mode, terrain et calendrier
-          pour construire ta prochaine sortie.
+          Des ultras, des aventures, des défis d'endurance à vélo. Gravel, route ou VTT — filtre par mode, terrain et
+          calendrier, et pars à la recherche de ta prochaine trace.
         </p>
 
         {races && (
@@ -509,6 +509,18 @@ export default function Home() {
             <div><div className="hero-stat-num">{organizerCount}</div><div className="hero-stat-label">Organisateurs</div></div>
           </div>
         )}
+      </div>
+
+      <div className="why-section">
+        <div className="wrap why-section-inner">
+          <h2 className="why-section-title">Pourquoi UltraRide ?</h2>
+          <p className="why-section-text">
+            L'ultra-distance à vélo est un monde éclaté entre des dizaines de sites d'organisateurs, de groupes
+            Facebook et de forums épars. UltraRide rassemble ces épreuves : gravel, route, VTT, en autonomie,
+            semi-autonomie ou assisté ; dans un seul répertoire clair, pensé pour t'aider à trouver la course qui te
+            correspond sans passer des heures à chercher.
+          </p>
+        </div>
       </div>
 
       {error && <div className="wrap"><div className="error-box">{error}</div></div>}
