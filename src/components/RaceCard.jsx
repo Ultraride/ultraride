@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
@@ -67,6 +68,17 @@ function FormatBadge({ format }) {
 
 export default function RaceCard({ race }) {
   const hasOrganizerFooter = race.organizer && (race.organizer.name || race.organizer.logo_url);
+  const blurbRef = useRef(null);
+  const [blurbTruncated, setBlurbTruncated] = useState(false);
+
+  useEffect(() => {
+    const el = blurbRef.current;
+    if (!el) return;
+    const check = () => setBlurbTruncated(el.scrollHeight > el.clientHeight + 1);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [race.blurb]);
 
   return (
     <div className="race-card-wrapper">
@@ -101,7 +113,12 @@ export default function RaceCard({ race }) {
           </div>
         </div>
 
-        {race.blurb && <p className="race-card-blurb">{race.blurb}</p>}
+        {race.blurb && (
+          <>
+            <p className="race-card-blurb" ref={blurbRef}>{race.blurb}</p>
+            {blurbTruncated && <span className="race-card-read-more">Lire plus →</span>}
+          </>
+        )}
 
         <div className="race-card-stats">
           <span>{race.km ?? "—"} <small>km</small></span>
