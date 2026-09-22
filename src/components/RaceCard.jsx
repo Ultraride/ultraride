@@ -70,15 +70,23 @@ export default function RaceCard({ race }) {
   const hasOrganizerFooter = race.organizer && (race.organizer.name || race.organizer.logo_url);
   const blurbRef = useRef(null);
   const [blurbTruncated, setBlurbTruncated] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
+    if (expanded) return;
     const el = blurbRef.current;
     if (!el) return;
     const check = () => setBlurbTruncated(el.scrollHeight > el.clientHeight + 1);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
-  }, [race.blurb]);
+  }, [race.blurb, expanded]);
+
+  const toggleExpanded = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpanded((v) => !v);
+  };
 
   return (
     <div className="race-card-wrapper">
@@ -115,8 +123,18 @@ export default function RaceCard({ race }) {
 
         {race.blurb && (
           <>
-            <p className="race-card-blurb" ref={blurbRef}>{race.blurb}</p>
-            {blurbTruncated && <span className="race-card-read-more">Lire plus →</span>}
+            <p
+              className="race-card-blurb"
+              ref={blurbRef}
+              style={expanded ? undefined : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+            >
+              {race.blurb}
+            </p>
+            {blurbTruncated && (
+              <button type="button" className="race-card-read-more" onClick={toggleExpanded}>
+                {expanded ? "Lire moins" : "Lire plus →"}
+              </button>
+            )}
           </>
         )}
 

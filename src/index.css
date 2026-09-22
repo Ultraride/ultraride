@@ -159,8 +159,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-card-top>div:first-child{min-width:0;}
 .race-card-loc{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
 .race-card-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.2;color:var(--paper);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.race-card-blurb{font-size:13px;color:var(--paperDim);line-height:1.5;margin:0 0 10px;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}
-.race-card-read-more{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--moss);margin:-6px 0 10px;}
+.race-card-blurb{font-size:13px;color:var(--paperDim);line-height:1.5;margin:0 0 10px;white-space:pre-line;}
+.race-card-read-more{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--moss);background:none;border:none;padding:0;margin:-6px 0 10px;cursor:pointer;}
 .race-card-stats{display:flex;align-items:center;gap:16px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;color:var(--paper);}
 .race-card-stats small{color:var(--paperDim);}
 .race-card-month{margin-left:auto;color:var(--paperDim);font-size:11px;}
