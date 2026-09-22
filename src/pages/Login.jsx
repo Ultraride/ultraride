@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 
 export default function Login() {
   const { signInWithPassword, signUp, sendPasswordReset, user } = useAuth();
-  const [mode, setMode] = useState("signin"); // "signin" | "signup" | "forgot"
+  const [searchParams] = useSearchParams();
+  // Permet de pointer directement sur le formulaire d'inscription depuis
+  // un lien externe (ex: nav "Créer un compte") via /login?mode=signup.
+  const [mode, setMode] = useState(searchParams.get("mode") === "signup" ? "signup" : "signin"); // "signin" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [consent, setConsent] = useState(true);

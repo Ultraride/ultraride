@@ -27,7 +27,10 @@ export default function Header() {
         {user ? (
           <button onClick={signOut}>Déconnexion</button>
         ) : (
-          <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>Connexion</NavLink>
+          <>
+            <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>Connexion</NavLink>
+            <NavLink to="/login?mode=signup" className={({ isActive }) => (isActive ? "active" : "")}>Créer un compte</NavLink>
+          </>
         )}
       </nav>
     </header>
