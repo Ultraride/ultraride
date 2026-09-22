@@ -159,7 +159,7 @@ export default function PendingRaces() {
 
   return (
     <div>
-      <h1 className="h1">Courses à valider</h1>
+      <h1 className="h1">Ultras à valider</h1>
       {error && <div className="error-box">{error}</div>}
 
       {races === null ? (
