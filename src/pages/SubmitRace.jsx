@@ -40,7 +40,7 @@ export default function SubmitRace() {
   if (sent) {
     return (
       <div className="wrap" style={{ paddingTop: 60, maxWidth: 480 }}>
-        <h1 className="h1">Proposer une course</h1>
+        <h1 className="h1">Proposer un ultra</h1>
         <div className="success-box">
           Merci, votre proposition a été transmise, nous reviendrons vers vous rapidement.
         </div>
@@ -50,10 +50,10 @@ export default function SubmitRace() {
 
   return (
     <div className="wrap" style={{ paddingTop: 60, paddingBottom: 60, maxWidth: 480 }}>
-      <h1 className="h1">Proposer une course</h1>
+      <h1 className="h1">Proposer un ultra</h1>
       <p className="muted" style={{ marginTop: -8, marginBottom: 20, fontSize: 14 }}>
-        Vous organisez une course ou en connaissez une qui mériterait sa place dans le répertoire ?
-        Décrivez-la ci-dessous, nous reviendrons vers vous.
+        Vous organisez un ultra ou en connaissez un qui mériterait sa place dans le répertoire ?
+        Décrivez-le ci-dessous, nous reviendrons vers vous.
       </p>
 
       <form onSubmit={handleSubmit} className="panel">
