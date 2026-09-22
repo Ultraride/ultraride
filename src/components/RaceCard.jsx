@@ -130,11 +130,16 @@ export default function RaceCard({ race }) {
             >
               {race.blurb}
             </p>
-            {blurbTruncated && (
-              <button type="button" className="race-card-read-more" onClick={toggleExpanded}>
-                {expanded ? "Lire moins" : "Lire plus →"}
-              </button>
-            )}
+            <button
+              type="button"
+              className="race-card-read-more"
+              onClick={toggleExpanded}
+              style={{ visibility: blurbTruncated ? "visible" : "hidden" }}
+              aria-hidden={!blurbTruncated}
+              tabIndex={blurbTruncated ? 0 : -1}
+            >
+              {expanded ? "Lire moins" : "Lire plus →"}
+            </button>
           </>
         )}
 
