@@ -78,7 +78,7 @@ export default function OrganizerProfile() {
     <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60, maxWidth: 520 }}>
       <h1 className="h1">Fiche organisateur</h1>
       <p className="muted" style={{ marginBottom: 24 }}>
-        Renseigne ces informations une seule fois — elles s'afficheront automatiquement sur toutes les courses que tu soumets, dans un encadré "Organisé par".
+        Renseigne ces informations une seule fois — elles s'afficheront automatiquement sur tous les ultras que tu soumets, dans un encadré "Organisé par".
       </p>
 
       {error && <div className="error-box">{error}</div>}

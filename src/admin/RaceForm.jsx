@@ -121,7 +121,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   // cette mise à jour renvoie la course en validation.
   const requestDeletion = async () => {
     const reason = window.prompt(
-      "Pourquoi cette course doit-elle être retirée du répertoire ?\n(édition annulée, doublon, erreur de saisie…)",
+      "Pourquoi cet ultra doit-il être retiré du répertoire ?\n(édition annulée, doublon, erreur de saisie…)",
       ""
     );
     if (reason === null) return;
@@ -157,7 +157,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="panel">
-      <div className="h2">{race?.id ? "Modifier la course" : "Nouvelle course"}</div>
+      <div className="h2">{race?.id ? "Modifier l'ultra" : "Nouvel ultra"}</div>
       {!isAdmin && (
         <p className="muted" style={{ fontSize: 13, marginTop: -4 }}>
           Ta soumission sera relue par un administrateur avant d'apparaître dans le répertoire.
@@ -171,7 +171,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       </div>
 
       <ImageUploadField
-        label="Image de la course"
+        label="Image de l'ultra"
         value={form.image_url}
         onChange={(v) => field("image_url", v)}
         folder="races"
@@ -368,7 +368,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             <>
               <input value={linkedOrganizer.name} disabled />
               <div className="field-hint">
-                Cette course sera rattachée à ta fiche organisateur : ton logo et tes liens
+                Cet ultra sera rattaché à ta fiche organisateur : ton logo et tes liens
                 s'afficheront automatiquement dessus.
               </div>
             </>
@@ -382,7 +382,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
               <div className="error-box" style={{ marginTop: 8 }}>
                 Aucune fiche organisateur n'est liée à ce compte ({user?.email}). Renseigne-la dans
                 « Fiche organisateur » avant de soumettre : sans elle, ni ton logo ni tes liens
-                n'apparaîtront sur la course.
+                n'apparaîtront sur l'ultra.
               </div>
             </>
           )}
@@ -397,7 +397,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           placeholder="Race Across France"
         />
         <div className="field-hint">
-          Laisse vide si la course est isolée. Renseigné à l'identique sur plusieurs courses, ce
+          Laisse vide si l'ultra est isolé. Renseigné à l'identique sur plusieurs ultras, ce
           libellé les regroupe en une seule carte dans le répertoire, avec une page dédiée listant
           les formats.
         </div>
@@ -438,7 +438,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             <>
               <div className="deletion-request-label">Suppression demandée</div>
               <p className="muted" style={{ fontSize: 13, margin: "4px 0 10px" }}>
-                Un administrateur va examiner ta demande. La course reste visible dans le répertoire
+                Un administrateur va examiner ta demande. L'ultra reste visible dans le répertoire
                 jusqu'à ce qu'il la traite.
               </p>
               <button
@@ -452,7 +452,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             </>
           ) : (
             <>
-              <div className="deletion-request-label">Cette course ne doit plus figurer au répertoire ?</div>
+              <div className="deletion-request-label">Cet ultra ne doit plus figurer au répertoire ?</div>
               <p className="muted" style={{ fontSize: 13, margin: "4px 0 10px" }}>
                 Tu ne peux pas la supprimer toi-même : signale-la avec un motif, un administrateur
                 s'en chargera.

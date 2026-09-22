@@ -154,7 +154,7 @@ export default function RaceDetail() {
 
   return (
     <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60, maxWidth: 800 }}>
-      <Link to="/" className="muted" style={{ fontSize: 13 }}>← Toutes les courses</Link>
+      <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
         <h1 className="h1" style={{ margin: 0 }}>{race.name}</h1>
         <FavoriteButton raceId={race.id} size={22} />

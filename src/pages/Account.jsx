@@ -62,7 +62,7 @@ function InfoSection() {
             checked={marketingConsent}
             onChange={(e) => setMarketingConsent(e.target.checked)}
           />
-          <span>Recevoir des communications par email (nouvelles courses, actualités du site).</span>
+          <span>Recevoir des communications par email (nouveaux ultras, actualités du site).</span>
         </label>
         <button className="btn btn-primary" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
@@ -144,12 +144,12 @@ function FavoritesSection() {
 
   return (
     <div className="panel" style={{ marginBottom: 24 }}>
-      <div className="h2">Mes courses favorites</div>
+      <div className="h2">Mes ultras favoris</div>
       {error && <div className="error-box">{error}</div>}
       {favorites === null ? (
         <p className="muted">Chargement…</p>
       ) : favorites.length === 0 ? (
-        <p className="muted">Aucune course en favori pour l'instant — clique sur l'étoile d'une fiche course pour l'ajouter ici.</p>
+        <p className="muted">Aucun ultra en favori pour l'instant — clique sur l'étoile d'une fiche ultra pour l'ajouter ici.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {favorites.map((f) => (
@@ -160,7 +160,7 @@ function FavoritesSection() {
                   <span className="muted mono" style={{ fontSize: 12 }}>· {f.race.country} · {f.race.km} km · {f.race.month}</span>
                 </Link>
               ) : (
-                <span className="muted">Course supprimée</span>
+                <span className="muted">Ultra supprimé</span>
               )}
               <button className="btn" onClick={() => remove(f.id)}>Retirer</button>
             </div>
@@ -210,7 +210,7 @@ function CommentsSection() {
             <div key={c.id} className="card">
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <div className="mono muted" style={{ fontSize: 12 }}>
-                  {c.race ? <Link to={`/courses/${c.race.id}`}>{c.race.name}</Link> : "Course supprimée"}
+                  {c.race ? <Link to={`/courses/${c.race.id}`}>{c.race.name}</Link> : "Ultra supprimé"}
                   {c.status === "hidden" && <span className="badge badge-hidden" style={{ marginLeft: 8 }}>Masqué par un admin</span>}
                 </div>
                 {c.deletion_requested ? (

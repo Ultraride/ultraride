@@ -92,7 +92,7 @@ export default function CommentsModeration() {
             }>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <div className="muted mono" style={{ fontSize: 12 }}>
-                  {c.race?.name || "course supprimée"} · {c.author?.display_name || c.author?.email || "Utilisateur supprimé"}
+                  {c.race?.name || "ultra supprimé"} · {c.author?.display_name || c.author?.email || "Utilisateur supprimé"}
                   {c.rating ? ` · ${c.rating}/5` : ""}
                   {c.status === "pending" && <span className="badge badge-published" style={{ marginLeft: 8 }}>En attente</span>}
                   {c.status === "visible" && <span className="badge badge-published" style={{ marginLeft: 8 }}>Visible</span>}

@@ -57,7 +57,7 @@ export default function OrganizerRaces() {
       <div className="wrap" style={{ paddingTop: 60, maxWidth: 480 }}>
         <h1 className="h1">Réservé aux organisateurs</h1>
         <p className="muted">
-          Cet espace permet de soumettre des courses au répertoire. Si tu organises un événement,
+          Cet espace permet de soumettre des ultras au répertoire. Si tu organises un événement,
           contacte l'administrateur pour faire passer ton compte en organisateur.
         </p>
       </div>
@@ -68,7 +68,7 @@ export default function OrganizerRaces() {
     return (
       <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60, maxWidth: 640 }}>
         <button className="filter-reset" style={{ marginBottom: 16 }} onClick={() => setEditing(null)}>
-          ← Retour à mes courses
+          ← Retour à mes ultras
         </button>
         <RaceForm
           race={editing.id ? editing : null}
@@ -104,8 +104,8 @@ export default function OrganizerRaces() {
         <p className="muted">Chargement…</p>
       ) : sorted.length === 0 ? (
         <div className="empty-box">
-          <p className="muted">Tu n'as encore soumis aucune course.</p>
-          <button className="filter-reset" onClick={() => setEditing({})}>Soumettre ma première course</button>
+          <p className="muted">Tu n'as encore soumis aucun ultra.</p>
+          <button className="filter-reset" onClick={() => setEditing({})}>Soumettre mon premier ultra</button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

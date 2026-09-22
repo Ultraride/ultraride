@@ -41,7 +41,7 @@ export default function RaceSubmissions() {
 
   return (
     <div>
-      <h1 className="h1">Propositions de course</h1>
+      <h1 className="h1">Propositions d'ultra</h1>
       {newCount > 0 && (
         <div style={{ marginBottom: 16 }}>
           <span className="badge badge-pending">{newCount} nouvelle{newCount !== 1 ? "s" : ""}</span>

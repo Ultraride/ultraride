@@ -462,13 +462,13 @@ export default function Home() {
         <div className="eyebrow">Répertoire ultra-distance · France &amp; Europe</div>
         <h1 className="hero-title">Trouve ta trace.</h1>
         <p className="hero-sub">
-          Courses, aventures et défis d'endurance à vélo. Gravel, route, VTT — filtre par mode, terrain et calendrier
+          Ultras, aventures et défis d'endurance à vélo. Gravel, route, VTT — filtre par mode, terrain et calendrier
           pour construire ta prochaine sortie.
         </p>
 
         {races && (
           <div className="hero-stats">
-            <div><div className="hero-stat-num">{races.length}</div><div className="hero-stat-label">Courses référencées</div></div>
+            <div><div className="hero-stat-num">{races.length}</div><div className="hero-stat-label">Ultras référencés</div></div>
             <div><div className="hero-stat-num">{countries.length}</div><div className="hero-stat-label">Pays couverts</div></div>
             <div><div className="hero-stat-num">{DISCIPLINES.length}</div><div className="hero-stat-label">Disciplines</div></div>
             <div><div className="hero-stat-num">{organizerCount}</div><div className="hero-stat-label">Organisateurs</div></div>
@@ -488,7 +488,7 @@ export default function Home() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher une course, un lieu, un organisateur…"
+                placeholder="Rechercher un ultra, un lieu, un organisateur…"
                 aria-label="Rechercher"
               />
               {search && (
@@ -599,7 +599,7 @@ export default function Home() {
                     {geoStatus === "denied" && (
                       <>
                         <p className="muted" style={{ margin: 0 }}>
-                          Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les courses proches.
+                          Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les ultras proches.
                         </p>
                         <button type="button" className="btn" onClick={requestLocation}>Réessayer</button>
                       </>
@@ -612,7 +612,7 @@ export default function Home() {
                     {geoStatus === "idle" && (
                       <>
                         <p className="muted" style={{ margin: 0 }}>
-                          Autorise la géolocalisation pour découvrir les courses les plus proches de toi.
+                          Autorise la géolocalisation pour découvrir les ultras les plus proches de toi.
                           Ta position reste dans ton navigateur, elle n'est ni envoyée ni enregistrée.
                         </p>
                         <button type="button" className="btn btn-primary" onClick={requestLocation}>
@@ -639,9 +639,9 @@ export default function Home() {
           )}
 
           <div className="wrap" style={{ paddingBottom: 60 }}>
-            {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Toutes les courses</h2>}
+            {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Tous les ultras</h2>}
             <div className="results-count">
-              {filtered.length} course{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
+              {filtered.length} ultra{filtered.length !== 1 ? "s" : ""} trouvé{filtered.length !== 1 ? "s" : ""}
               {gridEntries.length !== filtered.length && ` · ${gridEntries.length} entrée${gridEntries.length !== 1 ? "s" : ""}`}
             </div>
             {filtered.length === 0 ? (

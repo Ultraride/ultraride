@@ -27,8 +27,8 @@ export default function EventPage() {
   if (races.length === 0) {
     return (
       <div className="wrap" style={{ paddingTop: 40 }}>
-        <p className="muted">Cet événement n'existe pas ou n'a aucune course publiée.</p>
-        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Toutes les courses</Link>
+        <p className="muted">Cet événement n'existe pas ou n'a aucun ultra publié.</p>
+        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function EventPage() {
 
   return (
     <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60 }}>
-      <Link to="/" className="muted" style={{ fontSize: 13 }}>← Toutes les courses</Link>
+      <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
 
       <h1 className="h1" style={{ marginTop: 12 }}>{eventName}</h1>
       <div className="muted mono" style={{ fontSize: 13 }}>

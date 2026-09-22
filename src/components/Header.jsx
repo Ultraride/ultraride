@@ -11,12 +11,12 @@ export default function Header() {
       </NavLink>
       <nav className="top-nav">
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Ultra</NavLink>
-        <NavLink to="/proposer-course" className={({ isActive }) => (isActive ? "active" : "")}>Proposer une course</NavLink>
+        <NavLink to="/proposer-course" className={({ isActive }) => (isActive ? "active" : "")}>Proposer un ultra</NavLink>
         {user && (
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>Mon compte</NavLink>
         )}
         {(isOrganizer || isAdmin) && (
-          <NavLink to="/organizer/races" className={({ isActive }) => (isActive ? "active" : "")}>Mes courses</NavLink>
+          <NavLink to="/organizer/races" className={({ isActive }) => (isActive ? "active" : "")}>Mes ultras</NavLink>
         )}
         {(isOrganizer || isAdmin) && (
           <NavLink to="/organizer/profile" className={({ isActive }) => (isActive ? "active" : "")}>Fiche organisateur</NavLink>

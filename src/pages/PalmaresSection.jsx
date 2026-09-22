@@ -144,7 +144,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
 
   return (
     <div className="field">
-      <label>Nom de la course</label>
+      <label>Nom de l'ultra</label>
       {matchedRace ? (
         <div>
           <div className="race-search-matched">
@@ -177,7 +177,7 @@ function RaceSearchField({ value, onChangeText, onMatch, matchedRace, onClearMat
         </div>
       )}
       <div className="field-hint">
-        Si la course existe déjà dans le répertoire (édition passée ou future), sélectionne-la pour rapprocher ton résultat.
+        Si l'ultra existe déjà dans le répertoire (édition passée ou future), sélectionne-le pour rapprocher ton résultat.
       </div>
     </div>
   );
@@ -385,7 +385,7 @@ function AthleteCard({ profile, user, results, stats }) {
       <div className="print-stats">
         <div>
           <div className="print-stat-num">{stats.count}</div>
-          <div className="print-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
+          <div className="print-stat-label">Ultra{stats.count !== 1 ? "s" : ""}</div>
         </div>
         <div>
           <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
@@ -469,7 +469,7 @@ export default function PalmaresSection() {
           <div className="palmares-stats">
             <div>
               <div className="palmares-stat-num">{stats.count}</div>
-              <div className="palmares-stat-label">Course{stats.count !== 1 ? "s" : ""}</div>
+              <div className="palmares-stat-label">Ultra{stats.count !== 1 ? "s" : ""}</div>
             </div>
             <div>
               <div className="palmares-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>

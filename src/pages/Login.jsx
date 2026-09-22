@@ -134,8 +134,8 @@ export default function Login() {
             </div>
             <div className="field-hint">
               {accountType === "organizer"
-                ? "Tu pourras soumettre des courses — elles seront revues par un administrateur avant publication."
-                : "Tu pourras suivre des courses, laisser des avis et tenir ton palmarès."}
+                ? "Tu pourras soumettre des ultras — ils seront revus par un administrateur avant publication."
+                : "Tu pourras suivre des ultras, laisser des avis et tenir ton palmarès."}
             </div>
           </div>
         )}
@@ -150,7 +150,7 @@ export default function Login() {
             <span>
               J'accepte les <Link to="/rules" target="_blank" rel="noopener noreferrer">règles de bonne conduite</Link> du
               site et la <Link to="/cookies" target="_blank" rel="noopener noreferrer">politique de cookies</Link>, et
-              j'autorise UltraRide à m'envoyer des communications par email (nouvelles courses, actualités du site).
+              j'autorise UltraRide à m'envoyer des communications par email (nouveaux ultras, actualités du site).
               <span style={{ color: "var(--brick)" }}> *</span>
             </span>
           </label>

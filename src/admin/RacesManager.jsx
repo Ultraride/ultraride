@@ -103,8 +103,8 @@ export default function RacesManager() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
-        <h1 className="h1" style={{ margin: 0 }}>Toutes les courses</h1>
-        <button className="btn btn-primary" onClick={() => setEditing({})}>+ Nouvelle course</button>
+        <h1 className="h1" style={{ margin: 0 }}>Tous les ultras</h1>
+        <button className="btn btn-primary" onClick={() => setEditing({})}>+ Nouvel ultra</button>
       </div>
 
       <div className="search-bar" style={{ marginBottom: 16 }}>
@@ -112,7 +112,7 @@ export default function RacesManager() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher une course, un organisateur, un pays…"
+          placeholder="Rechercher un ultra, un organisateur, un pays…"
           aria-label="Rechercher"
         />
         {search && (
@@ -125,11 +125,11 @@ export default function RacesManager() {
       {races === null ? (
         <p className="muted">Chargement…</p>
       ) : groups.length === 0 ? (
-        <p className="muted">Aucune course ne correspond à cette recherche.</p>
+        <p className="muted">Aucun ultra ne correspond à cette recherche.</p>
       ) : (
         <>
           <div className="muted mono" style={{ fontSize: 12, marginBottom: 10 }}>
-            {groups.reduce((n, g) => n + g.races.length, 0)} course
+            {groups.reduce((n, g) => n + g.races.length, 0)} ultra
             {groups.reduce((n, g) => n + g.races.length, 0) !== 1 ? "s" : ""} ·{" "}
             {groups.length} organisateur{groups.length !== 1 ? "s" : ""}
             {searching && " · groupes dépliés automatiquement"}
@@ -147,7 +147,7 @@ export default function RacesManager() {
                   <span className="org-group-caret">{isOpen(g.name) ? "▾" : "▸"}</span>
                   <span className="org-group-name">{g.name}</span>
                   <span className="org-group-count">
-                    {g.races.length} course{g.races.length !== 1 ? "s" : ""}
+                    {g.races.length} ultra{g.races.length !== 1 ? "s" : ""}
                   </span>
                   {g.pending > 0 && <span className="badge badge-pending">{g.pending} en attente</span>}
                   {g.unpublished - g.pending > 0 && (

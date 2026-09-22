@@ -63,13 +63,13 @@ export default function OrganizerPage() {
       )}
 
       <div className="h2" style={{ marginTop: 32, marginBottom: 16 }}>
-        Courses ({races === null ? "…" : races.length})
+        Ultras ({races === null ? "…" : races.length})
       </div>
 
       {races === null ? (
         <p className="muted">Chargement…</p>
       ) : races.length === 0 ? (
-        <p className="muted">Aucune course publiée pour l'instant.</p>
+        <p className="muted">Aucun ultra publié pour l'instant.</p>
       ) : (
         <div className="race-grid">
           {races.map((r) => <RaceCard key={r.id} race={{ ...r, organizer: { name: organizer.name, logo_url: organizer.logo_url, id: organizer.id } }} />)}
@@ -77,7 +77,7 @@ export default function OrganizerPage() {
       )}
 
       <div style={{ marginTop: 32 }}>
-        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Toutes les courses</Link>
+        <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
       </div>
     </div>
   );

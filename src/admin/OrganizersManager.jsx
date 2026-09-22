@@ -168,7 +168,7 @@ export default function OrganizersManager() {
   });
 
   const remove = async (o) => {
-    if (!window.confirm(`Supprimer la fiche « ${o.name} » ? Les courses liées ne seront plus rattachées à un organisateur.`)) return;
+    if (!window.confirm(`Supprimer la fiche « ${o.name} » ? Les ultras liés ne seront plus rattachés à un organisateur.`)) return;
     const { error } = await supabase.from("organizers").delete().eq("id", o.id);
     if (error) setError(error.message);
     else load();

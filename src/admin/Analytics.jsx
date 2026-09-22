@@ -177,7 +177,7 @@ export default function Analytics() {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Course</th>
+                  <th>Ultra</th>
                   <th>Pays</th>
                   <th>Sur la période</th>
                   <th>Depuis le début</th>
