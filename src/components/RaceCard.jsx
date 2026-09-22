@@ -86,7 +86,7 @@ export default function RaceCard({ race }) {
               </span>
               {race.discipline && <DisciplineBadge discipline={race.discipline} />}
             </div>
-            <div className="race-card-title">{race.name}</div>
+            <div className="race-card-title" title={race.name}>{race.name}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <FavoriteButton raceId={race.id} />

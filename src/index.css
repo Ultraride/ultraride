@@ -155,8 +155,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-card-organizer-link{text-decoration:none;cursor:pointer;}
 .race-card-organizer-link:hover{color:var(--amber);}
 .race-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.race-card-top>div:first-child{min-width:0;}
 .race-card-loc{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
-.race-card-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.2;color:var(--paper);}
+.race-card-title{font-family:var(--disp);font-weight:400;font-size:18px;line-height:1.2;color:var(--paper);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .race-card-blurb{font-size:13px;color:var(--paperDim);line-height:1.5;margin:0 0 10px;white-space:pre-line;}
 .race-card-stats{display:flex;align-items:center;gap:16px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;color:var(--paper);}
 .race-card-stats small{color:var(--paperDim);}
