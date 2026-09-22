@@ -60,9 +60,9 @@ export default function AdminLayout() {
 
   const links = [
     { to: "/admin", label: "À valider", end: true, count: counts.races },
-    { to: "/admin/races", label: "Toutes les courses" },
+    { to: "/admin/races", label: "Tous les ultras" },
     { to: "/admin/comments", label: "Commentaires", count: counts.comments },
-    { to: "/admin/submissions", label: "Propositions de course", count: counts.submissions },
+    { to: "/admin/submissions", label: "Propositions d'ultra", count: counts.submissions },
     { to: "/admin/users", label: "Utilisateurs" },
     { to: "/admin/organizers", label: "Fiches organisateur" },
     { to: "/admin/analytics", label: "Supervision" },
