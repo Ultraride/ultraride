@@ -143,16 +143,19 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 /* ---------- results ---------- */
 .results-count{font-family:var(--mono);font-size:14px;color:var(--paperDim);margin-bottom:16px;}
 .empty-box{padding:64px 16px;text-align:center;border:1px dashed var(--line);border-radius:3px;}
-.race-grid{display:grid;grid-template-columns:1fr;gap:16px;}
-@media(min-width:768px){.race-grid{grid-template-columns:1fr 1fr;}}
-@media(min-width:1024px){.race-grid{grid-template-columns:1fr 1fr 1fr;}}
+.race-grid{display:grid;grid-template-columns:repeat(auto-fill, 300px);gap:16px;justify-content:center;}
+@media(min-width:768px){.race-grid{justify-content:start;}}
 
-/* ---------- race cue-card ---------- */
-.race-card-wrapper{display:flex;flex-direction:column;height:100%;}
-.race-card{display:block;flex:1 1 auto;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;transition:border-color .2s, transform .2s, box-shadow .2s;}
-.race-card--flat-bottom{flex:0 1 auto;border-bottom-left-radius:0;border-bottom-right-radius:0;}
+/* ---------- race cue-card ----------
+   Fixed 300x480 box everywhere a card renders (carousels, grid, event/org
+   pages): every zone below reserves a constant height regardless of which
+   fields are present, so cards never vary in size. `overflow:hidden` on the
+   wrapper is a safety net, lifted to `visible`/`auto` only while a card's
+   description is expanded via "Lire plus". */
+.race-card-wrapper{display:flex;flex-direction:column;width:300px;height:480px;flex-shrink:0;overflow:hidden;}
+.race-card{display:block;flex:1 1 auto;min-width:0;min-height:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:16px;transition:border-color .2s, transform .2s, box-shadow .2s;}
 .race-card:hover{border-color:var(--moss);transform:translateY(-2px);box-shadow:0 6px 16px rgba(27,43,32,0.12);}
-.race-card-organizer{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:var(--paperDim);background:var(--panel);border:1px solid var(--line);border-top:none;border-bottom-left-radius:24px;border-bottom-right-radius:24px;margin-top:auto;}
+.race-card-organizer{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12px;color:var(--paperDim);background:var(--panel);border:1px solid var(--line);border-top:none;border-bottom-left-radius:24px;border-bottom-right-radius:24px;flex-shrink:0;}
 .race-card-organizer-link{text-decoration:none;cursor:pointer;}
 .race-card-organizer-link:hover{color:var(--amber);}
 .race-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
@@ -164,7 +167,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .race-card-stats{display:flex;align-items:center;gap:16px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;color:var(--paper);}
 .race-card-stats small{color:var(--paperDim);}
 .race-card-month{margin-left:auto;color:var(--paperDim);font-size:11px;}
-.race-card-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.race-card-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:26px;}
+.race-card-parcours-mode{display:flex;gap:12px;padding:6px 12px;border-radius:8px;background:#F9F7F0;border:1px solid #E5E0D0;margin-top:8px;margin-bottom:8px;font-size:0.82rem;color:#3A3A32;flex-wrap:nowrap;height:33px;box-sizing:border-box;overflow:hidden;}
 
 /* ---------- organizer info box ---------- */
 .organizer-box{margin-top:24px;padding:16px 18px;background:var(--panel2);border:1px solid var(--line);border-radius:3px;}
@@ -297,11 +301,6 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .carousel-item {
   flex: 0 0 300px;
   scroll-snap-align: start;
-}
-
-/* Les RaceCard s'alignent en hauteur dans le carrousel */
-.carousel-item > .race-card-wrapper {
-  height: 100%;
 }
 
 @media (max-width: 600px) {
@@ -667,6 +666,13 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
+  max-height: 58px;
+  overflow: hidden;
+}
+
+.event-card-price-slot {
+  margin-top: 8px;
+  min-height: 22px;
 }
 
 /* --- Relecture d'une course en attente de validation --- */

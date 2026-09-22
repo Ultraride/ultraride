@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
@@ -68,16 +69,18 @@ function FormatBadge({ format }) {
 
 export default function RaceCard({ race }) {
   const hasOrganizerFooter = race.organizer && (race.organizer.name || race.organizer.logo_url);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="race-card-wrapper">
-      <Link
-        to={`/courses/${race.id}`}
-        className={`race-card${hasOrganizerFooter ? " race-card--flat-bottom" : ""}`}
-      >
-        {race.image_url && (
-          <div className="race-card-image" style={{ backgroundImage: `url(${race.image_url})` }} />
-        )}
+    <div
+      className="race-card-wrapper"
+      style={expanded ? { height: "auto", overflow: "visible" } : undefined}
+    >
+      <Link to={`/courses/${race.id}`} className="race-card">
+        <div
+          className="race-card-image"
+          style={race.image_url ? { backgroundImage: `url(${race.image_url})` } : undefined}
+        />
 
         <div className="race-card-top">
           <div>
@@ -102,7 +105,9 @@ export default function RaceCard({ race }) {
           </div>
         </div>
 
-        <ClampedBlurb>{race.blurb}</ClampedBlurb>
+        <ClampedBlurb expanded={expanded} onToggle={() => setExpanded((v) => !v)}>
+          {race.blurb}
+        </ClampedBlurb>
 
         <div className="race-card-stats">
           <span>{race.km ?? "—"} <small>km</small></span>
@@ -115,38 +120,24 @@ export default function RaceCard({ race }) {
           {race.format && <FormatBadge format={FORMAT_LABEL[race.format] || race.format} />}
         </div>
 
-        {(race.parcours || race.mode) && (
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              padding: "6px 12px",
-              borderRadius: "8px",
-              background: "#F9F7F0",
-              border: "1px solid #E5E0D0",
-              marginTop: "8px",
-              marginBottom: "8px",
-              fontSize: "0.82rem",
-              color: "#3A3A32",
-              flexWrap: "nowrap",
-            }}
-          >
+        <div
+          className="race-card-parcours-mode"
+          style={{ visibility: race.parcours || race.mode ? "visible" : "hidden" }}
+        >
+          <span style={{ whiteSpace: "nowrap" }}>
             {race.parcours && (
-              <span style={{ whiteSpace: "nowrap" }}>
-                {PARCOURS_EMOJI[race.parcours]} {PARCOURS_LABEL[race.parcours] || race.parcours}
-              </span>
+              <>{PARCOURS_EMOJI[race.parcours]} {PARCOURS_LABEL[race.parcours] || race.parcours}</>
             )}
-            {race.mode && (
-              <span style={{ whiteSpace: "nowrap" }}>
-                {MODE_EMOJI[race.mode]} {race.mode}
-              </span>
-            )}
-          </div>
-        )}
+          </span>
+          <span style={{ whiteSpace: "nowrap" }}>
+            {race.mode && <>{MODE_EMOJI[race.mode]} {race.mode}</>}
+          </span>
+        </div>
       </Link>
 
-      {/* Organizer footer lives OUTSIDE the race Link to avoid click conflicts */}
-      {hasOrganizerFooter && (
+      {/* Organizer footer lives OUTSIDE the race Link to avoid click conflicts.
+          Always rendered so every card reserves the same footer height. */}
+      {hasOrganizerFooter ? (
         race.organizer.id ? (
           <Link to={`/organizers/${race.organizer.id}`} className="race-card-organizer race-card-organizer-link">
             {race.organizer.logo_url && (
@@ -162,6 +153,10 @@ export default function RaceCard({ race }) {
             <span>{race.organizer.name}</span>
           </div>
         )
+      ) : (
+        <div className="race-card-organizer" style={{ visibility: "hidden" }} aria-hidden="true">
+          <span>—</span>
+        </div>
       )}
     </div>
   );

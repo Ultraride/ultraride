@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import PriceTag from "./PriceTag";
 import ClampedBlurb from "./ClampedBlurb";
@@ -9,6 +10,7 @@ const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Aoû
 // « Race Across France » avec une distance différente noie le répertoire.
 export default function EventCard({ event }) {
   const { slug, name, races } = event;
+  const [expanded, setExpanded] = useState(false);
 
   const distances = races.map((r) => r.km).filter((k) => k != null).sort((a, b) => a - b);
   const disciplines = [...new Set(races.map((r) => r.discipline).filter(Boolean))];
@@ -31,9 +33,12 @@ export default function EventCard({ event }) {
         : `${distances[0]} à ${distances[distances.length - 1]} km`;
 
   return (
-    <div className="race-card-wrapper">
+    <div
+      className="race-card-wrapper"
+      style={expanded ? { height: "auto", overflow: "visible" } : undefined}
+    >
       <Link to={`/evenements/${slug}`} className="race-card">
-        {image && <div className="race-card-image" style={{ backgroundImage: `url(${image})` }} />}
+        <div className="race-card-image" style={image ? { backgroundImage: `url(${image})` } : undefined} />
 
         <div className="race-card-top">
           <div>
@@ -47,18 +52,16 @@ export default function EventCard({ event }) {
           </span>
         </div>
 
-        <ClampedBlurb>
+        <ClampedBlurb expanded={expanded} onToggle={() => setExpanded((v) => !v)}>
           <strong>{races.length} format{races.length > 1 ? "s" : ""}</strong>
           {distanceLabel ? ` · ${distanceLabel}` : ""}
           {months.length > 0 ? ` · ${months.join(", ")}` : ""}
         </ClampedBlurb>
 
-        {minPrice != null && (
-          <div style={{ marginTop: 8 }}>
-            <span className="muted mono" style={{ fontSize: 11, marginRight: 6 }}>à partir de</span>
-            <PriceTag price={minPrice} showAmount />
-          </div>
-        )}
+        <div className="event-card-price-slot" style={{ visibility: minPrice != null ? "visible" : "hidden" }}>
+          <span className="muted mono" style={{ fontSize: 11, marginRight: 6 }}>à partir de</span>
+          <PriceTag price={minPrice ?? 0} showAmount />
+        </div>
 
         <div className="event-card-formats">
           {races.map((r) => (
@@ -69,7 +72,7 @@ export default function EventCard({ event }) {
         </div>
       </Link>
 
-      {organizer && (organizer.name || organizer.logo_url) && (
+      {organizer && (organizer.name || organizer.logo_url) ? (
         organizer.id ? (
           <Link to={`/organizers/${organizer.id}`} className="race-card-organizer race-card-organizer-link">
             {organizer.logo_url && <img src={organizer.logo_url} alt="" className="race-card-organizer-logo" />}
@@ -81,6 +84,10 @@ export default function EventCard({ event }) {
             <span>{organizer.name}</span>
           </div>
         )
+      ) : (
+        <div className="race-card-organizer" style={{ visibility: "hidden" }} aria-hidden="true">
+          <span>—</span>
+        </div>
       )}
     </div>
   );
