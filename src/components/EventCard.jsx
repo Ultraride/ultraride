@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import PriceTag from "./PriceTag";
+import ClampedBlurb from "./ClampedBlurb";
 
 const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
@@ -39,18 +40,18 @@ export default function EventCard({ event }) {
             <div className="race-card-loc">
               {countries.join(" · ")} · {disciplines.join(" · ")}
             </div>
-            <div className="race-card-title">{name}</div>
+            <div className="race-card-title" title={name}>{name}</div>
           </div>
           <span className={`badge ${anyOpen ? "badge-published" : "badge-rejected"}`}>
             {anyOpen ? "Ouvert" : "Fermé"}
           </span>
         </div>
 
-        <p className="race-card-blurb">
+        <ClampedBlurb>
           <strong>{races.length} format{races.length > 1 ? "s" : ""}</strong>
           {distanceLabel ? ` · ${distanceLabel}` : ""}
           {months.length > 0 ? ` · ${months.join(", ")}` : ""}
-        </p>
+        </ClampedBlurb>
 
         {minPrice != null && (
           <div style={{ marginTop: 8 }}>

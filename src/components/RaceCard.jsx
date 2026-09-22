@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import FavoriteButton from "./FavoriteButton";
 import PriceTag from "./PriceTag";
+import ClampedBlurb from "./ClampedBlurb";
 import { getFlagEmoji } from "../lib/emea";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
@@ -68,25 +68,6 @@ function FormatBadge({ format }) {
 
 export default function RaceCard({ race }) {
   const hasOrganizerFooter = race.organizer && (race.organizer.name || race.organizer.logo_url);
-  const blurbRef = useRef(null);
-  const [blurbTruncated, setBlurbTruncated] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (expanded) return;
-    const el = blurbRef.current;
-    if (!el) return;
-    const check = () => setBlurbTruncated(el.scrollHeight > el.clientHeight + 1);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, [race.blurb, expanded]);
-
-  const toggleExpanded = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpanded((v) => !v);
-  };
 
   return (
     <div className="race-card-wrapper">
@@ -121,27 +102,7 @@ export default function RaceCard({ race }) {
           </div>
         </div>
 
-        {race.blurb && (
-          <>
-            <p
-              className="race-card-blurb"
-              ref={blurbRef}
-              style={expanded ? undefined : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-            >
-              {race.blurb}
-            </p>
-            <button
-              type="button"
-              className="race-card-read-more"
-              onClick={toggleExpanded}
-              style={{ visibility: blurbTruncated ? "visible" : "hidden" }}
-              aria-hidden={!blurbTruncated}
-              tabIndex={blurbTruncated ? 0 : -1}
-            >
-              {expanded ? "Lire moins" : "Lire plus →"}
-            </button>
-          </>
-        )}
+        <ClampedBlurb>{race.blurb}</ClampedBlurb>
 
         <div className="race-card-stats">
           <span>{race.km ?? "—"} <small>km</small></span>
