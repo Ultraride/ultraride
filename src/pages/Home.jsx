@@ -494,14 +494,16 @@ export default function Home() {
   return (
     <div>
       <div className="wrap" style={{ paddingTop: 40 }}>
-        <div className="eyebrow">Répertoire ultra-distance · France &amp; Europe</div>
-        <h1 className="hero-title">Trouve ta trace.</h1>
-        <p className="hero-sub">
-          L'ultra-distance à vélo est un monde éclaté entre des dizaines de sites d'organisateurs, de groupes
-          Facebook et de forums épars. UltraRide rassemble ces épreuves : gravel, route, VTT, en autonomie,
-          semi-autonomie ou assisté ; dans un seul répertoire clair, pensé pour t'aider à trouver la course qui te
-          correspond sans passer des heures à chercher.
-        </p>
+        <div className="hero-intro">
+          <div className="eyebrow">Répertoire ultra-distance · France &amp; Europe</div>
+          <h1 className="hero-title">Trouve ta trace.</h1>
+          <p className="hero-sub">
+            L'ultra-distance à vélo est un monde éclaté entre des dizaines de sites d'organisateurs, de groupes
+            Facebook et de forums épars. UltraRide rassemble ces épreuves : gravel, route, VTT, en autonomie,
+            semi-autonomie ou assisté ; dans un seul répertoire clair, pensé pour t'aider à trouver la course qui te
+            correspond sans passer des heures à chercher.
+          </p>
+        </div>
 
         {races && (
           <div className="hero-stats">

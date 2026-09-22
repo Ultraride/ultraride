@@ -82,10 +82,11 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .success-box{background:rgba(21,121,63,0.15);border:1px solid var(--moss);color:var(--paper);padding:10px 14px;border-radius:2px;font-size:13px;margin-bottom:14px;}
 
 /* ---------- home page: hero ---------- */
+.hero-intro{max-width:760px;margin:0 auto;text-align:center;}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;}
 .hero-title{font-family:var(--disp);font-weight:400;font-size:38px;letter-spacing:-.01em;margin:0 0 12px;color:var(--paper);}
 @media(min-width:768px){.hero-title{font-size:58px;}}
-.hero-sub{max-width:560px;font-size:16px;color:var(--paperDim,var(--text-secondary));margin:0 0 24px;line-height:1.6;}
+.hero-sub{font-size:16px;color:var(--paperDim,var(--text-secondary));margin:0 0 24px;line-height:1.6;}
 .elev-svg{width:100%;height:112px;display:block;}
 @media(min-width:768px){.elev-svg{height:144px;}}
 @keyframes elevDraw{to{stroke-dashoffset:0;}}
