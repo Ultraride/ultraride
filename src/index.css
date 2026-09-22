@@ -94,6 +94,12 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .hero-stat-num{font-family:var(--mono);font-weight:600;font-size:24px;color:var(--amber);}
 .hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--paperDim);}
 
+/* ---------- sticky search + filters ---------- */
+.search-filters-sticky{position:sticky;z-index:10;background:var(--ink);padding-top:16px;}
+.search-filters-sticky--stuck{padding-bottom:16px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px rgba(27,43,32,0.08);}
+.search-bar .btn{flex-shrink:0;}
+.filter-panel-overlay{box-shadow:0 12px 24px rgba(27,43,32,0.18);max-height:calc(100vh - 140px);overflow-y:auto;}
+
 /* ---------- filter panel ---------- */
 .filter-panel{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:24px;}
 @media(min-width:768px){.filter-panel{padding:20px;}}

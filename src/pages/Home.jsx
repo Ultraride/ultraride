@@ -303,11 +303,41 @@ function RaceCarousel({ title, subtitle, races }) {
   );
 }
 
+// Hauteur réelle de header.site (16px de padding haut/bas + logo 32px +
+// bordure 1px) : le bloc recherche+filtres s'accroche juste en dessous,
+// jamais dessous ni par-dessus.
+const HEADER_HEIGHT = 65;
+
 export default function Home() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [search, setSearch] = useState("");
+
+  // Le bloc complet (recherche + Discipline + Format + 5 menus) dépasse
+  // 40% de la hauteur d'écran une fois accroché en haut, surtout sur
+  // mobile. Une fois que le visiteur a scrollé au-delà de sa position
+  // naturelle, on ne garde donc que la barre de recherche + un bouton
+  // "Filtres" qui déplie le reste en overlay, plutôt que de figer tout
+  // le bloc en permanence.
+  const filterSentinelRef = useRef(null);
+  const [isStuck, setIsStuck] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const el = filterSentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsStuck(!entry.isIntersecting),
+      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`, threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [races]);
+
+  useEffect(() => {
+    if (!isStuck) setFiltersOpen(false);
+  }, [isStuck]);
 
   // Géolocalisation : "idle" tant que le visiteur n'a rien demandé, on ne
   // déclenche jamais la popup du navigateur sans une action de sa part —
@@ -398,6 +428,11 @@ export default function Home() {
     [filters, search]
   );
 
+  const activeFilterCount = useMemo(
+    () => Object.keys(EMPTY_FILTERS).filter((k) => filters[k] !== EMPTY_FILTERS[k]).length,
+    [filters]
+  );
+
   // Mois en cours, ou le prochain mois qui contient des courses.
   const monthlyBlock = useMemo(() => {
     if (!races || races.length === 0) return null;
@@ -482,77 +517,96 @@ export default function Home() {
         <div className="wrap"><p className="muted">Chargement…</p></div>
       ) : (
         <>
-          <div className="wrap">
-            <div className="search-bar">
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un ultra, un lieu, un organisateur…"
-                aria-label="Rechercher"
-              />
-              {search && (
-                <button type="button" className="filter-reset" onClick={() => setSearch("")}>
-                  Effacer
-                </button>
-              )}
-            </div>
-          </div>
+          <div ref={filterSentinelRef} />
 
-          <div className="wrap">
-            <div className="filter-panel">
-              <div className="filter-panel-head" style={{ justifyContent: "flex-end" }}>
-                <button onClick={resetFilters} className="filter-reset">Réinitialiser</button>
-              </div>
-
-              <div className="filter-section-title">Discipline</div>
-              <div className="filter-row">
-                {DISCIPLINES.map((d) => (
-                  <DisciplineFilterButton
-                    key={d}
-                    discipline={d}
-                    active={filters.discipline === d}
-                    onClick={() => setFilter("discipline", d)}
-                  />
-                ))}
-              </div>
-
-              <div className="filter-section-title" style={{ marginTop: "16px" }}>Format</div>
-              <div className="filter-row">
-                {FORMATS.map((f) => (
-                  <FormatFilterButton
-                    key={f.id}
-                    format={f.label}
-                    active={filters.format === f.id}
-                    onClick={() => setFilter("format", f.id)}
-                  />
-                ))}
-              </div>
-
-              <div className="filter-row" style={{ marginTop: "16px" }}>
-                <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
-                  <option value="">Pays : tous</option>
-                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select value={filters.mode} onChange={(e) => setFilters((f) => ({ ...f, mode: e.target.value }))}>
-                  <option value="">Mode : tous</option>
-                  {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={filters.parcours} onChange={(e) => setFilters((f) => ({ ...f, parcours: e.target.value }))}>
-                  <option value="">Parcours : tous</option>
-                  {PARCOURS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-                <select value={filters.month} onChange={(e) => setFilters((f) => ({ ...f, month: e.target.value }))}>
-                  <option value="">Mois : tous</option>
-                  {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={filters.reg} onChange={(e) => setFilters((f) => ({ ...f, reg: e.target.value }))}>
-                  <option value="">Inscription : toutes</option>
-                  <option value="open">Ouvertes</option>
-                  <option value="closed">Fermées</option>
-                </select>
+          <div
+            className={`search-filters-sticky${isStuck ? " search-filters-sticky--stuck" : ""}`}
+            style={{ top: HEADER_HEIGHT }}
+          >
+            <div className="wrap">
+              <div className="search-bar" style={{ marginBottom: isStuck ? 0 : 16 }}>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher un ultra, un lieu, un organisateur…"
+                  aria-label="Rechercher"
+                />
+                {search && (
+                  <button type="button" className="filter-reset" onClick={() => setSearch("")}>
+                    Effacer
+                  </button>
+                )}
+                {isStuck && (
+                  <button
+                    type="button"
+                    className={`btn ${filtersOpen ? "btn-primary" : ""}`}
+                    onClick={() => setFiltersOpen((v) => !v)}
+                    aria-expanded={filtersOpen}
+                  >
+                    Filtres{activeFilterCount > 0 && ` (${activeFilterCount})`}
+                  </button>
+                )}
               </div>
             </div>
+
+            {(!isStuck || filtersOpen) && (
+              <div className="wrap">
+                <div className={`filter-panel${isStuck ? " filter-panel-overlay" : ""}`}>
+                  <div className="filter-panel-head" style={{ justifyContent: "flex-end" }}>
+                    <button onClick={resetFilters} className="filter-reset">Réinitialiser</button>
+                  </div>
+
+                  <div className="filter-section-title">Discipline</div>
+                  <div className="filter-row">
+                    {DISCIPLINES.map((d) => (
+                      <DisciplineFilterButton
+                        key={d}
+                        discipline={d}
+                        active={filters.discipline === d}
+                        onClick={() => setFilter("discipline", d)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="filter-section-title" style={{ marginTop: "16px" }}>Format</div>
+                  <div className="filter-row">
+                    {FORMATS.map((f) => (
+                      <FormatFilterButton
+                        key={f.id}
+                        format={f.label}
+                        active={filters.format === f.id}
+                        onClick={() => setFilter("format", f.id)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="filter-row" style={{ marginTop: "16px" }}>
+                    <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
+                      <option value="">Pays : tous</option>
+                      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={filters.mode} onChange={(e) => setFilters((f) => ({ ...f, mode: e.target.value }))}>
+                      <option value="">Mode : tous</option>
+                      {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select value={filters.parcours} onChange={(e) => setFilters((f) => ({ ...f, parcours: e.target.value }))}>
+                      <option value="">Parcours : tous</option>
+                      {PARCOURS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                    </select>
+                    <select value={filters.month} onChange={(e) => setFilters((f) => ({ ...f, month: e.target.value }))}>
+                      <option value="">Mois : tous</option>
+                      {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select value={filters.reg} onChange={(e) => setFilters((f) => ({ ...f, reg: e.target.value }))}>
+                      <option value="">Inscription : toutes</option>
+                      <option value="open">Ouvertes</option>
+                      <option value="closed">Fermées</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="wrap">
