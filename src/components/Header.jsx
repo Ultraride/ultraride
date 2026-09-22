@@ -10,7 +10,7 @@ export default function Header() {
         <img src="/logo.png" alt="UltraRide" className="brand-logo" />
       </NavLink>
       <nav className="top-nav">
-        <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Courses</NavLink>
+        <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Ultra</NavLink>
         <NavLink to="/proposer-course" className={({ isActive }) => (isActive ? "active" : "")}>Proposer une course</NavLink>
         {user && (
           <NavLink to="/account" className={({ isActive }) => (isActive ? "active" : "")}>Mon compte</NavLink>
