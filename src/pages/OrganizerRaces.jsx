@@ -86,13 +86,13 @@ export default function OrganizerRaces() {
   return (
     <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60, maxWidth: 720 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h1 className="h1" style={{ margin: 0 }}>Mes courses</h1>
-        <button className="btn btn-primary" onClick={() => setEditing({})}>+ Soumettre une course</button>
+        <h1 className="h1" style={{ margin: 0 }}>Mes ultras</h1>
+        <button className="btn btn-primary" onClick={() => setEditing({})}>+ Soumettre un ultra</button>
       </div>
 
       <p className="muted" style={{ marginTop: 12, marginBottom: 24 }}>
-        Les courses que tu soumets sont relues par un administrateur avant publication. Tu peux les
-        corriger à tout moment — une modification, même sur une course déjà publiée, la renvoie en
+        Les ultras que tu soumets sont relus par un administrateur avant publication. Tu peux les
+        corriger à tout moment — une modification, même sur un ultra déjà publié, la renvoie en
         validation et la retire temporairement du répertoire. Les épreuves saisies par
         l'administrateur avant la création de ton compte apparaissent ici en lecture seule ;
         demande-lui de t'en transférer la gestion si tu souhaites les tenir à jour.
