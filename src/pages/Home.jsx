@@ -386,7 +386,7 @@ export default function Home() {
       return true;
     });
 
-    return result.sort(byChrono);
+    return result.sort(withImageFirst(byChrono));
   }, [races, filters, search]);
 
   // Les carrousels sont une vitrine éditoriale : dès que le visiteur filtre
