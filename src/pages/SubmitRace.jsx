@@ -77,12 +77,12 @@ export default function SubmitRace() {
         </div>
 
         <div className="field">
-          <label>Nom de la course</label>
+          <label>Nom de l'ultra</label>
           <input required value={form.race_name} onChange={(e) => field("race_name", e.target.value)} />
         </div>
 
         <div className="field">
-          <label>Site web / lien de la course (optionnel)</label>
+          <label>Site web / lien de l'ultra (optionnel)</label>
           <input value={form.website} onChange={(e) => field("website", e.target.value)} placeholder="https://…" />
         </div>
 
