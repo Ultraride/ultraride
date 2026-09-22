@@ -91,9 +91,12 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 @media(min-width:768px){.elev-svg{height:144px;}}
 @keyframes elevDraw{to{stroke-dashoffset:0;}}
 .elev-line{stroke-dasharray:1400;stroke-dashoffset:1400;animation:elevDraw 2.2s ease-out forwards;}
-.hero-stats{display:flex;gap:24px;flex-wrap:wrap;margin:12px 0 32px;}
-.hero-stat-num{font-family:var(--mono);font-weight:600;font-size:24px;color:var(--amber);}
-.hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--paperDim);}
+.hero-stats{display:flex;justify-content:center;flex-wrap:wrap;margin:12px 0 32px;}
+.hero-stats>div{display:flex;flex-direction:column;align-items:center;padding:0 28px;}
+.hero-stats>div:not(:first-child){border-left:1px solid rgba(27,43,32,0.35);}
+.hero-stat-num{font-family:var(--mono);font-weight:700;font-size:42px;line-height:1;color:var(--amber);}
+.hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paperDim);margin-top:6px;}
+@media(max-width:480px){.hero-stats>div{padding:0 16px;}.hero-stat-num{font-size:32px;}}
 
 /* ---------- sticky search + filters ---------- */
 .search-filters-sticky{position:sticky;z-index:10;background:var(--ink);padding-top:16px;}
