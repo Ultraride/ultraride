@@ -66,9 +66,14 @@ function FormatBadge({ format }) {
 }
 
 export default function RaceCard({ race }) {
+  const hasOrganizerFooter = race.organizer && (race.organizer.name || race.organizer.logo_url);
+
   return (
     <div className="race-card-wrapper">
-      <Link to={`/courses/${race.id}`} className="race-card">
+      <Link
+        to={`/courses/${race.id}`}
+        className={`race-card${hasOrganizerFooter ? " race-card--flat-bottom" : ""}`}
+      >
         {race.image_url && (
           <div className="race-card-image" style={{ backgroundImage: `url(${race.image_url})` }} />
         )}
@@ -140,7 +145,7 @@ export default function RaceCard({ race }) {
       </Link>
 
       {/* Organizer footer lives OUTSIDE the race Link to avoid click conflicts */}
-      {race.organizer && (race.organizer.name || race.organizer.logo_url) && (
+      {hasOrganizerFooter && (
         race.organizer.id ? (
           <Link to={`/organizers/${race.organizer.id}`} className="race-card-organizer race-card-organizer-link">
             {race.organizer.logo_url && (
