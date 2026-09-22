@@ -98,7 +98,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .why-section{background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:32px;}
 .why-section-inner{max-width:760px;padding-top:40px;padding-bottom:40px;text-align:center;}
 .why-section-title{font-family:var(--disp);font-weight:400;font-size:28px;margin:0 0 16px;color:var(--ink-strong,#1B2B20);}
-.why-section-text{font-family:var(--sans);font-size:16px;line-height:1.6;color:var(--ink-strong,#1B2B20);margin:0;}
+.why-section-text{font-family:var(--sans);font-size:16px;line-height:1.6;color:var(--ink-strong,#1B2B20);background:none;margin:0;}
 
 /* ---------- sticky search + filters ---------- */
 .search-filters-sticky{position:sticky;z-index:10;background:var(--ink);padding-top:16px;}
