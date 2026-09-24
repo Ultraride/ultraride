@@ -75,7 +75,9 @@ Le site enregistre uniquement dans votre navigateur les éléments strictement n
 
 La fonction « Près de chez moi » demande l'accès à votre position via votre navigateur, uniquement si vous cliquez sur « Activer la géolocalisation ». Le calcul des distances se fait sur votre appareil : votre position n'est ni envoyée à nos serveurs ni enregistrée. Vous pouvez retirer cette autorisation dans les réglages du navigateur.
 
-L'affichage des cartes et la recherche de lieux s'appuient sur [fournisseur de cartes et de géocodage — à confirmer]. Ce service reçoit l'adresse IP de votre appareil pour afficher les fonds de carte, sans compte ni identification.
+L'affichage des cartes et la recherche de lieux s'appuient sur OpenStreetMap (fonds de carte et service de recherche Nominatim), opéré par l'OpenStreetMap Foundation. Ce service reçoit l'adresse IP de votre appareil et, lors d'une recherche de lieu, le texte saisi, sans compte ni identification.
+
+Certaines images d'épreuves et logos d'organisateurs sont affichés directement depuis le site de l'organisateur concerné, qui reçoit alors l'adresse IP de votre appareil.
 
 Les liens vers les sites des organisateurs et les réseaux sociaux vous mènent vers des services tiers, soumis à leurs propres politiques de confidentialité.
 
