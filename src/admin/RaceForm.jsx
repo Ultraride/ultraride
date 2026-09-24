@@ -28,6 +28,20 @@ const EMPTY = {
   status: "published", organizer_id: "", image_url: "",
 };
 
+// Colonnes de `races` modifiables depuis ce formulaire.
+const ALLOWED_COLUMNS = [
+  "name","country","discipline","format","mode","parcours","month","km","dplus","open",
+  "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
+  "start_place","end_place","departure_time","start_date","end_date",
+  "organizer_name","organizer_id","terrain","next_edition","blurb","long_blurb",
+  "status","image_url","registration_url","event_name","event_slug","price"
+];
+
+const NUMERIC_COLUMNS = [
+  "km","dplus","price",
+  "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
+];
+
 export default function RaceForm({ race, onSaved, onCancel }) {
   const { isAdmin, isOrganizer, user } = useAuth();
   const [form, setForm] = useState(race ? { ...EMPTY, ...race, organizer_id: race.organizer_id || "" } : EMPTY);
@@ -80,28 +94,23 @@ export default function RaceForm({ race, onSaved, onCancel }) {
     setSaving(true);
     setError(null);
 
-    const payload = {
-      ...form,
-      km: numOrNull(form.km),
-      dplus: numOrNull(form.dplus),
-      price: numOrNull(form.price),
-      lat: numOrNull(form.lat),
-      lon: numOrNull(form.lon),
-      start_lat: numOrNull(form.start_lat),
-      start_lon: numOrNull(form.start_lon),
-      end_lat: numOrNull(form.end_lat),
-      end_lon: numOrNull(form.end_lon),
-    };
+    // Liste blanche : seules les colonnes éditables partent vers Supabase.
+    // `form` contient aussi, en édition, tout ce que la ligne `race` portait
+    // (id, created_by, gpx_track, colonnes ajoutées plus tard…).
+    const payload = {};
+    for (const key of ALLOWED_COLUMNS) {
+      if (key in form) payload[key] = form[key];
+    }
 
-    payload.organizer_id = payload.organizer_id || null;
+    for (const key of NUMERIC_COLUMNS) {
+      if (key in payload) payload[key] = numOrNull(payload[key]);
+    }
+    for (const key of ["start_date", "end_date", "organizer_id"]) {
+      if (key in payload && payload[key] === "") payload[key] = null;
+    }
+
     payload.event_name = form.event_name?.trim() || null;
     payload.event_slug = payload.event_name ? slugify(payload.event_name) : null;
-    delete payload.created_by;
-    delete payload.reviewed_by;
-    delete payload.created_at;
-    delete payload.updated_at;
-    delete payload.gpx_track;
-    delete payload.elevation_profile;
 
     let result;
     if (race?.id) {
