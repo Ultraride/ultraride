@@ -1,5 +1,5 @@
 import { Children, isValidElement, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -36,9 +36,15 @@ const components = {
 };
 
 export default function LegalPage({ content, title, className = "" }) {
+  const { hash } = useLocation();
+
+  // Ancre dans l'URL (/cgu#article-7-…) : on descend jusqu'au titre visé,
+  // sinon on repart du haut de la page.
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [content]);
+    const target = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (target) target.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }, [content, hash]);
 
   useEffect(() => {
     if (!title) return;

@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
+import DisclaimerModal from "./components/DisclaimerModal";
 import Home from "./pages/Home";
 import RaceDetail from "./pages/RaceDetail";
 import EventPage from "./pages/EventPage";
@@ -30,6 +31,7 @@ export default function App() {
   return (
     <>
       <Header />
+      <DisclaimerModal />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses/:id" element={<RaceDetail />} />
