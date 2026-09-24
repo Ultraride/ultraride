@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const EMPTY = { name: "", email: "", race_name: "", website: "", message: "" };
+const MESSAGE_MAX = 3000;
+// En dessous, personne n'a pu lire et remplir le formulaire : c'est un robot.
+const MIN_FILL_MS = 3000;
 
 export default function SubmitRace() {
   const [form, setForm] = useState(EMPTY);
@@ -9,6 +12,7 @@ export default function SubmitRace() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(false);
+  const shownAt = useRef(Date.now());
 
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -16,9 +20,10 @@ export default function SubmitRace() {
     e.preventDefault();
     setError(null);
 
-    // Un bot remplit ce champ invisible pour un humain : on fait semblant
-    // d'accepter sans rien enregistrer, pour ne pas révéler le piège.
-    if (honeypot.trim()) {
+    // Un bot remplit ce champ invisible pour un humain, ou envoie le
+    // formulaire trop vite : on fait semblant d'accepter sans rien
+    // enregistrer, pour ne pas révéler le piège.
+    if (honeypot.trim() || Date.now() - shownAt.current < MIN_FILL_MS) {
       setSent(true);
       return;
     }
@@ -61,7 +66,7 @@ export default function SubmitRace() {
 
         <div className="field">
           <label>Votre nom</label>
-          <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
+          <input required maxLength={120} value={form.name} onChange={(e) => field("name", e.target.value)} />
         </div>
 
         <div className="field">
@@ -69,6 +74,7 @@ export default function SubmitRace() {
           <input
             type="email"
             required
+            maxLength={254}
             value={form.email}
             onChange={(e) => field("email", e.target.value)}
             placeholder="toi@exemple.fr"
@@ -78,12 +84,12 @@ export default function SubmitRace() {
 
         <div className="field">
           <label>Nom de l'ultra</label>
-          <input required value={form.race_name} onChange={(e) => field("race_name", e.target.value)} />
+          <input required maxLength={200} value={form.race_name} onChange={(e) => field("race_name", e.target.value)} />
         </div>
 
         <div className="field">
           <label>Site web / lien de l'ultra (optionnel)</label>
-          <input value={form.website} onChange={(e) => field("website", e.target.value)} placeholder="https://…" />
+          <input maxLength={500} value={form.website} onChange={(e) => field("website", e.target.value)} placeholder="https://…" />
         </div>
 
         <div className="field">
@@ -91,17 +97,22 @@ export default function SubmitRace() {
           <textarea
             required
             rows={5}
+            maxLength={MESSAGE_MAX}
             value={form.message}
             onChange={(e) => field("message", e.target.value)}
             placeholder="Pays, date, distance approximative, discipline…"
           />
+          <div className="field-hint" style={{ textAlign: "right" }}>
+            {form.message.length} / {MESSAGE_MAX}
+          </div>
         </div>
 
-        <div aria-hidden="true" style={{ display: "none" }}>
+        {/* Hors écran plutôt que display:none, que certains robots savent ignorer. */}
+        <div aria-hidden="true" style={{ position: "absolute", left: "-9999px" }}>
           <label htmlFor="website-hp">Ne pas remplir ce champ</label>
           <input
             id="website-hp"
-            name="website"
+            name="website_url"
             type="text"
             tabIndex={-1}
             autoComplete="off"
