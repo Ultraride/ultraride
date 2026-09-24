@@ -890,3 +890,141 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   gap: 8px;
   flex-wrap: wrap;
 }
+
+/* --- Pages légales (CGU, confidentialité) --- */
+.legal-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  background: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--paper);
+}
+
+.legal-page h1 {
+  font-family: var(--disp);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.15;
+  color: var(--paper);
+  margin: 0 0 20px;
+}
+
+.legal-page h2 {
+  font-family: var(--disp);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--paper);
+  margin: 32px 0 12px;
+  scroll-margin-top: 80px;
+}
+
+.legal-page a {
+  color: #C4622D;
+  text-decoration: underline;
+}
+
+.legal-page ul {
+  padding-left: 22px;
+}
+
+.legal-table-scroll {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.legal-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.legal-page th,
+.legal-page td {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-page th {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--moss);
+}
+
+@media (max-width: 600px) {
+  .legal-page {
+    padding: 32px 16px;
+  }
+  .legal-page h1 {
+    font-size: 28px;
+  }
+  /* Largeur minimale : sous ce seuil les cellules deviendraient illisibles,
+     le tableau défile alors dans .legal-table-scroll. */
+  .legal-page table {
+    min-width: 520px;
+  }
+}
+
+/* --- Pied de page (accueil) --- */
+.site-footer {
+  margin-top: 48px;
+  padding: 32px 20px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+.site-footer-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.site-footer-logo {
+  font-family: var(--disp);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  color: #C4622D;
+}
+
+.site-footer-tagline {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.site-footer-links a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer-links a:hover {
+  color: #C4622D;
+}
+
+.site-footer-legal {
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.7;
+}

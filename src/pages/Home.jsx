@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
+import SiteFooter from "../components/SiteFooter";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
 
@@ -743,6 +744,8 @@ export default function Home() {
           </div>
         </>
       )}
+
+      <SiteFooter />
     </div>
   );
 }

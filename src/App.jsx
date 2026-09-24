@@ -12,6 +12,9 @@ import Account from "./pages/Account";
 import Rules from "./pages/Rules";
 import Cookies from "./pages/Cookies";
 import SubmitRace from "./pages/SubmitRace";
+import LegalPage from "./pages/LegalPage";
+import cgu from "./content/cgu.md?raw";
+import confidentialite from "./content/confidentialite.md?raw";
 import AdminLayout from "./admin/AdminLayout";
 import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
@@ -38,6 +41,8 @@ export default function App() {
         <Route path="/rules" element={<Rules />} />
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/proposer-course" element={<SubmitRace />} />
+        <Route path="/cgu" element={<LegalPage content={cgu} title="CGU — UltraRide" />} />
+        <Route path="/confidentialite" element={<LegalPage content={confidentialite} title="Confidentialité — UltraRide" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<PendingRaces />} />

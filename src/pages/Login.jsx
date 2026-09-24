@@ -151,7 +151,9 @@ export default function Login() {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span>
-              J'accepte les <Link to="/rules" target="_blank" rel="noopener noreferrer">règles de bonne conduite</Link> du
+              J'accepte les <Link to="/cgu" target="_blank" rel="noopener noreferrer">conditions générales</Link> et
+              la <Link to="/confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</Link>,
+              les <Link to="/rules" target="_blank" rel="noopener noreferrer">règles de bonne conduite</Link> du
               site et la <Link to="/cookies" target="_blank" rel="noopener noreferrer">politique de cookies</Link>, et
               j'autorise UltraRide à m'envoyer des communications par email (nouveaux ultras, actualités du site).
               <span style={{ color: "var(--brick)" }}> *</span>
