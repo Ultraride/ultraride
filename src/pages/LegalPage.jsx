@@ -30,7 +30,9 @@ const components = {
   a: ({ node, href = "", children, ...props }) =>
     href.startsWith("/")
       ? <Link to={href} {...props}>{children}</Link>
-      : <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
+      : href.startsWith("mailto:")
+        ? <a href={href} {...props}>{children}</a>
+        : <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
 };
 
 export default function LegalPage({ content, title }) {

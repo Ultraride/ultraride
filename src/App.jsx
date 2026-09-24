@@ -15,6 +15,8 @@ import SubmitRace from "./pages/SubmitRace";
 import LegalPage from "./pages/LegalPage";
 import cgu from "./content/cgu.md?raw";
 import confidentialite from "./content/confidentialite.md?raw";
+import leProjet from "./content/le-projet.md?raw";
+import modeEmploi from "./content/mode-d-emploi.md?raw";
 import AdminLayout from "./admin/AdminLayout";
 import PendingRaces from "./admin/PendingRaces";
 import RacesManager from "./admin/RacesManager";
@@ -43,6 +45,8 @@ export default function App() {
         <Route path="/proposer-course" element={<SubmitRace />} />
         <Route path="/cgu" element={<LegalPage content={cgu} title="CGU — UltraRide" />} />
         <Route path="/confidentialite" element={<LegalPage content={confidentialite} title="Confidentialité — UltraRide" />} />
+        <Route path="/le-projet" element={<LegalPage content={leProjet} title="Le projet — UltraRide" />} />
+        <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<PendingRaces />} />

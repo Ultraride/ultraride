@@ -932,6 +932,18 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   padding-left: 22px;
 }
 
+.legal-page blockquote {
+  margin: 20px 0;
+  padding: 10px 16px;
+  border-left: 3px solid #C4622D;
+  color: var(--paper);
+  opacity: 0.85;
+}
+
+.legal-page blockquote p {
+  margin: 0;
+}
+
 .legal-table-scroll {
   overflow-x: auto;
   margin: 16px 0;
@@ -972,6 +984,11 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   .legal-page table {
     min-width: 520px;
   }
+}
+
+/* Lien présent uniquement dans le menu burger. */
+.top-nav .nav-mobile-only {
+  display: none;
 }
 
 /* --- Pied de page (accueil) --- */

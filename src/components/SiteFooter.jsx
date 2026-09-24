@@ -8,6 +8,10 @@ export default function SiteFooter() {
         <span className="site-footer-tagline">Ultra-cycling almanac</span>
       </div>
       <nav className="site-footer-links">
+        <Link to="/le-projet">Le projet</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/mode-d-emploi">Mode d'emploi</Link>
+        <span aria-hidden="true">·</span>
         <Link to="/cgu">Conditions générales d'utilisation</Link>
         <span aria-hidden="true">·</span>
         <Link to="/confidentialite">Politique de confidentialité</Link>
