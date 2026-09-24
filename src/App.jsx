@@ -46,7 +46,7 @@ export default function App() {
         <Route path="/cgu" element={<LegalPage content={cgu} title="CGU — UltraRide" />} />
         <Route path="/confidentialite" element={<LegalPage content={confidentialite} title="Confidentialité — UltraRide" />} />
         <Route path="/le-projet" element={<LegalPage content={leProjet} title="Le projet — UltraRide" />} />
-        <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" />} />
+        <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" className="nowrap-first-cols" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<PendingRaces />} />

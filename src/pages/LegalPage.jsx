@@ -35,7 +35,7 @@ const components = {
         : <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>,
 };
 
-export default function LegalPage({ content, title }) {
+export default function LegalPage({ content, title, className = "" }) {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [content]);
@@ -48,7 +48,7 @@ export default function LegalPage({ content, title }) {
   }, [title]);
 
   return (
-    <div className="legal-page">
+    <div className={`legal-page ${className}`.trim()}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>

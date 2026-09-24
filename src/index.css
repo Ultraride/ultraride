@@ -954,12 +954,13 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .legal-page table {
   width: 100%;
   border-collapse: collapse;
+  border: 1.5px solid #1B2B20;
   font-size: 15px;
 }
 
 .legal-page th,
 .legal-page td {
-  border: 1px solid var(--line);
+  border: 1.5px solid #1B2B20;
   padding: 10px 12px;
   text-align: left;
   vertical-align: top;
@@ -972,6 +973,16 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--moss);
+}
+
+.legal-page thead th {
+  border-bottom: 2px solid #1B2B20;
+}
+
+/* Lexique : « Semi-autonomie », « Point à point »… sur une seule ligne. */
+.legal-page.nowrap-first-cols td:nth-child(-n+2),
+.legal-page.nowrap-first-cols th:nth-child(-n+2) {
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
