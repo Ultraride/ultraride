@@ -30,7 +30,7 @@ export default function Header() {
       <NavLink to="/" end className={navClass} onClick={close}>Trouve ton ultra</NavLink>
       <NavLink to="/proposer-course" className={navClass} onClick={close}>Proposer un ultra</NavLink>
       <NavLink to="/le-projet" className={navClass} onClick={close}>Le projet</NavLink>
-      <NavLink to="/mode-d-emploi" className={(state) => `nav-mobile-only ${navClass(state)}`} onClick={close}>Mode d'emploi</NavLink>
+      <NavLink to="/mode-d-emploi" className={navClass} onClick={close}>Mode d'emploi</NavLink>
       {user && (
         <NavLink to="/account" className={navClass} onClick={close}>Mon compte</NavLink>
       )}
