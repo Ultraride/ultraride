@@ -16,6 +16,9 @@
 *{box-sizing:border-box;}
 html,body,#root{margin:0;padding:0;min-height:100vh;}
 body{background:var(--ink);color:var(--paper);font-family:var(--sans);}
+/* Filet de sécurité : les carrousels défilent dans leur propre piste, jamais la page.
+   `clip` (et non `hidden`) ne crée pas de conteneur de défilement, le header reste sticky. */
+body{overflow-x:clip;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 input,select,textarea{font-family:inherit;}
@@ -32,6 +35,19 @@ header.site{position:sticky;top:0;z-index:1001;background:rgba(245,241,230,0.92)
 nav.top-nav{display:flex;gap:20px;align-items:center;}
 nav.top-nav a, nav.top-nav button{font-size:14px;color:var(--paperDim);border:none;background:none;padding:0;}
 nav.top-nav a.active, nav.top-nav button.active{color:var(--amber);}
+.nav-burger{display:none;}
+.mobile-nav{display:none;}
+@media(max-width:819px){
+  header.site{gap:12px;}
+  .brand{flex-shrink:0;}
+  .brand-logo{max-height:40px;}
+  nav.top-nav{display:none;}
+  .nav-burger{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:44px;min-height:44px;margin:-6px -10px -6px 0;padding:0;border:none;background:none;font-size:24px;line-height:1;color:var(--paper);}
+  .mobile-nav{display:flex;flex-direction:column;position:absolute;top:100%;left:0;right:0;background:#F5F1E6;border-bottom:1px solid var(--line);box-shadow:0 12px 24px rgba(27,43,32,0.15);max-height:calc(100vh - 72px);overflow-y:auto;}
+  .mobile-nav a, .mobile-nav button{display:block;width:100%;text-align:left;padding:14px 20px;font-family:var(--sans);font-size:17px;color:var(--paper);background:none;border:none;border-bottom:1px solid var(--line);}
+  .mobile-nav a.active, .mobile-nav button.active{color:var(--amber);}
+  .mobile-nav a.nav-cta{width:auto;margin:14px 20px;text-align:center;font-weight:600;color:#fff;background:#C4622D;border:none;border-radius:2px;}
+}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 14px;border-radius:2px;border:1px solid var(--line);color:var(--paperDim);background:transparent;}
@@ -84,6 +100,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 /* ---------- home page: hero ---------- */
 .hero-intro{max-width:760px;margin:0 auto;text-align:center;}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;}
+@media(max-width:819px){.eyebrow{font-size:11px;letter-spacing:.12em;text-wrap:balance;}}
 .hero-title{font-family:var(--disp);font-weight:400;font-size:38px;letter-spacing:-.01em;margin:0 0 12px;color:var(--paper);}
 @media(min-width:768px){.hero-title{font-size:58px;}}
 .hero-sub{font-size:16px;color:var(--paperDim,var(--text-secondary));margin:0 0 24px;line-height:1.6;}
@@ -97,12 +114,24 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .hero-stat-num{font-family:var(--mono);font-weight:700;font-size:42px;line-height:1;color:var(--amber);}
 .hero-stat-label{font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paperDim);margin-top:6px;}
 @media(max-width:480px){.hero-stats>div{padding:0 16px;}.hero-stat-num{font-size:32px;}}
+@media(max-width:819px){
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:24px 0;}
+  .hero-stats>div, .hero-stats>div:not(:first-child){border-left:none;padding:0 12px;text-align:center;}
+  .hero-stats>div:nth-child(2n){border-left:1px solid rgba(27,43,32,0.35);}
+}
 
 /* ---------- sticky search + filters ---------- */
 .search-filters-sticky{position:sticky;z-index:10;background:var(--ink);padding-top:16px;}
 .search-filters-sticky--stuck{padding-bottom:16px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px rgba(27,43,32,0.08);}
 .search-bar .btn{flex-shrink:0;}
 .filter-panel-overlay{box-shadow:0 12px 24px rgba(27,43,32,0.18);max-height:calc(100vh - 140px);overflow-y:auto;}
+/* Sur mobile, seul le header reste collant : header + recherche figés
+   mangeaient ~30% de l'écran et masquaient les carrousels. */
+@media(max-width:819px){
+  .search-filters-sticky{position:static;}
+  .search-bar input[type="search"]{min-width:0;}
+  .search-bar .filter-reset{flex-shrink:0;white-space:nowrap;}
+}
 
 /* ---------- filter panel ---------- */
 .filter-panel{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:16px;margin-bottom:24px;}

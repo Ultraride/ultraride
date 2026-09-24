@@ -308,6 +308,22 @@ function RaceCarousel({ title, subtitle, races }) {
 // jamais dessous ni par-dessus.
 const HEADER_HEIGHT = 65;
 
+// Sous ce seuil (cf. index.css), le bloc recherche n'est plus collant.
+const MOBILE_QUERY = "(max-width: 819px)";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e) => setIsMobile(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return isMobile;
+}
+
 export default function Home() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
@@ -320,24 +336,32 @@ export default function Home() {
   // naturelle, on ne garde donc que la barre de recherche + un bouton
   // "Filtres" qui déplie le reste en overlay, plutôt que de figer tout
   // le bloc en permanence.
+  //
+  // Sur mobile le bloc n'est pas collant : les filtres sont repliés
+  // derrière le bouton "Filtres" dès le départ, et on n'observe rien.
   const filterSentinelRef = useRef(null);
+  const isMobile = useIsMobile();
   const [isStuck, setIsStuck] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const compactFilters = isStuck || isMobile;
 
   useEffect(() => {
     const el = filterSentinelRef.current;
-    if (!el) return;
+    if (!el || isMobile) {
+      setIsStuck(false);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => setIsStuck(!entry.isIntersecting),
       { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`, threshold: 0 }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [races]);
+  }, [races, isMobile]);
 
   useEffect(() => {
-    if (!isStuck) setFiltersOpen(false);
-  }, [isStuck]);
+    if (!compactFilters) setFiltersOpen(false);
+  }, [compactFilters]);
 
   // Géolocalisation : "idle" tant que le visiteur n'a rien demandé, on ne
   // déclenche jamais la popup du navigateur sans une action de sa part —
@@ -495,7 +519,7 @@ export default function Home() {
     <div>
       <div className="wrap" style={{ paddingTop: 40 }}>
         <div className="hero-intro">
-          <div className="eyebrow">Répertoire ultra-distance · France &amp; Europe</div>
+          <div className="eyebrow">Répertoire <span style={{ whiteSpace: "nowrap" }}>ultra-distance</span> · France &amp; Europe</div>
           <h1 className="hero-title">Trouve ta trace.</h1>
           <p className="hero-sub">
             L'ultra-distance à vélo est un monde éclaté entre des dizaines de sites d'organisateurs, de groupes
@@ -541,7 +565,7 @@ export default function Home() {
                     Effacer
                   </button>
                 )}
-                {isStuck && (
+                {compactFilters && (
                   <button
                     type="button"
                     className={`btn ${filtersOpen ? "btn-primary" : ""}`}
@@ -554,7 +578,7 @@ export default function Home() {
               </div>
             </div>
 
-            {(!isStuck || filtersOpen) && (
+            {(!compactFilters || filtersOpen) && (
               <div className="wrap">
                 <div className={`filter-panel${isStuck ? " filter-panel-overlay" : ""}`}>
                   <div className="filter-panel-head" style={{ justifyContent: "flex-end" }}>
