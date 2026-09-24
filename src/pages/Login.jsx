@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
 
 export default function Login() {
   const { signInWithPassword, signUp, sendPasswordReset, user } = useAuth();
@@ -49,7 +50,7 @@ export default function Login() {
     setLoading(false);
 
     if (result.error) {
-      setError(result.error.message);
+      setError(mode === "signup" ? passwordErrorMessage(result.error) : result.error.message);
       return;
     }
     if (mode === "signup") {
@@ -102,11 +103,14 @@ export default function Login() {
             <input
               type="password"
               required
-              minLength={6}
+              // Seulement à l'inscription : les comptes créés avant la règle
+              // des 12 caractères doivent pouvoir se connecter.
+              minLength={mode === "signup" ? PASSWORD_MIN_LENGTH : undefined}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "signup" ? "6 caractères minimum" : ""}
             />
+            {mode === "signup" && <div className="field-hint">{PASSWORD_HINT}</div>}
           </div>
         )}
 

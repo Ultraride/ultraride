@@ -64,6 +64,7 @@ nav.top-nav a.active, nav.top-nav button.active{color:var(--amber);}
 .field label{display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:4px;}
 .field input, .field select, .field textarea{width:100%;padding:8px 10px;font-size:13px;border-radius:2px;background:var(--ink);border:1px solid var(--line);color:var(--paper);outline:none;}
 .field textarea{resize:vertical;}
+.field-hint{margin-top:4px;font-size:12px;line-height:1.4;color:var(--paperDim);}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:640px){.grid-2{grid-template-columns:1fr;}}
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
 import PalmaresSection from "./PalmaresSection";
 
 function InfoSection() {
@@ -86,7 +87,7 @@ function PasswordSection() {
     setSaved(false);
     const { error } = await updatePassword(password);
     setSaving(false);
-    if (error) setError(error.message);
+    if (error) setError(passwordErrorMessage(error));
     else {
       setSaved(true);
       setPassword("");
@@ -104,11 +105,12 @@ function PasswordSection() {
           <input
             type="password"
             required
-            minLength={6}
+            minLength={PASSWORD_MIN_LENGTH}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="6 caractères minimum"
           />
+          <div className="field-hint">{PASSWORD_HINT}</div>
         </div>
         <button className="btn btn-primary" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : "Changer le mot de passe"}

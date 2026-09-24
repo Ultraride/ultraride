@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
 
 // Reached via the link in a "reset password" email. Supabase exchanges the
 // URL token for a temporary recovery session automatically (it fires a
@@ -34,7 +35,7 @@ export default function ResetPassword() {
     const { error } = await updatePassword(password);
     setSaving(false);
     if (error) {
-      setError(error.message);
+      setError(passwordErrorMessage(error));
       return;
     }
     navigate("/account");
@@ -53,11 +54,12 @@ export default function ResetPassword() {
             <input
               type="password"
               required
-              minLength={6}
+              minLength={PASSWORD_MIN_LENGTH}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="6 caractères minimum"
             />
+            <div className="field-hint">{PASSWORD_HINT}</div>
           </div>
           <button className="btn btn-primary" type="submit" disabled={saving}>
             {saving ? "Enregistrement…" : "Définir ce mot de passe"}
