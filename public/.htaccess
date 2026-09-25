@@ -1,0 +1,49 @@
+# UltraRide — hébergement OVH (Apache 2.4)
+
+Options -Indexes
+DirectoryIndex index.html
+
+# Fichiers cachés (.htaccess, .ftp-deploy-sync-state.json déposé par le
+# déploiement…) : jamais servis.
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # www → domaine nu, directement en HTTPS (une seule redirection).
+  RewriteCond %{HTTP_HOST} ^www\.ultraride\.eu$ [NC]
+  RewriteRule ^ https://ultraride.eu%{REQUEST_URI} [R=301,L]
+
+  # HTTP → HTTPS. X-Forwarded-Proto évite une boucle si un proxy (CDN)
+  # termine le TLS devant le serveur.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # Routage SPA : tout ce qui n'est ni un fichier ni un dossier existant sert
+  # index.html. Un fichier manquant sous /assets/ reste un vrai 404.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/assets/
+  RewriteRule ^ /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Fichiers de build fingerprintés par Vite : immuables.
+  <If "%{REQUEST_URI} =~ m#^/assets/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+
+  # index.html (servi aussi pour toutes les routes SPA) : toujours revalidé,
+  # pour qu'un déploiement soit visible immédiatement.
+  <Files "index.html">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </Files>
+
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "geolocation=(self)"
+</IfModule>
