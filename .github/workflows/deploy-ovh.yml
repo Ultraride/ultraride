@@ -16,6 +16,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Filet de sécurité : un envoi bloqué ne monopolise pas le runner.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -31,13 +33,25 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Envoi incrémental : l'action garde un fichier d'état sur le serveur et
-      # n'envoie que les fichiers modifiés. Pas de dangerous-clean-slate.
-      - uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: ./dist/
-          server-dir: ./www/
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      # Le mutualisé OVH refuse le FTPS : envoi en SFTP (port 22).
+      # Le mot de passe passe par LFTP_PASSWORD (--env-password), jamais par
+      # la ligne de commande. Sans --delete : rien n'est supprimé côté serveur.
+      - name: Upload dist/ over SFTP
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -c "
+            set cmd:fail-exit yes;
+            set sftp:auto-confirm yes;
+            set net:max-retries 2;
+            set net:timeout 30;
+            set net:reconnect-interval-base 5;
+            open --env-password -u '$FTP_USERNAME' -p 22 'sftp://$FTP_SERVER';
+            mirror --reverse --verbose --parallel=4 ./dist/ www/;
+            bye
+          "
