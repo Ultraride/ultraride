@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import DisclaimerModal from "./components/DisclaimerModal";
@@ -26,8 +27,11 @@ import UsersManager from "./admin/UsersManager";
 import OrganizersManager from "./admin/OrganizersManager";
 import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
+import { trackVisit } from "./lib/trackVisit";
 
 export default function App() {
+  useEffect(() => { trackVisit(); }, []);
+
   return (
     <>
       <Header />
