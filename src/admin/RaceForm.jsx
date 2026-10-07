@@ -91,6 +91,25 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // `required` ne couvre pas PlaceSearch ni ImageUploadField : une fiche sans
+    // coordonnées GPS fait planter la carte Leaflet de la page détail.
+    const missing = [];
+    if (!form.image_url) missing.push("Image de la course");
+    if (!form.start_place || form.start_lat === "" || form.start_lat == null || form.start_lon === "" || form.start_lon == null)
+      missing.push("Lieu de départ (choisis une suggestion dans la liste pour récupérer les coordonnées GPS)");
+    if (!form.end_place || form.end_lat === "" || form.end_lat == null || form.end_lon === "" || form.end_lon == null)
+      missing.push("Lieu d'arrivée (choisis une suggestion dans la liste pour récupérer les coordonnées GPS)");
+    if (isAdmin && !form.organizer_id && !form.organizer_name?.trim())
+      missing.push("Organisateur (lié ou nom libre)");
+    if (form.start_date && form.end_date && form.end_date < form.start_date)
+      missing.push("Date de fin postérieure ou égale à la date de début");
+    if (missing.length) {
+      setError("Champs manquants ou invalides : " + missing.join(", "));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -105,6 +124,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
     for (const key of NUMERIC_COLUMNS) {
       if (key in payload) payload[key] = numOrNull(payload[key]);
     }
+    // Sans coordonnées principales, la carte se rabat sur le point de départ.
+    payload.lat = numOrNull(form.lat) ?? numOrNull(form.start_lat);
+    payload.lon = numOrNull(form.lon) ?? numOrNull(form.start_lon);
     for (const key of ["start_date", "end_date", "organizer_id"]) {
       if (key in payload && payload[key] === "") payload[key] = null;
     }
@@ -175,12 +197,12 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       {error && <div className="error-box">{error}</div>}
 
       <div className="field">
-        <label>Nom</label>
+        <label>Nom *</label>
         <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
       </div>
 
       <ImageUploadField
-        label="Image de l'ultra"
+        label="Image de l'ultra *"
         value={form.image_url}
         onChange={(v) => field("image_url", v)}
         folder="races"
@@ -188,15 +210,15 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="grid-2">
         <div className="field">
-          <label>Pays</label>
-          <select value={form.country} onChange={(e) => field("country", e.target.value)}>
+          <label>Pays *</label>
+          <select required value={form.country} onChange={(e) => field("country", e.target.value)}>
             <option value="">— Sélectionner —</option>
             {EMEA_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>Discipline</label>
-          <select value={form.discipline} onChange={(e) => field("discipline", e.target.value)}>
+          <label>Discipline *</label>
+          <select required value={form.discipline} onChange={(e) => field("discipline", e.target.value)}>
             <option>Gravel</option><option>Route</option><option>VTT</option>
           </select>
         </div>
@@ -204,16 +226,16 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="grid-2">
         <div className="field">
-          <label>Format</label>
-          <select value={form.format} onChange={(e) => field("format", e.target.value)}>
+          <label>Format *</label>
+          <select required value={form.format} onChange={(e) => field("format", e.target.value)}>
             <option value="course">Course</option>
             <option value="aventure">Aventure</option>
             <option value="endurance">Endurance</option>
           </select>
         </div>
         <div className="field">
-          <label>Mode</label>
-          <select value={form.mode} onChange={(e) => field("mode", e.target.value)}>
+          <label>Mode *</label>
+          <select required value={form.mode} onChange={(e) => field("mode", e.target.value)}>
             <option>Autonomie</option><option>Semi-autonomie</option><option>Assisté</option>
           </select>
         </div>
@@ -221,16 +243,16 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="grid-2">
         <div className="field">
-          <label>Parcours</label>
-          <select value={form.parcours} onChange={(e) => field("parcours", e.target.value)}>
+          <label>Parcours *</label>
+          <select required value={form.parcours} onChange={(e) => field("parcours", e.target.value)}>
             <option value="boucle">Boucle</option>
             <option value="point">Point à point</option>
             <option value="ar">Aller-retour</option>
           </select>
         </div>
         <div className="field">
-          <label>Mois</label>
-          <select value={form.month} onChange={(e) => field("month", e.target.value)}>
+          <label>Mois *</label>
+          <select required value={form.month} onChange={(e) => field("month", e.target.value)}>
             <option value="">— Sélectionner —</option>
             {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
@@ -239,12 +261,12 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
       <div className="grid-2">
         <div className="field">
-          <label>Distance (km)</label>
-          <input type="number" value={form.km ?? ""} onChange={(e) => field("km", e.target.value)} />
+          <label>Distance (km) *</label>
+          <input required type="number" value={form.km ?? ""} onChange={(e) => field("km", e.target.value)} />
         </div>
         <div className="field">
-          <label>Dénivelé + (m)</label>
-          <input type="number" value={form.dplus ?? ""} onChange={(e) => field("dplus", e.target.value)} />
+          <label>Dénivelé + (m) *</label>
+          <input required type="number" value={form.dplus ?? ""} onChange={(e) => field("dplus", e.target.value)} />
         </div>
       </div>
 
@@ -290,38 +312,44 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       </div>
 
       <PlaceSearch
-        label="Lieu de départ"
+        label="Lieu de départ *"
         value={form.start_place}
         placeholder="Place de la Cathédrale, Strasbourg…"
-        onSelect={({ name, lat, lon }) => setForm((f) => ({
-          ...f,
-          start_place: name,
-          start_lat: lat ?? f.start_lat,
-          start_lon: lon ?? f.start_lon,
-        }))}
+        onSelect={({ name, lat, lon }) => setForm((f) => {
+          // Saisie libre (lat/lon null) : on efface les coordonnées, sinon
+          // celles de l'ancien lieu resteraient attachées au nouveau nom.
+          const next = { ...f, start_place: name, start_lat: lat ?? "", start_lon: lon ?? "" };
+          if (f.parcours === "boucle" && lat != null && lon != null && !f.end_place) {
+            next.end_place = name;
+            next.end_lat = lat;
+            next.end_lon = lon;
+          }
+          return next;
+        })}
       />
 
       <PlaceSearch
-        label="Lieu d'arrivée"
+        label="Lieu d'arrivée *"
         value={form.end_place}
         placeholder="Esplanade, Argelès-sur-Mer…"
         onSelect={({ name, lat, lon }) => setForm((f) => ({
           ...f,
           end_place: name,
-          end_lat: lat ?? f.end_lat,
-          end_lon: lon ?? f.end_lon,
+          end_lat: lat ?? "",
+          end_lon: lon ?? "",
         }))}
       />
 
       <div className="field">
-        <label>Heure de départ</label>
-        <input value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
+        <label>Heure de départ *</label>
+        <input required value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
       </div>
 
       <div className="grid-2">
         <div className="field">
-          <label>Date de début</label>
+          <label>Date de début *</label>
           <input
+            required
             type="date"
             value={form.start_date || ""}
             onChange={(e) => field("start_date", e.target.value)}
@@ -329,8 +357,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           <div className="field-hint">jj/mm/aaaa — date du jour de départ officiel</div>
         </div>
         <div className="field">
-          <label>Date de fin</label>
+          <label>Date de fin *</label>
           <input
+            required
             type="date"
             value={form.end_date || ""}
             onChange={(e) => field("end_date", e.target.value)}
@@ -372,7 +401,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </div>
       ) : (
         <div className="field">
-          <label>Organisateur</label>
+          <label>Organisateur *</label>
           {linkedOrganizer ? (
             <>
               <input value={linkedOrganizer.name} disabled />
@@ -384,6 +413,7 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           ) : (
             <>
               <input
+                required
                 value={form.organizer_name || ""}
                 onChange={(e) => field("organizer_name", e.target.value)}
                 placeholder="Nom affiché"
@@ -413,13 +443,13 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       </div>
 
       <div className="field">
-        <label>Description courte</label>
-        <textarea rows={2} value={form.blurb || ""} onChange={(e) => field("blurb", e.target.value)} />
+        <label>Description courte *</label>
+        <textarea required rows={2} value={form.blurb || ""} onChange={(e) => field("blurb", e.target.value)} />
       </div>
 
       <div className="field">
-        <label>Description longue</label>
-        <textarea rows={4} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)} />
+        <label>Description longue *</label>
+        <textarea required rows={4} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)} />
       </div>
 
       {isAdmin && (

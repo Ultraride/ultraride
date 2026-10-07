@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Nominatim (OpenStreetMap) place autocomplete — no API key needed.
 // On selection, calls onSelect({ name, lat, lon }) so the parent can fill
@@ -8,6 +8,10 @@ export default function PlaceSearch({ label, value, onSelect, placeholder }) {
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef(null);
+
+  // Le parent peut remplir le lieu lui-même (arrivée recopiée du départ pour
+  // une boucle) : le champ doit alors afficher la nouvelle valeur.
+  useEffect(() => { setQuery(value || ""); }, [value]);
 
   const search = (text) => {
     setQuery(text);
