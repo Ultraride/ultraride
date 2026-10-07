@@ -2,6 +2,7 @@ import { Children, isValidElement, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { analyticsEnabled, openConsentBanner } from "../lib/analytics";
 
 function slugify(str) {
   return (str || "")
@@ -27,8 +28,13 @@ const components = {
     <div className="legal-table-scroll"><table {...props} /></div>
   ),
   // Liens internes via le routeur, sans rechargement de page.
+  // [Gérer les cookies](#gerer-cookies) : rouvre le bandeau de consentement.
   a: ({ node, href = "", children, ...props }) =>
-    href.startsWith("/")
+    href === "#gerer-cookies"
+      ? analyticsEnabled()
+        ? <button type="button" className="footer-link-button" onClick={openConsentBanner}>{children}</button>
+        : <>{children}</>
+      : href.startsWith("/")
       ? <Link to={href} {...props}>{children}</Link>
       : href.startsWith("mailto:")
         ? <a href={href} {...props}>{children}</a>

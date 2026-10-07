@@ -55,21 +55,32 @@ Elles peuvent être communiquées aux autorités sur réquisition légale.
 
 ## 6. Sous-traitants et hébergement
 
-Toutes les données sont hébergées en France.
+Toutes les données sont hébergées en France, à l'exception des statistiques de mesure d'audience, collectées seulement avec votre accord (voir article 7).
 
 | Prestataire | Rôle | Localisation |
 | --- | --- | --- |
 | OVHcloud | Hébergement du site | France |
 | Supabase | Base de données et authentification | Paris, France |
 | Brevo | Envoi des emails (confirmation, récap de modération, informations) | France |
+| Google Ireland Limited | Mesure d'audience (Google Analytics 4), seulement avec votre accord | Union européenne, transferts possibles vers les États-Unis |
 
 Chaque prestataire agit sur instruction de l'association, dans le cadre d'un contrat conforme à l'article 28 du RGPD.
 
 ## 7. Cookies et stockage local
 
-UltraRide n'utilise aucun cookie publicitaire ni outil de suivi tiers. C'est pourquoi aucun bandeau de consentement ne vous est demandé.
+UltraRide n'utilise aucun cookie publicitaire. Le seul outil de suivi tiers, la mesure d'audience décrite ci-dessous, n'est activé qu'avec votre accord.
 
-Le site enregistre uniquement dans votre navigateur les éléments strictement nécessaires à son fonctionnement : votre session de connexion, pour rester connecté, et vos préférences d'affichage. Ils sont exemptés de consentement au sens des recommandations de la CNIL. Vous pouvez les effacer à tout moment depuis les réglages de votre navigateur.
+Le site enregistre par ailleurs dans votre navigateur les éléments strictement nécessaires à son fonctionnement : votre session de connexion, pour rester connecté, vos préférences d'affichage et votre choix concernant les cookies de mesure d'audience. Ils sont exemptés de consentement au sens des recommandations de la CNIL. Vous pouvez les effacer à tout moment depuis les réglages de votre navigateur.
+
+### Cookies de mesure d'audience
+
+Avec votre accord, UltraRide utilise Google Analytics 4 (Google Ireland Limited) pour mesurer la fréquentation du site : pages consultées, durée de visite, type d'appareil, pays d'origine, source de la visite. Ces données servent uniquement à comprendre l'usage du site et à l'améliorer. Elles ne sont ni revendues, ni utilisées à des fins publicitaires.
+
+Ces cookies (_ga, _ga_*) ne sont déposés qu'après votre consentement explicite via le bandeau affiché lors de votre première visite. Votre choix est conservé 13 mois, après quoi il vous sera redemandé. Les données collectées sont conservées 14 mois par Google.
+
+Google peut transférer certaines données vers les États-Unis. Ces transferts sont encadrés par le Data Privacy Framework UE–États-Unis, auquel Google est certifié.
+
+Vous pouvez retirer votre consentement à tout moment via le lien « Gérer les cookies » en bas de la page d'accueil, ou ici : [Gérer les cookies](#gerer-cookies).
 
 ## 8. Géolocalisation et services tiers
 

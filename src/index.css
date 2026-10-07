@@ -925,7 +925,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   scroll-margin-top: 80px;
 }
 
-.legal-page a {
+.legal-page a,
+.legal-page .footer-link-button {
   color: #C4622D;
   text-decoration: underline;
 }
@@ -1137,8 +1138,54 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   color: #C4622D;
 }
 
+/* « Gérer les cookies » est un bouton (il ouvre le bandeau) habillé en lien. */
+.footer-link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.footer-link-button:hover {
+  color: #C4622D;
+}
+
 .site-footer-legal {
   margin-top: 16px;
   font-size: 12px;
   opacity: 0.7;
+}
+
+/* --- Bandeau de consentement (Google Analytics) --- */
+.cookie-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+  z-index: 2001; /* au-dessus des cartes Leaflet et de la modale d'avertissement (2000) */
+  background: #F5F1E6;
+  color: #1B2B20;
+  border: 2px solid #1B2B20;
+  padding: 16px 18px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 4px 4px 0 #1B2B20;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.cookie-banner a { color: #C4622D; text-decoration: underline; }
+.cookie-banner__actions { display: flex; gap: 10px; flex-shrink: 0; }
+.cookie-banner__actions .btn { min-width: 100px; justify-content: center; }
+@media (max-width: 600px) {
+  .cookie-banner { flex-direction: column; align-items: stretch; }
+  .cookie-banner__actions .btn { flex: 1; }
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { analyticsEnabled, openConsentBanner } from "../lib/analytics";
 
 export default function SiteFooter() {
   return (
@@ -13,6 +14,12 @@ export default function SiteFooter() {
         <Link to="/confidentialite">Politique de confidentialité</Link>
         <span aria-hidden="true">·</span>
         <a href="mailto:hello@ultraride.eu">Contact</a>
+        {analyticsEnabled() && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="footer-link-button" onClick={openConsentBanner}>Gérer les cookies</button>
+          </>
+        )}
       </nav>
       <div className="site-footer-legal">
         © 2026 UltraRide · édité par l'association Beyond The Track
