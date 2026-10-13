@@ -268,7 +268,7 @@ async function callClaude(url: string, races: Race[], pageText: string, usage: U
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 4000,
+      max_tokens: 8000,
       system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       tools: [TOOL],
       // "auto" et non "tool" : le choix forcé n'est pas compatible avec la
