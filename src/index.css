@@ -99,6 +99,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .ig-gen-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 10px;font-size:13px;color:var(--paper);background:none;border:1px solid transparent;border-radius:2px;}
 .ig-gen-item:hover{border-color:var(--line);background:var(--panel);}
 .ig-gen-item.active{background:var(--panel);border-color:var(--amber);color:var(--amber);}
+.ru-pill{display:inline-block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;padding:3px 8px;border-radius:999px;color:#FFFFFF;}
 .ig-pill{font-family:var(--mono);font-size:10px;white-space:nowrap;padding:2px 7px;border-radius:999px;color:#FFFFFF;}
 .ig-pill-published{background:#15793F;}
 .ig-pill-exported{background:#C4622D;}

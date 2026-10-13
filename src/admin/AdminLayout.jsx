@@ -6,7 +6,7 @@ import { useAuth } from "../lib/AuthContext";
 export default function AdminLayout() {
   const { user, profile, isAdmin, loading } = useAuth();
   const location = useLocation();
-  const [counts, setCounts] = useState({ races: 0, comments: 0, submissions: 0 });
+  const [counts, setCounts] = useState({ races: 0, comments: 0, submissions: 0, updates: 0 });
 
   // Les compteurs sont relus à chaque changement de page de l'admin : après
   // avoir validé une course ou modéré un avis, la pastille se met à jour
@@ -14,7 +14,7 @@ export default function AdminLayout() {
   const loadCounts = useCallback(async () => {
     if (!isAdmin) return;
 
-    const [racesRes, deletionRes, commentsRes, submissionsRes] = await Promise.all([
+    const [racesRes, deletionRes, commentsRes, submissionsRes, updatesRes] = await Promise.all([
       supabase
         .from("races")
         .select("id", { count: "exact", head: true })
@@ -31,6 +31,10 @@ export default function AdminLayout() {
         .from("race_submissions")
         .select("id", { count: "exact", head: true })
         .eq("status", "new"),
+      supabase
+        .from("race_update_suggestions")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
     ]);
 
     setCounts({
@@ -38,6 +42,7 @@ export default function AdminLayout() {
       races: (racesRes.count || 0) + (deletionRes.count || 0),
       comments: commentsRes.count || 0,
       submissions: submissionsRes.count || 0,
+      updates: updatesRes.count || 0,
     });
   }, [isAdmin]);
 
@@ -61,6 +66,7 @@ export default function AdminLayout() {
   const links = [
     { to: "/admin", label: "À valider", end: true, count: counts.races },
     { to: "/admin/races", label: "Tous les ultras" },
+    { to: "/admin/mises-a-jour", label: "Mises à jour", count: counts.updates },
     { to: "/admin/comments", label: "Commentaires", count: counts.comments },
     { to: "/admin/submissions", label: "Propositions d'ultra", count: counts.submissions },
     { to: "/admin/users", label: "Utilisateurs" },
