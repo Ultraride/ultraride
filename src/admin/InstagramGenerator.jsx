@@ -564,6 +564,36 @@ function buildCaption(race) {
   return blocks.filter(Boolean).join("\n\n");
 }
 
+/* ---------- suivi des publications ---------- */
+
+const IG_FILTERS = [
+  { key: "all", label: "Tous" },
+  { key: "todo", label: "Pas encore publiés" },
+  { key: "done", label: "Publiés" },
+];
+
+function formatDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString("fr-FR") : "";
+}
+
+function PostPill({ post }) {
+  if (post?.published_at) {
+    return (
+      <span className="ig-pill ig-pill-published" title={`Publié le ${formatDate(post.published_at)}`}>
+        📸 Publié
+      </span>
+    );
+  }
+  if (post?.exported_at) {
+    return (
+      <span className="ig-pill ig-pill-exported" title={`Exporté le ${formatDate(post.exported_at)}`}>
+        ⬇ Exporté
+      </span>
+    );
+  }
+  return null;
+}
+
 /* ---------- page ---------- */
 
 export default function InstagramGenerator() {
@@ -576,6 +606,9 @@ export default function InstagramGenerator() {
   const [warnings, setWarnings] = useState([]);
   const [caption, setCaption] = useState("");
   const [copied, setCopied] = useState(false);
+  const [posts, setPosts] = useState({});
+  const [igFilter, setIgFilter] = useState("todo");
+  const [savingPost, setSavingPost] = useState(false);
   const canvasRef = useRef(null);
   const renderSeq = useRef(0);
 
@@ -588,15 +621,76 @@ export default function InstagramGenerator() {
       if (error) setError(error.message);
       else setRaces(data);
     })();
+    (async () => {
+      const { data, error } = await supabase.from("instagram_posts").select("*");
+      if (error) setError(`Suivi Instagram indisponible : ${error.message}`);
+      else setPosts(Object.fromEntries(data.map((p) => [p.race_id, p])));
+    })();
   }, []);
 
+  // Mise à jour locale immédiate, puis upsert. En cas d'échec, on revient à
+  // l'état précédent et on affiche l'erreur. Seuls les champs passés sont
+  // écrits : un export ne touche jamais published_at, et inversement.
+  const savePost = async (raceId, fields) => {
+    const previous = posts[raceId];
+    const row = { race_id: raceId, ...fields, updated_at: new Date().toISOString() };
+    setPosts((p) => ({ ...p, [raceId]: { ...p[raceId], ...row } }));
+    const { error } = await supabase
+      .from("instagram_posts")
+      .upsert(row, { onConflict: "race_id" });
+    if (error) {
+      setPosts((p) => {
+        const next = { ...p };
+        if (previous) next[raceId] = previous;
+        else delete next[raceId];
+        return next;
+      });
+      setError(`Suivi Instagram non enregistré : ${error.message}`);
+      return false;
+    }
+    return true;
+  };
+
+  const setPublished = async (published) => {
+    if (!selected) return;
+    setSavingPost(true);
+    setError(null);
+    await savePost(selected.id, { published_at: published ? new Date().toISOString() : null });
+    setSavingPost(false);
+  };
+
+  const pool = useMemo(
+    () => (races || []).filter((r) => includeUnpublished || r.status === "published"),
+    [races, includeUnpublished]
+  );
+
+  const stats = useMemo(() => {
+    let published = 0;
+    let exported = 0;
+    pool.forEach((r) => {
+      if (posts[r.id]?.published_at) published += 1;
+      else if (posts[r.id]?.exported_at) exported += 1;
+    });
+    return { published, exported, remaining: pool.length - published - exported };
+  }, [pool, posts]);
+
   const filtered = useMemo(() => {
-    if (!races) return [];
     const q = normalize(search.trim());
-    return races
-      .filter((r) => includeUnpublished || r.status === "published")
-      .filter((r) => !q || normalize(r.name).includes(q));
-  }, [races, search, includeUnpublished]);
+    const list = pool
+      .filter((r) => !q || normalize(r.name).includes(q))
+      .filter((r) => {
+        const isPublished = !!posts[r.id]?.published_at;
+        if (igFilter === "todo") return !isPublished;
+        if (igFilter === "done") return isPublished;
+        return true;
+      });
+    // Les ultras exportés mais pas encore publiés sont à publier en priorité.
+    if (igFilter === "todo") {
+      const exported = (r) => (posts[r.id]?.exported_at ? 0 : 1);
+      return [...list].sort((a, b) => exported(a) - exported(b));
+    }
+    return list;
+  }, [pool, posts, search, igFilter]);
 
   const selected = useMemo(
     () => races?.find((r) => r.id === selectedId) || null,
@@ -630,6 +724,9 @@ export default function InstagramGenerator() {
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+        // Après le lancement du téléchargement : un échec ici ne le bloque pas.
+        setError(null);
+        savePost(selected.id, { exported_at: new Date().toISOString() });
       }, "image/png");
     } catch (e) {
       setError(`Export impossible : ${e.message}`);
@@ -672,6 +769,26 @@ export default function InstagramGenerator() {
             Inclure les non publiés
           </label>
 
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+            {IG_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className={`btn${igFilter === f.key ? " btn-primary" : ""}`}
+                style={{ padding: "5px 10px", fontSize: 12 }}
+                onClick={() => setIgFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {races !== null && (
+            <div className="muted mono" style={{ fontSize: 11, marginBottom: 10 }}>
+              {stats.published} publié{stats.published !== 1 ? "s" : ""} · {stats.exported} exporté
+              {stats.exported !== 1 ? "s" : ""} · {stats.remaining} restant{stats.remaining !== 1 ? "s" : ""}
+            </div>
+          )}
+
           {races === null ? (
             <p className="muted">Chargement…</p>
           ) : filtered.length === 0 ? (
@@ -690,7 +807,10 @@ export default function InstagramGenerator() {
                     onClick={() => setSelectedId(r.id)}
                   >
                     <span>{getFlagEmoji(r.country) || ""} {r.name}</span>
-                    {r.status !== "published" && <span className="badge badge-draft">{r.status}</span>}
+                    <span style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      <PostPill post={posts[r.id]} />
+                      {r.status !== "published" && <span className="badge badge-draft">{r.status}</span>}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -710,6 +830,27 @@ export default function InstagramGenerator() {
                 {rendering ? "Rendu en cours…" : `${W} × ${H} px`}
               </span>
             </div>
+            {selected && (
+              <div style={{ marginBottom: 12 }}>
+                {posts[selected.id]?.published_at ? (
+                  <span className="mono" style={{ fontSize: 12, color: "var(--moss)" }}>
+                    Publié le {formatDate(posts[selected.id].published_at)}{" "}
+                    <button
+                      type="button"
+                      className="ig-link"
+                      onClick={() => setPublished(false)}
+                      disabled={savingPost}
+                    >
+                      annuler
+                    </button>
+                  </span>
+                ) : (
+                  <button className="btn" onClick={() => setPublished(true)} disabled={savingPost}>
+                    ✓ Marquer comme publié sur Instagram
+                  </button>
+                )}
+              </div>
+            )}
             {warnings.map((w) => (
               <p key={w} className="field-hint" style={{ color: "var(--brick)", margin: "0 0 6px" }}>⚠ {w}</p>
             ))}
