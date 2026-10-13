@@ -4,6 +4,7 @@ import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
 import EventCard from "../components/EventCard";
 import SiteFooter from "../components/SiteFooter";
+import DataFreshness from "../components/DataFreshness";
 import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
 import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
 
@@ -538,6 +539,8 @@ export default function Home() {
             <div><div className="hero-stat-num">{organizerCount}</div><div className="hero-stat-label">Organisateurs</div></div>
           </div>
         )}
+
+        <DataFreshness />
       </div>
 
       {error && <div className="wrap"><div className="error-box">{error}</div></div>}
