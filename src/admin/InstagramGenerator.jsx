@@ -56,12 +56,26 @@ function formatThousands(n) {
   return int.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + (dec ? `,${dec}` : "");
 }
 
-function instagramHandle(value) {
+const IG_RESERVED_PATHS = new Set(["p", "reel", "reels", "explore", "stories", "tv", "accounts"]);
+
+// "@nom", "nom", "https://instagram.com/nom", "https://www.instagram.com/nom/?hl=fr"
+// → "@nom". null si la valeur est vide ou ne ressemble pas à un compte.
+function toInstagramHandle(value) {
   if (!value) return null;
-  const v = value.trim();
-  const fromUrl = v.match(/instagram\.com\/([^/?#]+)/i);
-  const handle = (fromUrl ? fromUrl[1] : v).replace(/^@/, "");
-  return handle ? `@${handle}` : null;
+  const v = String(value).trim();
+  if (!v) return null;
+  let handle;
+  const fromUrl = v.match(/^(?:https?:\/\/)?(?:[a-z]+\.)?instagram\.com\/([^/?#]+)/i);
+  if (fromUrl) {
+    if (IG_RESERVED_PATHS.has(fromUrl[1].toLowerCase())) return null;
+    handle = fromUrl[1];
+  } else if (/[/:]/.test(v)) {
+    return null;
+  } else {
+    handle = v.replace(/^@/, "");
+  }
+  handle = handle.toLowerCase();
+  return /^[a-z0-9._]{1,30}$/.test(handle) ? `@${handle}` : null;
 }
 
 function organizerName(race) {
@@ -327,6 +341,7 @@ async function renderRacecard(canvas, race) {
 
   // --- Pile du bas, ancrée sur le bas de la carte ---
   const orgName = organizerName(race);
+  const orgHandle = toInstagramHandle(race.organizer?.instagram);
   const footerH = 108;
   const footerLineY = bottom - footerH;
   const formatH = 50;
@@ -482,7 +497,7 @@ async function renderRacecard(canvas, race) {
   }
 
   // --- Pied de carte : organisateur ---
-  if (orgName || logo) {
+  if (orgName || logo || orgHandle) {
     ctx.save();
     ctx.strokeStyle = COLORS.line;
     ctx.lineWidth = 2;
@@ -508,13 +523,19 @@ async function renderRacecard(canvas, race) {
       ctx.stroke();
       fx += s + 20;
     }
+    // Avec un compte Instagram, le nom remonte et le @compte se place dessous.
+    const maxW = right - fx;
+    const fit = (text) => (ctx.measureText(text).width > maxW ? ellipsize(ctx, text, maxW) : text);
+    ctx.textBaseline = "middle";
     if (orgName) {
       ctx.font = `600 28px ${SANS}`;
       ctx.fillStyle = COLORS.dim;
-      ctx.textBaseline = "middle";
-      const maxW = right - fx;
-      const text = ctx.measureText(orgName).width > maxW ? ellipsize(ctx, orgName, maxW) : orgName;
-      ctx.fillText(text, fx, mid + 1);
+      ctx.fillText(fit(orgName), fx, orgHandle ? mid - 16 : mid + 1);
+    }
+    if (orgHandle) {
+      ctx.font = `500 26px ${MONO}`;
+      ctx.fillStyle = COLORS.rust;
+      ctx.fillText(fit(orgHandle), fx, orgName ? mid + 20 : mid + 1);
     }
     ctx.restore();
   }
@@ -536,7 +557,9 @@ async function renderRacecard(canvas, race) {
 
 function buildCaption(race) {
   const flag = getFlagEmoji(race.country);
-  const first = [flag, race.blurb?.trim()].filter(Boolean).join(" ");
+  const handle = toInstagramHandle(race.organizer?.instagram);
+  // Le @compte en tête notifie l'organisateur, qui peut repartager.
+  const first = [flag, handle, race.blurb?.trim()].filter(Boolean).join(" ");
 
   const km = formatThousands(race.km);
   const dplus = formatThousands(race.dplus);
@@ -548,7 +571,8 @@ function buildCaption(race) {
   ].filter(Boolean).join(" · ");
   const what = [race.discipline, race.mode].filter(Boolean).join(" · ");
 
-  const org = instagramHandle(race.organizer?.instagram) || organizerName(race);
+  // Sans compte Instagram, pas de ligne organisateur du tout.
+  const org = handle ? `Organisé par ${handle}` : null;
 
   const disciplineTag = race.discipline ? `#${normalize(race.discipline).replace(/[^a-z0-9]/g, "")}` : null;
   const tags = ["#ultracycling", "#ultradistance", "#bikepacking", disciplineTag, "#ultraride"]
@@ -609,6 +633,10 @@ export default function InstagramGenerator() {
   const [posts, setPosts] = useState({});
   const [igFilter, setIgFilter] = useState("todo");
   const [savingPost, setSavingPost] = useState(false);
+  const [igInput, setIgInput] = useState("");
+  const [igSaving, setIgSaving] = useState(false);
+  const [igError, setIgError] = useState(null);
+  const [igSaved, setIgSaved] = useState(false);
   const canvasRef = useRef(null);
   const renderSeq = useRef(0);
 
@@ -696,6 +724,45 @@ export default function InstagramGenerator() {
     () => races?.find((r) => r.id === selectedId) || null,
     [races, selectedId]
   );
+
+  const selectedOrgId = selected?.organizer?.id || null;
+  const selectedOrgInstagram = selected?.organizer?.instagram || "";
+  useEffect(() => {
+    setIgInput(selectedOrgInstagram);
+    setIgError(null);
+    setIgSaved(false);
+  }, [selectedId, selectedOrgInstagram]);
+
+  // Enregistre le compte sous sa forme normalisée (@nom) ; un champ vide
+  // efface la valeur. Tous les ultras du même organisateur sont mis à jour
+  // localement, ce qui redessine la vignette et la légende.
+  const saveInstagram = async () => {
+    if (!selectedOrgId) return;
+    const raw = igInput.trim();
+    const handle = raw ? toInstagramHandle(raw) : null;
+    if (raw && !handle) {
+      setIgError(`« ${raw} » n'est pas un compte Instagram valide.`);
+      return;
+    }
+    setIgSaving(true);
+    setIgError(null);
+    setIgSaved(false);
+    const { error } = await supabase
+      .from("organizers")
+      .update({ instagram: handle })
+      .eq("id", selectedOrgId);
+    setIgSaving(false);
+    if (error) {
+      setIgError(error.message);
+      return;
+    }
+    setRaces((list) =>
+      list.map((r) =>
+        r.organizer?.id === selectedOrgId ? { ...r, organizer: { ...r.organizer, instagram: handle } } : r
+      )
+    );
+    setIgSaved(true);
+  };
 
   useEffect(() => {
     if (!selected || !canvasRef.current) return;
@@ -808,6 +875,9 @@ export default function InstagramGenerator() {
                   >
                     <span>{getFlagEmoji(r.country) || ""} {r.name}</span>
                     <span style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      {!toInstagramHandle(r.organizer?.instagram) && (
+                        <span className="ig-missing" title="Compte Instagram de l'organisateur non renseigné">IG ?</span>
+                      )}
                       <PostPill post={posts[r.id]} />
                       {r.status !== "published" && <span className="badge badge-draft">{r.status}</span>}
                     </span>
@@ -849,6 +919,30 @@ export default function InstagramGenerator() {
                     ✓ Marquer comme publié sur Instagram
                   </button>
                 )}
+              </div>
+            )}
+            {selected && (
+              <div className="field" style={{ maxWidth: 560, marginBottom: 12 }}>
+                <label htmlFor="ig-org">Instagram de l'organisateur</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    id="ig-org"
+                    value={igInput}
+                    onChange={(e) => { setIgInput(e.target.value); setIgSaved(false); }}
+                    placeholder="@tortour_ultracycling ou URL du profil"
+                    disabled={!selectedOrgId || igSaving}
+                  />
+                  <button
+                    className="btn"
+                    onClick={saveInstagram}
+                    disabled={!selectedOrgId || igSaving || igInput.trim() === selectedOrgInstagram.trim()}
+                  >
+                    {igSaving ? "Enregistrement…" : "Enregistrer"}
+                  </button>
+                </div>
+                {!selectedOrgId && <div className="field-hint">Lie d'abord un organisateur à cet ultra.</div>}
+                {igSaved && <div className="field-hint" style={{ color: "var(--moss)" }}>Enregistré ✓</div>}
+                {igError && <div className="error-box" style={{ marginTop: 6 }}>{igError}</div>}
               </div>
             )}
             {warnings.map((w) => (

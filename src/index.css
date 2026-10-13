@@ -119,6 +119,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .ru-evidence-field{font-family:var(--mono);font-size:11px;color:var(--paperDim);}
 @media(max-width:760px){.ru-compare{grid-template-columns:1fr;}.ru-arrow-side{display:none;}.ru-arrow-down{display:inline;}}
 .ru-pill{display:inline-block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;padding:3px 8px;border-radius:999px;color:#FFFFFF;}
+.ig-missing{font-family:var(--mono);font-size:10px;white-space:nowrap;padding:2px 6px;border-radius:999px;color:var(--paperDim);border:1px solid var(--line);}
 .ig-pill{font-family:var(--mono);font-size:10px;white-space:nowrap;padding:2px 7px;border-radius:999px;color:#FFFFFF;}
 .ig-pill-published{background:#15793F;}
 .ig-pill-exported{background:#C4622D;}
