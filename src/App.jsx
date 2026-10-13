@@ -30,6 +30,7 @@ import OrganizersManager from "./admin/OrganizersManager";
 import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
 import InstagramGenerator from "./admin/InstagramGenerator";
+import ImageOptimizer from "./admin/ImageOptimizer";
 import { trackVisit } from "./lib/trackVisit";
 
 export default function App() {
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="organizers" element={<OrganizersManager />} />
           <Route path="submissions" element={<RaceSubmissions />} />
           <Route path="instagram" element={<InstagramGenerator />} />
+          <Route path="images" element={<ImageOptimizer />} />
         </Route>
       </Routes>
     </>

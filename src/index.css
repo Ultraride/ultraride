@@ -103,6 +103,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .ig-pill-published{background:#15793F;}
 .ig-pill-exported{background:#C4622D;}
 .ig-link{background:none;border:none;padding:0;font:inherit;font-size:11px;color:var(--paperDim);text-decoration:underline;}
+.ig-progress{height:8px;background:var(--ink);border-radius:999px;overflow:hidden;}
+.ig-progress>div{height:100%;background:var(--moss);transition:width .2s;}
+.img-opt-thumb{width:44px;height:44px;object-fit:contain;background:#E5DCC3;border:1px solid var(--line);border-radius:3px;display:block;}
 .ig-gen-canvas{display:block;width:400px;max-width:100%;height:auto;border:1px solid var(--line);border-radius:3px;}
 @media(max-width:900px){.ig-gen{grid-template-columns:1fr;}.ig-gen-items{max-height:320px;}}
 
@@ -236,7 +239,8 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .organizer-links .tag:hover{border-color:var(--amber);color:var(--amber);}
 
 /* ---------- race card image + organizer logo badge ---------- */
-.race-card-image{width:100%;height:140px;border-radius:2px;background-size:contain;background-position:center;background-repeat:no-repeat;margin-bottom:12px;background-color:#E5DCC3;}
+.race-card-image{width:100%;height:140px;border-radius:2px;margin-bottom:12px;background-color:#E5DCC3;overflow:hidden;}
+.race-card-image img{display:block;width:100%;height:100%;object-fit:contain;}
 .race-card-organizer-logo{width:22px;height:22px;border-radius:5px;object-fit:cover;background:var(--ink);border:1px solid var(--line);}
 
 /* ---------- race detail cover image ---------- */

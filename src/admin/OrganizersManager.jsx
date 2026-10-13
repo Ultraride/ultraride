@@ -217,7 +217,7 @@ export default function OrganizersManager() {
             <div key={o.id} className="card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  {o.logo_url && <img src={o.logo_url} alt="" className="organizer-logo" />}
+                  {o.logo_url && <img src={o.logo_url} alt="" className="organizer-logo" loading="lazy" decoding="async" />}
                   <div>
                     <div className="h2" style={{ marginBottom: 2 }}>{o.name}</div>
                     <div className="muted mono" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

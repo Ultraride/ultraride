@@ -38,7 +38,9 @@ export default function EventCard({ event }) {
       style={expanded ? { height: "auto", overflow: "visible" } : undefined}
     >
       <Link to={`/evenements/${slug}`} className="race-card">
-        <div className="race-card-image" style={image ? { backgroundImage: `url(${image})` } : undefined} />
+        <div className="race-card-image">
+          {image && <img src={image} alt="" loading="lazy" decoding="async" />}
+        </div>
 
         <div className="race-card-top">
           <div>
@@ -75,12 +77,12 @@ export default function EventCard({ event }) {
       {organizer && (organizer.name || organizer.logo_url) ? (
         organizer.id ? (
           <Link to={`/organizers/${organizer.id}`} className="race-card-organizer race-card-organizer-link">
-            {organizer.logo_url && <img src={organizer.logo_url} alt="" className="race-card-organizer-logo" />}
+            {organizer.logo_url && <img src={organizer.logo_url} alt="" className="race-card-organizer-logo" loading="lazy" decoding="async" />}
             <span>{organizer.name}</span>
           </Link>
         ) : (
           <div className="race-card-organizer">
-            {organizer.logo_url && <img src={organizer.logo_url} alt="" className="race-card-organizer-logo" />}
+            {organizer.logo_url && <img src={organizer.logo_url} alt="" className="race-card-organizer-logo" loading="lazy" decoding="async" />}
             <span>{organizer.name}</span>
           </div>
         )

@@ -66,6 +66,7 @@ export default function AdminLayout() {
     { to: "/admin/users", label: "Utilisateurs" },
     { to: "/admin/organizers", label: "Fiches organisateur" },
     { to: "/admin/instagram", label: "Instagram" },
+    { to: "/admin/images", label: "Images" },
     { to: "/admin/analytics", label: "Supervision" },
   ];
 

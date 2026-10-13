@@ -74,7 +74,7 @@ export default function EventPage() {
         <div className="organizer-box" style={{ marginTop: 20 }}>
           {organizer.id ? (
             <Link to={`/organizers/${organizer.id}`} className="organizer-box-head organizer-box-head-link">
-              {organizer.logo_url && <img src={organizer.logo_url} alt="" className="organizer-logo" />}
+              {organizer.logo_url && <img src={organizer.logo_url} alt="" className="organizer-logo" loading="lazy" decoding="async" />}
               <div>
                 <div className="organizer-box-label">Organisé par</div>
                 <div className="organizer-box-name">{organizer.name}</div>

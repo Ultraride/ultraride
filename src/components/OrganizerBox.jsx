@@ -18,7 +18,7 @@ export default function OrganizerBox({ race }) {
   const nameContent = (
     <>
       {org?.logo_url && (
-        <img src={org.logo_url} alt="" className="organizer-logo" />
+        <img src={org.logo_url} alt="" className="organizer-logo" loading="lazy" decoding="async" />
       )}
       <div>
         <div className="organizer-box-label">Organisé par</div>

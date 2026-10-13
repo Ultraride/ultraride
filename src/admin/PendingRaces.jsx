@@ -27,7 +27,7 @@ function RaceReview({ race }) {
   return (
     <div className="review-panel">
       {race.image_url && (
-        <img src={race.image_url} alt="" className="review-image" />
+        <img src={race.image_url} alt="" className="review-image" loading="lazy" decoding="async" />
       )}
 
       <dl className="review-grid">

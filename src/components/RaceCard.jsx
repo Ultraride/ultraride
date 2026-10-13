@@ -77,10 +77,9 @@ export default function RaceCard({ race }) {
       style={expanded ? { height: "auto", overflow: "visible" } : undefined}
     >
       <Link to={`/courses/${race.id}`} className="race-card">
-        <div
-          className="race-card-image"
-          style={race.image_url ? { backgroundImage: `url(${race.image_url})` } : undefined}
-        />
+        <div className="race-card-image">
+          {race.image_url && <img src={race.image_url} alt="" loading="lazy" decoding="async" />}
+        </div>
 
         <div className="race-card-top">
           <div>
@@ -141,14 +140,14 @@ export default function RaceCard({ race }) {
         race.organizer.id ? (
           <Link to={`/organizers/${race.organizer.id}`} className="race-card-organizer race-card-organizer-link">
             {race.organizer.logo_url && (
-              <img src={race.organizer.logo_url} alt="" className="race-card-organizer-logo" />
+              <img src={race.organizer.logo_url} alt="" className="race-card-organizer-logo" loading="lazy" decoding="async" />
             )}
             <span>{race.organizer.name}</span>
           </Link>
         ) : (
           <div className="race-card-organizer">
             {race.organizer.logo_url && (
-              <img src={race.organizer.logo_url} alt="" className="race-card-organizer-logo" />
+              <img src={race.organizer.logo_url} alt="" className="race-card-organizer-logo" loading="lazy" decoding="async" />
             )}
             <span>{race.organizer.name}</span>
           </div>

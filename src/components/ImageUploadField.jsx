@@ -1,16 +1,25 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { compressImage, formatBytes } from "../lib/compressImage";
 
 // Le SVG peut embarquer du script : seul l'admin peut en téléverser.
 const BASE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const FORMAT_ERROR = "Format non autorisé : PNG, JPEG, WebP ou GIF uniquement.";
+
+// Les logos s'affichent en petit : 600 px de large suffisent largement.
+const MAX_WIDTH_BY_FOLDER = { organizers: 600 };
+
+// Un an de cache navigateur : chaque upload a un nom unique, donc une image
+// remplacée change d'URL et le cache n'est jamais périmé.
+const CACHE_CONTROL = "31536000";
 
 // Reusable field: paste a URL directly, or upload a file (goes to Supabase
 // Storage, bucket "public-images"), with a small preview once set.
 export default function ImageUploadField({ label, value, onChange, hint, folder = "uploads" }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [sizeInfo, setSizeInfo] = useState(null);
   const { isAdmin } = useAuth();
   const allowedTypes = isAdmin ? [...BASE_TYPES, "image/svg+xml"] : BASE_TYPES;
 
@@ -18,6 +27,7 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
     const file = e.target.files?.[0];
     if (!file) return;
     setError(null);
+    setSizeInfo(null);
 
     // `accept` n'est qu'une suggestion au sélecteur de fichiers.
     if (!allowedTypes.includes(file.type)) {
@@ -27,9 +37,20 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
     }
     setUploading(true);
 
-    const ext = file.name.split(".").pop();
+    let result;
+    try {
+      result = await compressImage(file, { maxWidth: MAX_WIDTH_BY_FOLDER[folder] || 1600 });
+    } catch {
+      // Image illisible par le navigateur : on envoie l'original.
+      result = { blob: file, contentType: file.type, originalSize: file.size, newSize: file.size };
+    }
+    const compressed = result.contentType === "image/webp" && result.blob !== file;
+
+    const ext = compressed ? "webp" : file.name.split(".").pop();
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("public-images").upload(path, file);
+    const { error: uploadError } = await supabase.storage
+      .from("public-images")
+      .upload(path, result.blob, { contentType: result.contentType, cacheControl: CACHE_CONTROL });
 
     if (uploadError) {
       const rejectedFormat =
@@ -42,6 +63,11 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
 
     const { data } = supabase.storage.from("public-images").getPublicUrl(path);
     onChange(data.publicUrl);
+    setSizeInfo(
+      compressed
+        ? `Image optimisée : ${formatBytes(result.originalSize)} → ${formatBytes(result.newSize)}`
+        : `Image envoyée telle quelle : ${formatBytes(result.originalSize)}`
+    );
     setUploading(false);
     e.target.value = "";
   };
@@ -60,7 +86,8 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
           <input type="file" accept={allowedTypes.join(",")} onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
         </label>
       </div>
-      {value && <img src={value} alt="" className="image-upload-preview" />}
+      {value && <img src={value} alt="" className="image-upload-preview" loading="lazy" decoding="async" />}
+      {sizeInfo && <div className="field-hint">{sizeInfo}</div>}
       {error && <div className="error-box" style={{ marginTop: 6 }}>{error}</div>}
       {hint && <div className="field-hint">{hint}</div>}
     </div>

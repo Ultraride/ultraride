@@ -42,7 +42,7 @@ export default function OrganizerPage() {
     <div className="wrap" style={{ paddingTop: 40, paddingBottom: 60 }}>
       <div className="organizer-page-head">
         {organizer.logo_url && (
-          <img src={organizer.logo_url} alt="" className="organizer-page-logo" />
+          <img src={organizer.logo_url} alt="" className="organizer-page-logo" loading="lazy" decoding="async" />
         )}
         <div>
           <h1 className="h1" style={{ margin: 0 }}>{organizer.name}</h1>
