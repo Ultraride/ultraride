@@ -65,6 +65,7 @@ export default function AdminLayout() {
     { to: "/admin/submissions", label: "Propositions d'ultra", count: counts.submissions },
     { to: "/admin/users", label: "Utilisateurs" },
     { to: "/admin/organizers", label: "Fiches organisateur" },
+    { to: "/admin/instagram", label: "Instagram" },
     { to: "/admin/analytics", label: "Supervision" },
   ];
 

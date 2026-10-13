@@ -29,6 +29,7 @@ import UsersManager from "./admin/UsersManager";
 import OrganizersManager from "./admin/OrganizersManager";
 import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
+import InstagramGenerator from "./admin/InstagramGenerator";
 import { trackVisit } from "./lib/trackVisit";
 
 export default function App() {
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="users" element={<UsersManager />} />
           <Route path="organizers" element={<OrganizersManager />} />
           <Route path="submissions" element={<RaceSubmissions />} />
+          <Route path="instagram" element={<InstagramGenerator />} />
         </Route>
       </Routes>
     </>

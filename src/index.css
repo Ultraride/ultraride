@@ -93,6 +93,15 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .admin-main{flex:1;padding:24px 28px;overflow-x:auto;}
 @media(max-width:768px){.admin-shell{flex-direction:column;}.admin-sidebar{width:100%;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}.admin-sidebar a{white-space:nowrap;}}
 
+/* ---------- admin: générateur de vignettes Instagram ---------- */
+.ig-gen{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:24px;align-items:start;}
+.ig-gen-items{display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 280px);overflow-y:auto;}
+.ig-gen-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 10px;font-size:13px;color:var(--paper);background:none;border:1px solid transparent;border-radius:2px;}
+.ig-gen-item:hover{border-color:var(--line);background:var(--panel);}
+.ig-gen-item.active{background:var(--panel);border-color:var(--amber);color:var(--amber);}
+.ig-gen-canvas{display:block;width:400px;max-width:100%;height:auto;border:1px solid var(--line);border-radius:3px;}
+@media(max-width:900px){.ig-gen{grid-template-columns:1fr;}.ig-gen-items{max-height:320px;}}
+
 .h1{font-family:var(--disp);font-weight:400;font-size:26px;margin:0 0 16px;}
 .h2{font-family:var(--disp);font-weight:400;font-size:18px;margin:0 0 10px;}
 .muted{color:var(--paperDim);font-size:13px;}
