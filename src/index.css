@@ -115,6 +115,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .ru-arrow-down{display:none;}
 .ru-evidence{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:12px;}
 .ru-evidence-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.ru-source-path{font-family:var(--mono);font-size:11px;color:var(--paperDim);word-break:break-all;}
 .ru-evidence-field{font-family:var(--mono);font-size:11px;color:var(--paperDim);}
 @media(max-width:760px){.ru-compare{grid-template-columns:1fr;}.ru-arrow-side{display:none;}.ru-arrow-down{display:inline;}}
 .ru-pill{display:inline-block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;padding:3px 8px;border-radius:999px;color:#FFFFFF;}

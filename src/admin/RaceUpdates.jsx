@@ -166,6 +166,29 @@ function defaultSelection(items) {
   return sel;
 }
 
+// « tortour.com/fr/race-info » : domaine et chemin, pour voir d'un coup
+// d'œil d'où vient l'information.
+function shortUrl(url) {
+  try {
+    const u = new URL(normalizeUrl(url));
+    const path = u.pathname.replace(/\/+$/, "");
+    const short = `${u.hostname.replace(/^www\./, "")}${path}`;
+    return short.length > 70 ? `${short.slice(0, 69)}…` : short;
+  } catch {
+    return url;
+  }
+}
+
+function SourceLink({ url }) {
+  if (!url) return null;
+  return (
+    <>
+      <a href={normalizeUrl(url)} target="_blank" rel="noopener noreferrer">source ↗</a>
+      <span className="ru-source-path" title={url}>{shortUrl(url)}</span>
+    </>
+  );
+}
+
 function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnoreAll, busy, error }) {
   const checked = items.filter((s) => selection[s.id]);
   const suggestedFields = new Set(items.map((s) => s.field));
@@ -249,9 +272,7 @@ function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnor
               <Pill label={conf.label} bg={conf.bg} />
               <span className="ru-evidence-field">{FIELD_LABEL[s.field] || s.field}</span>
               {s.evidence && <em>« {s.evidence} »</em>}
-              {s.source?.url && (
-                <a href={s.source.url} target="_blank" rel="noopener noreferrer">source ↗</a>
-              )}
+              <SourceLink url={s.source_url || s.source?.url} />
             </div>
           );
         })}
