@@ -24,7 +24,7 @@ const FIELD_LABEL = {
 };
 
 const CONFIDENCE = {
-  high: { label: "Élevée", bg: "#15793F" },
+  high: { label: "Haute", bg: "#15793F" },
   medium: { label: "Moyenne", bg: "#D9822B" },
   low: { label: "Faible", bg: "#8A8A80" },
 };
@@ -48,23 +48,6 @@ function Pill({ label, bg, title }) {
       {label}
     </span>
   );
-}
-
-function displayValue(field, value) {
-  if (value === null || value === undefined || value === "") return <span className="muted">—</span>;
-  if (field === "open") return value === "true" ? "Ouvert" : "Fermé";
-  if (field === "start_date" || field === "end_date") {
-    const d = new Date(`${value}T00:00:00`);
-    return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("fr-FR");
-  }
-  if (field === "registration_url") {
-    return (
-      <a href={value} target="_blank" rel="noopener noreferrer" style={{ wordBreak: "break-all" }}>
-        {value}
-      </a>
-    );
-  }
-  return value;
 }
 
 function formatDateTime(iso) {
@@ -97,19 +80,211 @@ function convertValue(field, raw) {
 
 /* ---------- onglet Suggestions ---------- */
 
+const RACE_FIELDS = "id, name, km, dplus, start_date, end_date, month, open, next_edition, registration_url";
+
+function formatThousands(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+function parseDate(v) {
+  if (!v) return null;
+  const d = new Date(`${String(v).slice(0, 10)}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+// « 8 → 15 mai 2027 », « 28 mai → 3 juin 2027 », « 8 mai 2027 »…
+function formatDateRange(start, end) {
+  const s = parseDate(start);
+  const e = parseDate(end);
+  const full = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  if (!s && !e) return null;
+  if (!s || !e) return full(s || e);
+  if (s.getTime() === e.getTime()) return full(s);
+  if (s.getFullYear() === e.getFullYear()) {
+    if (s.getMonth() === e.getMonth()) return `${s.getDate()} → ${full(e)}`;
+    return `${s.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} → ${full(e)}`;
+  }
+  return `${full(s)} → ${full(e)}`;
+}
+
+function UrlValue({ url }) {
+  const href = normalizeUrl(url);
+  let host = url;
+  try {
+    host = new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    // URL illisible : on affiche la valeur brute.
+  }
+  return <a href={href} target="_blank" rel="noopener noreferrer">{host}</a>;
+}
+
+// Champs de la fiche, dans l'ordre d'affichage. `fields` : colonnes de races
+// couvertes par la ligne (les dates regroupent début et fin).
+const ROWS = [
+  {
+    key: "km", label: "Distance", fields: ["km"],
+    render: (r) => (r.km === null || r.km === undefined || r.km === "" ? "Boucle infinie" : `${formatThousands(r.km)} km`),
+  },
+  {
+    key: "dplus", label: "D+", fields: ["dplus"],
+    render: (r) => (r.dplus === null || r.dplus === undefined || r.dplus === "" ? null : `${formatThousands(r.dplus)} m`),
+  },
+  { key: "dates", label: "Dates", fields: ["start_date", "end_date"], render: (r) => formatDateRange(r.start_date, r.end_date) },
+  { key: "month", label: "Mois", fields: ["month"], render: (r) => r.month || null },
+  {
+    key: "open", label: "Inscriptions", fields: ["open"],
+    render: (r) => (r.open === null || r.open === undefined ? null : r.open ? "Ouvertes" : "Fermées"),
+  },
+  { key: "next_edition", label: "Prochaine édition", fields: ["next_edition"], render: (r) => r.next_edition || null },
+  {
+    key: "registration_url", label: "Lien d'inscription", fields: ["registration_url"],
+    render: (r) => (r.registration_url ? <UrlValue url={r.registration_url} /> : null),
+  },
+];
+
+const SHORT_LABEL = { start_date: "début", end_date: "fin" };
+
+// Pour l'aperçu, une valeur invalide est affichée telle quelle ; la
+// validation, elle, la refusera avec un message clair.
+function previewValue(field, raw) {
+  try {
+    return convertValue(field, raw);
+  } catch {
+    return raw;
+  }
+}
+
+// Coche par défaut les confiances high/medium, une seule suggestion par champ.
+function defaultSelection(items) {
+  const sel = {};
+  const taken = new Set();
+  items.forEach((s) => {
+    const eligible = s.confidence === "high" || s.confidence === "medium";
+    sel[s.id] = eligible && !taken.has(s.field);
+    if (sel[s.id]) taken.add(s.field);
+  });
+  return sel;
+}
+
+function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnoreAll, busy, error }) {
+  const checked = items.filter((s) => selection[s.id]);
+  const suggestedFields = new Set(items.map((s) => s.field));
+
+  const after = { ...race };
+  checked.forEach((s) => { after[s.field] = previewValue(s.field, s.new_value); });
+  const checkedFields = new Set(checked.map((s) => s.field));
+
+  const show = (v) => (v === null || v === undefined || v === "" ? "—" : v);
+
+  return (
+    <div className="panel ru-card">
+      <div className="ru-card-head">
+        <Link to={`/courses/${race.id}`} className="h2" style={{ margin: 0 }} target="_blank">
+          {race.name} ↗
+        </Link>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn" disabled={busy} onClick={onIgnoreAll}>Tout ignorer</button>
+          <button className="btn btn-primary" disabled={busy || checked.length === 0} onClick={onValidate}>
+            Valider la sélection ({checked.length})
+          </button>
+        </div>
+      </div>
+
+      {error && <div className="error-box" style={{ whiteSpace: "pre-line" }}>{error}</div>}
+
+      <div className="ru-compare">
+        <div className="ru-block">
+          <div className="ru-block-title">Avant · fiche actuelle</div>
+          {ROWS.map((row) => {
+            const touched = row.fields.some((f) => suggestedFields.has(f));
+            return (
+              <div key={row.key} className="ru-row">
+                <span className="ru-label">{row.label}</span>
+                <span className={`ru-value${touched ? " ru-old" : ""}`}>{show(row.render(race))}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="ru-arrow" aria-hidden="true">
+          <span className="ru-arrow-side">→</span>
+          <span className="ru-arrow-down">↓</span>
+        </div>
+
+        <div className="ru-block">
+          <div className="ru-block-title">Après · si tu valides</div>
+          {ROWS.map((row) => {
+            const rowItems = items.filter((s) => row.fields.includes(s.field));
+            const changed = row.fields.some((f) => checkedFields.has(f));
+            return (
+              <div key={row.key} className="ru-row">
+                <span className="ru-label">
+                  {rowItems.map((s) => (
+                    <label key={s.id} className="ru-check" title={`Proposé : ${s.new_value}`}>
+                      <input
+                        type="checkbox"
+                        checked={!!selection[s.id]}
+                        onChange={() => onToggle(s)}
+                        disabled={busy}
+                      />
+                      {(rowItems.length > 1 || row.fields.length > 1) && (
+                        <span className="ru-check-hint">{SHORT_LABEL[s.field] || s.new_value}</span>
+                      )}
+                    </label>
+                  ))}
+                  {row.label}
+                </span>
+                <span className={`ru-value${changed ? " ru-new" : ""}`}>{show(row.render(changed ? after : race))}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="ru-evidence">
+        {items.map((s) => {
+          const conf = CONFIDENCE[s.confidence] || CONFIDENCE.low;
+          return (
+            <div key={s.id} className="ru-evidence-line">
+              <Pill label={conf.label} bg={conf.bg} />
+              <span className="ru-evidence-field">{FIELD_LABEL[s.field] || s.field}</span>
+              {s.evidence && <em>« {s.evidence} »</em>}
+              {s.source?.url && (
+                <a href={s.source.url} target="_blank" rel="noopener noreferrer">source ↗</a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SuggestionsTab({ onChanged }) {
   const [suggestions, setSuggestions] = useState(null);
   const [error, setError] = useState(null);
+  const [cardErrors, setCardErrors] = useState({});
   const [busy, setBusy] = useState({});
+  const [selection, setSelection] = useState({});
+  const [flashes, setFlashes] = useState([]);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("race_update_suggestions")
-      .select("*, race:races(id, name), source:race_sources(url)")
+      .select(`*, race:races(${RACE_FIELDS}), source:race_sources(url)`)
       .eq("status", "pending")
       .order("created_at", { ascending: true });
-    if (error) setError(error.message);
-    else setSuggestions(data);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setSuggestions(data);
+    // Les choix déjà faits sont conservés ; seules les nouvelles suggestions
+    // reçoivent la sélection par défaut.
+    setSelection((prev) => {
+      const fresh = data.filter((s) => !(s.id in prev));
+      return { ...prev, ...defaultSelection(fresh) };
+    });
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -117,56 +292,101 @@ function SuggestionsTab({ onChanged }) {
   const groups = useMemo(() => {
     const map = new Map();
     (suggestions || []).forEach((s) => {
+      if (!s.race) return;
       if (!map.has(s.race_id)) map.set(s.race_id, { race: s.race, items: [] });
       map.get(s.race_id).items.push(s);
     });
-    return [...map.values()].sort((a, b) => (a.race?.name || "").localeCompare(b.race?.name || ""));
+    return [...map.values()].sort((a, b) => a.race.name.localeCompare(b.race.name));
   }, [suggestions]);
 
-  const markReviewed = (id, status) =>
-    supabase
-      .from("race_update_suggestions")
-      .update({ status, reviewed_at: new Date().toISOString() })
-      .eq("id", id);
+  // Une seule valeur par champ : cocher une suggestion décoche ses rivales.
+  const toggle = (group, s) =>
+    setSelection((prev) => {
+      const next = { ...prev, [s.id]: !prev[s.id] };
+      if (next[s.id]) {
+        group.items.forEach((o) => {
+          if (o.id !== s.id && o.field === s.field) next[o.id] = false;
+        });
+      }
+      return next;
+    });
 
-  // Renvoie un message d'erreur, ou null si tout s'est bien passé.
-  const accept = async (s) => {
-    let value;
-    try {
-      value = convertValue(s.field, s.new_value);
-    } catch (e) {
-      return `${s.race?.name} · ${FIELD_LABEL[s.field] || s.field} : ${e.message}`;
-    }
-    const { error: updateError } = await supabase
-      .from("races")
-      .update({ [s.field]: value })
-      .eq("id", s.race_id);
-    if (updateError) return `${s.race?.name} · ${FIELD_LABEL[s.field] || s.field} : ${updateError.message}`;
-
-    const { error: markError } = await markReviewed(s.id, "accepted");
-    if (markError) {
-      return `${s.race?.name} : l'ultra a été mis à jour, mais la suggestion n'a pas pu être marquée comme validée (${markError.message})`;
-    }
-    return null;
+  const flash = (message) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setFlashes((f) => [...f, { id, message }]);
+    setTimeout(() => setFlashes((f) => f.filter((x) => x.id !== id)), 4000);
   };
 
-  const ignore = async (s) => {
-    const { error } = await markReviewed(s.id, "ignored");
-    return error ? `${s.race?.name} · ${FIELD_LABEL[s.field] || s.field} : ${error.message}` : null;
-  };
+  const setCardError = (raceId, message) => setCardErrors((e) => ({ ...e, [raceId]: message }));
 
-  const run = async (key, list, action) => {
-    setBusy((b) => ({ ...b, [key]: true }));
-    setError(null);
-    const errors = [];
-    for (const s of list) {
-      const err = await action(s);
-      if (err) errors.push(err);
-    }
-    if (errors.length) setError(errors.join("\n"));
-    setBusy((b) => ({ ...b, [key]: false }));
+  const markReviewed = (ids, status) =>
+    ids.length === 0
+      ? Promise.resolve({ error: null })
+      : supabase
+          .from("race_update_suggestions")
+          .update({ status, reviewed_at: new Date().toISOString() })
+          .in("id", ids);
+
+  const finish = async (raceId) => {
+    setBusy((b) => ({ ...b, [raceId]: false }));
     await load();
     onChanged();
+  };
+
+  const validate = async (group) => {
+    const raceId = group.race.id;
+    const accepted = group.items.filter((s) => selection[s.id]);
+    const rejected = group.items.filter((s) => !selection[s.id]);
+    setCardError(raceId, null);
+
+    const payload = {};
+    const conversionErrors = [];
+    accepted.forEach((s) => {
+      try {
+        payload[s.field] = convertValue(s.field, s.new_value);
+      } catch (e) {
+        conversionErrors.push(`${FIELD_LABEL[s.field] || s.field} : ${e.message}`);
+      }
+    });
+    if (conversionErrors.length) {
+      setCardError(raceId, conversionErrors.join("\n"));
+      return;
+    }
+
+    setBusy((b) => ({ ...b, [raceId]: true }));
+    // Un seul update pour tous les champs cochés : en cas d'échec, rien n'est
+    // marqué et les suggestions restent en attente.
+    const { error: updateError } = await supabase.from("races").update(payload).eq("id", raceId);
+    if (updateError) {
+      setCardError(raceId, updateError.message);
+      setBusy((b) => ({ ...b, [raceId]: false }));
+      return;
+    }
+
+    const [acc, rej] = await Promise.all([
+      markReviewed(accepted.map((s) => s.id), "accepted"),
+      markReviewed(rejected.map((s) => s.id), "ignored"),
+    ]);
+    const markError = acc.error || rej.error;
+    if (markError) {
+      setError(`${group.race.name} a été mis à jour, mais les suggestions n'ont pas pu être marquées : ${markError.message}`);
+    } else {
+      flash(`${group.race.name} mis à jour ✓`);
+    }
+    await finish(raceId);
+  };
+
+  const ignoreAll = async (group) => {
+    const raceId = group.race.id;
+    setCardError(raceId, null);
+    setBusy((b) => ({ ...b, [raceId]: true }));
+    const { error } = await markReviewed(group.items.map((s) => s.id), "ignored");
+    if (error) {
+      setCardError(raceId, error.message);
+      setBusy((b) => ({ ...b, [raceId]: false }));
+      return;
+    }
+    await finish(raceId);
   };
 
   if (suggestions === null && !error) return <p className="muted">Chargement…</p>;
@@ -174,77 +394,27 @@ function SuggestionsTab({ onChanged }) {
   return (
     <div>
       {error && <div className="error-box" style={{ whiteSpace: "pre-line" }}>{error}</div>}
+      {flashes.map((f) => (
+        <div key={f.id} className="success-box">{f.message}</div>
+      ))}
       {suggestions && groups.length === 0 && (
         <p className="muted">Aucune suggestion en attente.</p>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {groups.map((g) => {
-          const groupKey = `race-${g.race?.id}`;
-          return (
-            <div key={groupKey} className="panel">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-                <Link to={`/courses/${g.race?.id}`} className="h2" style={{ margin: 0 }} target="_blank">
-                  {g.race?.name || "Ultra inconnu"} ↗
-                </Link>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn btn-primary" disabled={busy[groupKey]} onClick={() => run(groupKey, g.items, accept)}>
-                    Tout valider
-                  </button>
-                  <button className="btn" disabled={busy[groupKey]} onClick={() => run(groupKey, g.items, ignore)}>
-                    Tout ignorer
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ overflowX: "auto" }}>
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Champ</th>
-                      <th>Actuel</th>
-                      <th>Proposé</th>
-                      <th>Confiance</th>
-                      <th>Extrait source</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {g.items.map((s) => {
-                      const conf = CONFIDENCE[s.confidence] || CONFIDENCE.low;
-                      const disabled = busy[groupKey] || busy[s.id];
-                      return (
-                        <tr key={s.id}>
-                          <td style={{ whiteSpace: "nowrap" }}>{FIELD_LABEL[s.field] || s.field}</td>
-                          <td className="mono" style={{ fontSize: 12 }}>{displayValue(s.field, s.old_value)}</td>
-                          <td className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{displayValue(s.field, s.new_value)}</td>
-                          <td><Pill label={conf.label} bg={conf.bg} /></td>
-                          <td style={{ fontSize: 12, maxWidth: 340 }}>
-                            {s.evidence && <em>« {s.evidence} »</em>}
-                            {s.source?.url && (
-                              <>
-                                {" "}
-                                <a href={s.source.url} target="_blank" rel="noopener noreferrer">source ↗</a>
-                              </>
-                            )}
-                          </td>
-                          <td style={{ whiteSpace: "nowrap", textAlign: "right" }}>
-                            <button className="btn btn-primary" disabled={disabled} onClick={() => run(s.id, [s], accept)}>
-                              Valider
-                            </button>{" "}
-                            <button className="btn" disabled={disabled} onClick={() => run(s.id, [s], ignore)}>
-                              Ignorer
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          );
-        })}
+        {groups.map((g) => (
+          <RaceCompareCard
+            key={g.race.id}
+            race={g.race}
+            items={g.items}
+            selection={selection}
+            onToggle={(s) => toggle(g, s)}
+            onValidate={() => validate(g)}
+            onIgnoreAll={() => ignoreAll(g)}
+            busy={!!busy[g.race.id]}
+            error={cardErrors[g.race.id]}
+          />
+        ))}
       </div>
     </div>
   );

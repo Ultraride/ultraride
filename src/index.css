@@ -99,6 +99,24 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .ig-gen-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 10px;font-size:13px;color:var(--paper);background:none;border:1px solid transparent;border-radius:2px;}
 .ig-gen-item:hover{border-color:var(--line);background:var(--panel);}
 .ig-gen-item.active{background:var(--panel);border-color:var(--amber);color:var(--amber);}
+.ru-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.ru-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch;}
+.ru-block{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+.ru-block-title{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--moss);margin-bottom:8px;}
+.ru-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-top:1px dashed var(--line);font-size:13px;}
+.ru-block-title + .ru-row{border-top:none;}
+.ru-label{display:flex;align-items:center;gap:6px;color:var(--paperDim);flex-wrap:wrap;}
+.ru-value{font-family:var(--mono);font-size:13px;color:var(--paper);text-align:right;padding:2px 6px;border-radius:4px;word-break:break-word;}
+.ru-old{background:#F6DEDA;color:#B8432E;text-decoration:line-through;}
+.ru-new{background:#DCEFE3;color:#15793F;font-weight:600;}
+.ru-check{display:inline-flex;align-items:center;gap:3px;cursor:pointer;}
+.ru-check-hint{font-family:var(--mono);font-size:10px;color:var(--paperDim);}
+.ru-arrow{display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--amber);}
+.ru-arrow-down{display:none;}
+.ru-evidence{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:12px;}
+.ru-evidence-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.ru-evidence-field{font-family:var(--mono);font-size:11px;color:var(--paperDim);}
+@media(max-width:760px){.ru-compare{grid-template-columns:1fr;}.ru-arrow-side{display:none;}.ru-arrow-down{display:inline;}}
 .ru-pill{display:inline-block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;padding:3px 8px;border-radius:999px;color:#FFFFFF;}
 .ig-pill{font-family:var(--mono);font-size:10px;white-space:nowrap;padding:2px 7px;border-radius:999px;color:#FFFFFF;}
 .ig-pill-published{background:#15793F;}
