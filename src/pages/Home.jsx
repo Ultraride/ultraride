@@ -79,7 +79,6 @@ export default function Home() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState("");
-  const [when, setWhen] = useState("upcoming");
 
   // Géolocalisation : jamais demandée sans action du visiteur, sauf si la
   // permission a déjà été accordée lors d'une visite précédente.
@@ -157,7 +156,6 @@ export default function Home() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
-    if (when !== "upcoming") params.set("when", when);
     navigate(`/ultras${params.toString() ? `?${params}` : ""}`);
   };
 
@@ -185,13 +183,6 @@ export default function Home() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Nom, pays, organisateur…"
                 />
-              </label>
-              <label className="v2-search-when">
-                <span className="sr-only">Quand</span>
-                <select value={when} onChange={(e) => setWhen(e.target.value)}>
-                  <option value="upcoming">Prochains départs</option>
-                  <option value="all">Toutes les dates</option>
-                </select>
               </label>
               <button type="submit" className="v2-btn v2-btn-rust">Rechercher</button>
             </form>
