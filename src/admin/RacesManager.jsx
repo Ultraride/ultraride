@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import RaceForm from "./RaceForm";
 import { createNextEdition } from "../lib/editions";
@@ -23,7 +24,12 @@ function normalize(str) {
 export default function RacesManager() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
-  const [editing, setEditing] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  // « + Nouvel ultra » depuis la supervision arrive avec ?new=1 : formulaire ouvert.
+  const [editing, setEditing] = useState(() => (searchParams.get("new") ? {} : null));
+  useEffect(() => {
+    if (searchParams.get("new")) setSearchParams({}, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [deleting, setDeleting] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [search, setSearch] = useState("");

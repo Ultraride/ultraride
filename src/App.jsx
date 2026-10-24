@@ -30,6 +30,7 @@ import UsersManager from "./admin/UsersManager";
 import OrganizersManager from "./admin/OrganizersManager";
 import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
+import AdminOverview from "./admin/AdminOverview";
 import InstagramGenerator from "./admin/InstagramGenerator";
 import ImageOptimizer from "./admin/ImageOptimizer";
 import RaceUpdates from "./admin/RaceUpdates";
@@ -64,7 +65,8 @@ export default function App() {
         <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" className="nowrap-first-cols" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<PendingRaces />} />
+          <Route index element={<AdminOverview />} />
+          <Route path="a-valider" element={<PendingRaces />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="races" element={<RacesManager />} />
           <Route path="comments" element={<CommentsModeration />} />
