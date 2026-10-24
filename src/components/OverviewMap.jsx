@@ -9,7 +9,7 @@ import { DISCIPLINE_COLORS } from "../lib/disciplineColors";
 // carte, juste hors champ tant qu'on ne s'y déplace pas.
 const EUROPE_BOUNDS = [[38.57, -8.75], [58.57, 24.25]];
 
-export default function OverviewMap({ races }) {
+export default function OverviewMap({ races, tall = false }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const [markerRadius, setMarkerRadius] = useState(7);
@@ -69,7 +69,7 @@ export default function OverviewMap({ races }) {
   }, [races, markerRadius]);
 
   return (
-    <div className="map-box">
+    <div className={`map-box${tall ? " map-box--tall" : ""}`}>
       <div className="map-box-head">
         <span>Carte</span>
         <span className="muted">{races.length} balise{races.length !== 1 ? "s" : ""}</span>
