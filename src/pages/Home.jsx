@@ -6,7 +6,7 @@ import DataFreshness from "../components/DataFreshness";
 import { RaceRow, RaceTile, DisciplineBadge, FormatBadge } from "../components/RaceBits";
 import {
   LIST_COLUMNS, DISCIPLINE_COLOR, isUpcoming, byStartDate, countdownLabel,
-  formatLongDate, formatNumber, haversineKm, raceCoords, placeLine,
+  formatShortDate, formatNumber, haversineKm, raceCoords, placeLine,
 } from "../lib/raceDisplay";
 
 // Rayon maximum et nombre de fiches du bloc « Près de toi ».
@@ -67,7 +67,7 @@ function FeaturedRace({ race }) {
       <div className="v2-statgrid">
         <div className="v2-stat"><span className="v2-label">Distance</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
         <div className="v2-stat"><span className="v2-label">D+</span><b>{race.dplus ? `${formatNumber(race.dplus)} m` : "—"}</b></div>
-        <div className="v2-stat"><span className="v2-label">Départ</span><b>{formatLongDate(race.start_date) || race.month || "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">Départ</span><b>{formatShortDate(race.start_date) || race.month || "—"}</b></div>
         <div className="v2-stat"><span className="v2-label">Lieu</span><b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{placeLine({ ...race, country: null }) || race.country || "—"}</b></div>
       </div>
     </Link>

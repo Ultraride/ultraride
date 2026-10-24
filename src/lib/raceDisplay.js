@@ -67,11 +67,12 @@ export function formatLongDate(str) {
   return `${d.getDate()} ${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+const MONTHS_ABBR = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+
 export function formatShortDate(str) {
   const d = parseDate(str);
   if (!d) return null;
-  const m = MONTHS_LONG[d.getMonth()];
-  return `${d.getDate()} ${m.length > 4 ? m.slice(0, 4) + "." : m} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MONTHS_ABBR[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 // Clé de regroupement par mois pour la liste : "2027-03" et son libellé.
