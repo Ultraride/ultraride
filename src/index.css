@@ -1435,3 +1435,17 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   .v2-roadbook-line{display:none;}
   .v2-roadbook-stats{flex-basis:100%;order:10;}
 }
+.v2-feature-wrap{flex:1 1 480px;min-width:0;display:flex;flex-direction:column;gap:12px;}
+.v2-feature-slide{display:flex;flex:1;animation:v2-fade .45s ease;}
+.v2-feature-slide .v2-feature{flex:1 1 auto;}
+@keyframes v2-fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion: reduce){.v2-feature-slide{animation:none;}}
+.v2-carousel-bar{display:flex;align-items:center;gap:8px;}
+.v2-carousel-btn{width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--paper);display:inline-flex;align-items:center;justify-content:center;padding:0;}
+.v2-carousel-btn:hover{border-color:var(--paper);}
+.v2-carousel-dots{display:flex;gap:4px;flex:1;justify-content:center;flex-wrap:wrap;}
+.v2-carousel-dot{width:24px;height:24px;border:none;background:transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;}
+.v2-carousel-dot::before{content:"";width:8px;height:8px;border-radius:4px;background:#CFC6AC;transition:width .2s ease,background .2s ease;}
+.v2-carousel-dot.is-active::before{width:22px;background:#B4541F;}
+.v2-carousel-shuffle{height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--paper);background:transparent;color:var(--paper);font-size:14px;font-weight:600;}
+.v2-carousel-shuffle:hover{background:var(--paper);color:#F5F1E6;}

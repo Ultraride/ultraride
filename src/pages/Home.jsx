@@ -74,6 +74,85 @@ function FeaturedRace({ race }) {
   );
 }
 
+const SLIDE_COUNT = 8;
+const SLIDE_MS = 7000;
+
+function shuffle(list) {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Carrousel « À la une » : des ultras à venir tirés au hasard à chaque visite,
+// qui défilent seuls (pause au survol, au focus, ou via le bouton).
+function FeaturedCarousel({ races }) {
+  const [index, setIndex] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [paused, setPaused] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  );
+  const count = races.length;
+
+  useEffect(() => {
+    if (paused || hovered || count < 2) return;
+    const t = setTimeout(() => setIndex((i) => (i + 1) % count), SLIDE_MS);
+    return () => clearTimeout(t);
+  }, [index, paused, hovered, count]);
+
+  if (!count) return null;
+  const go = (i) => setIndex((i + count) % count);
+  const race = races[index];
+
+  return (
+    <div
+      className="v2-feature-wrap"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
+      aria-roledescription="carrousel"
+      aria-label="Ultras à la une"
+    >
+      <div key={race.id} className="v2-feature-slide" aria-live={paused ? "polite" : "off"}>
+        <FeaturedRace race={race} />
+      </div>
+      {count > 1 && (
+        <div className="v2-carousel-bar">
+          <button type="button" className="v2-carousel-btn" onClick={() => go(index - 1)} aria-label="Ultra précédent">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+          </button>
+          <div className="v2-carousel-dots">
+            {races.map((r, i) => (
+              <button
+                key={r.id}
+                type="button"
+                className={`v2-carousel-dot${i === index ? " is-active" : ""}`}
+                onClick={() => go(i)}
+                aria-label={`Afficher ${r.name}`}
+                aria-current={i === index ? "true" : undefined}
+              />
+            ))}
+          </div>
+          <button type="button" className="v2-carousel-btn" onClick={() => go(index + 1)} aria-label="Ultra suivant">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+          </button>
+          <button type="button" className="v2-carousel-btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Lancer le défilement" : "Mettre en pause"}>
+            {paused
+              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z" /></svg>
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>}
+          </button>
+          <button type="button" className="v2-carousel-shuffle" onClick={() => go(index + 1 + Math.floor(Math.random() * (count - 1)))}>
+            Au hasard
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [races, setRaces] = useState(null);
@@ -127,18 +206,14 @@ export default function Home() {
     [races]
   );
 
-  // « À la une » : l'ultra à venir illustré le plus consulté, sinon le prochain départ.
+  // « À la une » : un tirage au hasard parmi les ultras à venir illustrés
+  // (tous les ultras à venir si aucun n'a de visuel), refait à chaque visite.
   const featured = useMemo(() => {
     const withImage = upcoming.filter((r) => r.image_url);
-    const pool = withImage.length ? withImage : upcoming;
-    if (!pool.length) return null;
-    return [...pool].sort((a, b) => (b.view_count || 0) - (a.view_count || 0))[0];
+    return shuffle(withImage.length ? withImage : upcoming).slice(0, SLIDE_COUNT);
   }, [upcoming]);
 
-  const nextDepartures = useMemo(
-    () => upcoming.filter((r) => r.id !== featured?.id).slice(0, 6),
-    [upcoming, featured]
-  );
+  const nextDepartures = useMemo(() => upcoming.slice(0, 6), [upcoming]);
 
   const nearby = useMemo(() => {
     if (!coords) return [];
@@ -198,7 +273,7 @@ export default function Home() {
             </div>
           </div>
 
-          {featured && <FeaturedRace race={featured} />}
+          {featured.length > 0 && <FeaturedCarousel races={featured} />}
         </section>
 
         <DataFreshness />
