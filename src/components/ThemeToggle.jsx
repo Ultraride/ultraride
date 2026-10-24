@@ -21,6 +21,7 @@ function applyTheme(mode) {
   if (mode === "auto") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", mode);
   try { localStorage.setItem(KEY, mode); } catch { /* stockage indisponible */ }
+  window.dispatchEvent(new CustomEvent("ultraride-theme", { detail: mode }));
 }
 
 function useTheme() {
@@ -28,9 +29,15 @@ function useTheme() {
   useEffect(() => { applyTheme(mode); }, [mode]);
   // Un autre onglet change le thème : on suit.
   useEffect(() => {
+    // Les autres sélecteurs de la page (en-tête, compte) et les autres onglets suivent.
     const onStorage = (e) => { if (e.key === KEY) setMode(readTheme()); };
+    const onLocal = (e) => setMode((m) => (m === e.detail ? m : e.detail));
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("ultraride-theme", onLocal);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("ultraride-theme", onLocal);
+    };
   }, []);
   return [mode, setMode];
 }
@@ -77,10 +84,10 @@ export function ThemeCycleButton() {
 }
 
 // Choix explicite à trois boutons, pour le menu mobile.
-export function ThemeSegmented() {
+export function ThemeSegmented({ className = "" }) {
   const [mode, setMode] = useTheme();
   return (
-    <div className="theme-seg" role="group" aria-label="Thème">
+    <div className={`theme-seg ${className}`} role="group" aria-label="Thème">
       {ORDER.map((m) => (
         <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}>
           <Icon mode={m} />{LABEL[m]}

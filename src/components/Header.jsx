@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { ThemeCycleButton, ThemeSegmented } from "./ThemeToggle";
 
@@ -62,9 +62,9 @@ export default function Header() {
       <nav className="top-nav" aria-label="Navigation principale">{mainLinks}</nav>
       <div className="top-actions">
         <ThemeCycleButton />
-        <Link to={user ? "/account" : "/login"} className="nav-passport">
+        <NavLink to={user ? "/account" : "/login"} className={({ isActive }) => `nav-passport${isActive ? " active" : ""}`}>
           <PassportIcon />Mon passeport
-        </Link>
+        </NavLink>
         {user && (
           <button type="button" className="nav-signout" onClick={signOut}>Déconnexion</button>
         )}

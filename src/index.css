@@ -1548,3 +1548,96 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .leaflet-bar a, .leaflet-bar a:hover{background:var(--surface);color:var(--paper);border-bottom-color:var(--line);}
 .leaflet-control-attribution{background:var(--overlay) !important;color:var(--text2);}
 .leaflet-control-attribution a{color:var(--rust-text);}
+
+/* =====================================================================
+   Page compte (Mon passeport)
+   ===================================================================== */
+.acc-page{padding-top:32px;padding-bottom:64px;display:flex;flex-direction:column;gap:28px;}
+.acc-passport{position:relative;border-radius:24px;background:#1B2B20;color:#F5F1E6;overflow:hidden;padding:30px 32px;}
+.acc-passport > svg{position:absolute;inset:0;width:100%;height:100%;}
+.acc-passport-inner{position:relative;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between;}
+.acc-passport-id{display:flex;gap:20px;align-items:center;min-width:0;}
+.acc-avatar{width:88px;height:88px;border-radius:44px;background:#B4541F;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:34px;flex-shrink:0;}
+.acc-passport-tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:#E9A27A;font-weight:600;}
+.acc-passport-name{margin:0;font-family:var(--disp);font-weight:400;font-size:40px;line-height:1;text-transform:uppercase;overflow-wrap:anywhere;}
+@media(min-width:900px){.acc-passport-name{font-size:54px;}}
+.acc-passport-sub{font-size:15px;color:#C9D3C6;}
+.acc-passport-right{display:flex;gap:28px;align-items:center;flex-wrap:wrap;}
+.acc-passport-stats{display:grid;grid-template-columns:repeat(4,minmax(0,auto));gap:26px;}
+.acc-passport-stats div{display:flex;flex-direction:column;gap:4px;}
+.acc-passport-stats b{font-family:var(--disp);font-weight:400;font-size:38px;line-height:1;}
+.acc-passport-stats span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:#C9D3C6;}
+.acc-stamp{width:112px;height:112px;border-radius:56px;border:2px solid #E9A27A;color:#E9A27A;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(10deg);font-family:var(--mono);line-height:1.1;}
+.acc-stamp span:first-child{font-size:11px;letter-spacing:.12em;}
+.acc-stamp span:last-child{font-family:var(--disp);font-size:34px;}
+@media(max-width:600px){
+  .acc-passport{padding:22px 20px;}
+  .acc-avatar{width:64px;height:64px;font-size:24px;}
+  .acc-passport-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+  .acc-passport-stats b{font-size:30px;}
+  .acc-stamp{width:88px;height:88px;}
+  .acc-stamp span:last-child{font-size:26px;}
+}
+.acc-layout{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start;}
+.acc-nav{flex:0 1 230px;min-width:200px;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px;position:sticky;top:96px;}
+.acc-nav-link{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:10px;font-size:15px;color:var(--paper);}
+.acc-nav-link:hover{background:var(--track);}
+.acc-nav-count{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--text2);}
+.acc-nav-sep{height:1px;background:var(--track);margin:6px 4px;}
+.acc-danger{color:#B8432E;}
+:root[data-theme="dark"] .acc-danger{color:#E57D68;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .acc-danger{color:#E57D68;}}
+@media(max-width:819px){
+  .acc-nav{position:static;flex-basis:100%;flex-direction:row;flex-wrap:wrap;gap:6px;padding:8px;}
+  .acc-nav-link{min-height:40px;border:1px solid var(--line);border-radius:20px;padding:0 14px;font-size:14px;}
+  .acc-nav-sep{display:none;}
+}
+.acc-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:32px;}
+.acc-section{display:flex;flex-direction:column;gap:14px;scroll-margin-top:96px;}
+.acc-section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.acc-h2{margin:0;font-family:var(--disp);font-weight:400;font-size:32px;text-transform:uppercase;}
+.acc-h3{margin:0;font-family:var(--disp);font-weight:400;font-size:24px;text-transform:uppercase;}
+.acc-btn{min-height:44px;padding:0 16px;font-size:14px;}
+.acc-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;}
+.acc-card-accent{border-color:#B4541F;}
+.acc-empty{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;background:var(--surface);border:1px dashed var(--line3);border-radius:16px;padding:18px 20px;font-size:15px;color:var(--text2);}
+.acc-result-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+.acc-year{width:64px;height:64px;border-radius:32px;border:2px solid var(--moss);color:var(--moss);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:19px;flex-shrink:0;}
+.acc-result-main{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:4px;}
+.acc-result-name{font-weight:700;font-size:18px;}
+.acc-result-name a:hover{color:var(--rust-text);}
+.acc-result-sub{font-size:14px;color:var(--text2);}
+.acc-result-stats{display:flex;gap:22px;flex-wrap:wrap;}
+.acc-result-stats div{display:flex;flex-direction:column;gap:2px;}
+.acc-result-stats b{font-size:16px;}
+.acc-result-actions{display:flex;gap:16px;justify-content:flex-end;margin-top:8px;}
+.acc-linkbtn{border:none;background:none;padding:8px 0;font-size:14px;font-weight:600;color:var(--rust-text);}
+.acc-linkbtn:hover{text-decoration:underline;}
+.acc-tag{display:inline-block;margin-left:8px;padding:3px 9px;border-radius:999px;background:var(--track);color:var(--paper);font-family:var(--mono);font-size:11px;font-weight:600;vertical-align:middle;}
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.acc-fav{display:flex;gap:14px;align-items:center;}
+.acc-fav-name{font-weight:700;font-size:16px;color:var(--paper);}
+.acc-fav-name:hover{color:var(--rust-text);}
+.acc-heart{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:transparent;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
+.acc-add-tile{border:2px dashed var(--line3);border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text2);font-size:15px;min-height:96px;text-align:center;}
+.acc-add-tile:hover{color:var(--rust-text);border-color:var(--rust-text);}
+.acc-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start;}
+.acc-form{display:flex;flex-direction:column;gap:14px;scroll-margin-top:96px;}
+.acc-form-body{display:flex;flex-direction:column;gap:14px;}
+.acc-field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;}
+.acc-field input{height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:15px;font-weight:400;background:var(--ink);color:var(--paper);}
+.acc-static{font-weight:400;color:var(--text2);}
+.acc-check{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;}
+.acc-check input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--paper);flex-shrink:0;}
+.acc-hint{font-size:13px;color:var(--text2);line-height:1.45;}
+.acc-form .v2-btn{align-self:flex-start;}
+.acc-theme.theme-seg{padding:0;border-bottom:none;}
+.acc-danger-zone{margin-top:6px;padding-top:16px;border-top:1px solid var(--track);display:flex;flex-direction:column;gap:10px;scroll-margin-top:96px;}
+.acc-danger-title{font-weight:700;font-size:15px;color:#B8432E;}
+:root[data-theme="dark"] .acc-danger-title{color:#E57D68;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .acc-danger-title{color:#E57D68;}}
+.acc-btn-danger{align-self:flex-start;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid #B8432E;background:transparent;color:#B8432E;font-weight:600;font-size:14px;}
+.acc-btn-danger-fill{min-height:44px;padding:0 16px;border-radius:12px;border:none;background:#B8432E;color:#fff;font-weight:700;font-size:14px;}
+/* Le formulaire d'ajout du palmarès hérite des champs du site. */
+.acc-card-accent .field input, .acc-card-accent .field select, .acc-card-accent .field textarea{background:var(--ink);border-radius:10px;min-height:40px;font-size:15px;}
+.nav-passport.active{background:var(--paper);color:var(--ink);}
