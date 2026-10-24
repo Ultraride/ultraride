@@ -6,6 +6,7 @@ import AnalyticsTracker from "./components/AnalyticsTracker";
 import CookieBanner from "./components/CookieBanner";
 import Home from "./pages/Home";
 import RaceDetail from "./pages/RaceDetail";
+import Ultras from "./pages/Ultras";
 import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -45,6 +46,7 @@ export default function App() {
       <CookieBanner />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/ultras" element={<Ultras />} />
         <Route path="/courses/:id" element={<RaceDetail />} />
         <Route path="/evenements/:slug" element={<EventPage />} />
         <Route path="/organizers/:id" element={<OrganizerPage />} />

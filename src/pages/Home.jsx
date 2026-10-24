@@ -1,753 +1,300 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import OverviewMap from "../components/OverviewMap";
-import RaceCard from "../components/RaceCard";
-import EventCard from "../components/EventCard";
 import SiteFooter from "../components/SiteFooter";
 import DataFreshness from "../components/DataFreshness";
-import { DISCIPLINE_COLORS, darken } from "../lib/disciplineColors";
-import { FORMAT_COLORS, FORMAT_EMOJI } from "../lib/formatStyles";
+import { RaceRow, RaceTile, DisciplineBadge, FormatBadge } from "../components/RaceBits";
+import {
+  LIST_COLUMNS, DISCIPLINE_COLOR, isUpcoming, byStartDate, countdownLabel,
+  formatLongDate, formatNumber, haversineKm, raceCoords, placeLine,
+} from "../lib/raceDisplay";
 
-const DISCIPLINES = ["Gravel", "Route", "VTT"];
-const FORMATS = [
-  { id: "course", label: "Course" },
-  { id: "aventure", label: "Aventure" },
-  { id: "endurance", label: "Endurance" },
-];
-const PARCOURS = [
-  { id: "boucle", label: "Boucle" },
-  { id: "point", label: "Point à point" },
-  { id: "ar", label: "Aller-retour" },
-];
-const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
-const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-
-const EMPTY_FILTERS = { discipline: null, format: null, parcours: "", mode: "", country: "", month: "", reg: "" };
-
-// Rayon maximum et nombre de fiches du bloc « Près de chez moi ».
+// Rayon maximum et nombre de fiches du bloc « Près de toi ».
 const NEARBY_RADIUS_KM = 400;
-const NEARBY_LIMIT = 5;
+const NEARBY_LIMIT = 4;
+const DISCIPLINES = ["Route", "Gravel", "VTT"];
 
-function normalize(str) {
-  return (str || "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-// Distance à vol d'oiseau entre deux points, en km.
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-// Position chronologique d'une course dans l'année. On utilise start_date
-// quand elle existe, sinon on retombe sur le mois pour que les fiches sans
-// date restent mêlées aux autres au bon endroit.
-function monthIndex(month) {
-  const i = MONTHS.indexOf(month);
-  return i === -1 ? 12 : i;
-}
-
-// Vrai si la course a lieu ce mois-ci, en tenant compte de l'année quand
-// start_date est renseignée — évite qu'une édition future du même mois
-// (ex: septembre 2027) ne remonte dans "Ce mois-ci" de l'année en cours.
-function isThisMonth(race) {
-  const now = new Date();
-
-  if (race.start_date) {
-    const start = new Date(race.start_date);
-    return (
-      start.getFullYear() === now.getFullYear() &&
-      start.getMonth() === now.getMonth()
-    );
-  }
-
-  // Repli : pas de start_date renseignée pour cette course, on ne peut pas
-  // vérifier l'année — on garde l'ancien comportement (match sur le mois texte).
-  // Le risque de faux positif (mauvaise année) reste présent pour ces courses-là
-  // tant que leur start_date n'est pas complétée en base.
-  const currentMonthName = MONTHS[now.getMonth()];
-  return race.month === currentMonthName;
-}
-
-function chronoKey(race) {
-  if (race.start_date) {
-    const d = new Date(race.start_date);
-    if (!Number.isNaN(d.getTime())) return d.getMonth() + d.getDate() / 100;
-  }
-  return monthIndex(race.month);
-}
-
-function byChrono(a, b) {
-  const diff = chronoKey(a) - chronoKey(b);
-  if (diff !== 0) return diff;
-  return (a.name || "").localeCompare(b.name || "");
-}
-
-// Priorise les courses illustrées dans les carrousels mis en avant : une
-// fiche sans image casse la vitrine, elle passe donc après — le tri déjà
-// en place continue de s'appliquer à l'intérieur de chaque groupe.
-function withImageFirst(compare) {
-  return (a, b) => {
-    const aHas = a.image_url ? 0 : 1;
-    const bHas = b.image_url ? 0 : 1;
-    if (aHas !== bHas) return aHas - bHas;
-    return compare(a, b);
-  };
-}
-
-// Regroupe la liste filtrée en entrées de grille : soit une course seule,
-// soit un événement rassemblant ses formats. Le regroupement s'applique à
-// la liste déjà filtrée, donc un filtre « Gravel » ne fait apparaître que
-// les formats gravel dans la carte événement — ce qui est le comportement
-// attendu. Un événement réduit à un seul format s'affiche comme une course
-// normale : une carte « 1 format » n'apporterait rien.
-function groupByEvent(list) {
-  const entries = [];
-  const index = new Map();
-
-  list.forEach((race) => {
-    if (!race.event_slug) {
-      entries.push({ type: "race", key: race.id, race });
-      return;
-    }
-    const existing = index.get(race.event_slug);
-    if (existing) {
-      existing.races.push(race);
-      return;
-    }
-    const entry = {
-      type: "event",
-      key: race.event_slug,
-      slug: race.event_slug,
-      name: race.event_name || race.name,
-      races: [race],
-    };
-    index.set(race.event_slug, entry);
-    entries.push(entry);
-  });
-
-  return entries.map((e) => {
-    if (e.type !== "event") return e;
-    if (e.races.length === 1) return { type: "race", key: e.races[0].id, race: e.races[0] };
-    e.races.sort((a, b) => (a.km || 0) - (b.km || 0));
-    return e;
-  });
-}
-
-function DisciplineFilterButton({ discipline, active, onClick }) {
-  const color = DISCIPLINE_COLORS[discipline] || "#6E6E66";
+function SearchIcon() {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "inline-block",
-        padding: "6px 20px",
-        borderRadius: "999px",
-        border: `2px solid ${darken(color, 0.25)}`,
-        color: "#FFFFFF",
-        textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-        background: `${color}E6`,
-        fontSize: "0.95rem",
-        fontWeight: 600,
-        cursor: "pointer",
-        opacity: active ? 1 : 0.55,
-        boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
-        transition: "opacity 0.15s ease",
-      }}
-    >
-      {discipline}
-    </button>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+    </svg>
   );
 }
 
-function FormatFilterButton({ format, active, onClick }) {
-  const color = FORMAT_COLORS[format] || "#6E6E66";
-  const emoji = FORMAT_EMOJI[format] || "";
+// Courbes de niveau du bloc « À la une », plus un tracé quand l'ultra n'a pas de visuel.
+function FeatureArt({ withRoute }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "6px 20px",
-        borderRadius: "999px",
-        border: `2px solid ${darken(color, 0.25)}`,
-        color: "#FFFFFF",
-        textShadow: "0 1px 2px rgba(0,0,0,0.35)",
-        background: color,
-        fontSize: "0.95rem",
-        fontWeight: 600,
-        cursor: "pointer",
-        opacity: active ? 1 : 0.55,
-        boxShadow: active ? "0 0 0 2px rgba(0,0,0,0.15)" : "none",
-        transition: "opacity 0.15s ease",
-        lineHeight: 1,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {format}
-      <span style={{ fontSize: "0.85em" }}>{emoji}</span>
-    </button>
+    <svg viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+      {[330, 290, 250, 210, 170].map((y, i) => (
+        <path key={y} d={`M-20 ${y} C 90 ${y - 50}, ${160 + i * 10} ${y + 10}, ${280 + i * 10} ${y - 30} S ${470 + i * 10} ${y - 110}, 620 ${y - 70}`} stroke="#2C4434" strokeWidth="1.4" />
+      ))}
+      {withRoute && (
+        <>
+          <path d="M560 230 L 520 200 L 536 160 L 480 150 L 450 176 L 400 130" stroke="#C4622D" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="560" cy="230" r="8" fill="#F5F1E6" />
+          <circle cx="400" cy="130" r="8" fill="#C4622D" stroke="#F5F1E6" strokeWidth="3" />
+        </>
+      )}
+    </svg>
   );
 }
 
-// Carrousel horizontal en scroll-snap natif : pas de librairie, tactile sur
-// mobile, navigable au clavier. Les flèches sont masquées quand tout tient
-// déjà à l'écran.
-function RaceCarousel({ title, subtitle, races }) {
-  const trackRef = useRef(null);
-  const [overflowing, setOverflowing] = useState(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [fadeWidth, setFadeWidth] = useState(70);
-
-  useEffect(() => {
-    const updateFadeWidth = () => {
-      setFadeWidth(window.innerWidth < 640 ? 28 : 70);
-    };
-    updateFadeWidth();
-    window.addEventListener("resize", updateFadeWidth);
-    return () => window.removeEventListener("resize", updateFadeWidth);
-  }, []);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    const check = () => {
-      setOverflowing(el.scrollWidth > el.clientWidth + 8);
-      setCanScrollLeft(el.scrollLeft > 4);
-      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-    };
-    check();
-    window.addEventListener("resize", check);
-    el.addEventListener("scroll", check);
-    return () => {
-      window.removeEventListener("resize", check);
-      el.removeEventListener("scroll", check);
-    };
-  }, [races]);
-
-  const scrollBy = (dir) => {
-    const el = trackRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
-  };
-
-  if (!races || races.length === 0) return null;
-
+function FeaturedRace({ race }) {
+  const countdown = countdownLabel(race);
   return (
-    <section className="carousel-section">
-      <div className="carousel-head">
-        <div>
-          <h2 className="carousel-title">{title}</h2>
-          {subtitle && <div className="carousel-sub">{subtitle}</div>}
-        </div>
-        {overflowing && (
-          <div className="carousel-nav">
-            <button type="button" onClick={() => scrollBy(-1)} aria-label="Voir les courses précédentes">←</button>
-            <button type="button" onClick={() => scrollBy(1)} aria-label="Voir les courses suivantes">→</button>
+    <Link to={`/courses/${race.id}`} className="v2-feature">
+      <div className="v2-feature-media">
+        <FeatureArt withRoute={!race.image_url} />
+        <span className="v2-feature-tag">À LA UNE</span>
+        {countdown && (
+          <div className="v2-stamp"><span>DÉPART</span><span>{countdown === "Aujourd'hui" ? "J-0" : countdown}</span></div>
+        )}
+        {race.image_url && <img className="v2-feature-logo" src={race.image_url} alt="" />}
+        <div className="v2-feature-bottom">
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <DisciplineBadge discipline={race.discipline} light />
+            <FormatBadge format={race.format} />
+            {race.country && (
+              <span className="v2-pill" style={{ background: "rgba(245,241,230,0.16)", color: "#F5F1E6", fontWeight: 600 }}>
+                {race.country.toUpperCase()}
+              </span>
+            )}
           </div>
-        )}
-      </div>
-      <div style={{ position: "relative" }}>
-        <div className="carousel-track" ref={trackRef}>
-          {races.map((r) => (
-            <div className="carousel-item" key={r.id}>
-              <RaceCard race={r} />
-              {r._distanceKm != null && (
-                <div className="carousel-item-distance">
-                  à {Math.round(r._distanceKm)} km de toi
-                </div>
-              )}
-            </div>
-          ))}
+          <div className="v2-feature-name">{race.name}</div>
         </div>
-
-        {canScrollLeft && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              bottom: 0,
-              width: fadeWidth,
-              background: "linear-gradient(to left, transparent, var(--ink))",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {canScrollRight && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: fadeWidth,
-              background: "linear-gradient(to right, transparent, var(--ink))",
-              pointerEvents: "none",
-            }}
-          />
-        )}
       </div>
-    </section>
+      <div className="v2-statgrid">
+        <div className="v2-stat"><span className="v2-label">Distance</span><b>{race.km ? `${formatNumber(race.km)} km` : "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">D+</span><b>{race.dplus ? `${formatNumber(race.dplus)} m` : "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">Départ</span><b>{formatLongDate(race.start_date) || race.month || "—"}</b></div>
+        <div className="v2-stat"><span className="v2-label">Lieu</span><b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{placeLine({ ...race, country: null }) || race.country || "—"}</b></div>
+      </div>
+    </Link>
   );
-}
-
-// Hauteur réelle de header.site (16px de padding haut/bas + logo 32px +
-// bordure 1px) : le bloc recherche+filtres s'accroche juste en dessous,
-// jamais dessous ni par-dessus.
-const HEADER_HEIGHT = 65;
-
-// Sous ce seuil (cf. index.css), le bloc recherche n'est plus collant.
-const MOBILE_QUERY = "(max-width: 819px)";
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches
-  );
-  useEffect(() => {
-    const mql = window.matchMedia(MOBILE_QUERY);
-    const onChange = (e) => setIsMobile(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-  return isMobile;
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  const [when, setWhen] = useState("upcoming");
 
-  // Le bloc complet (recherche + Discipline + Format + 5 menus) dépasse
-  // 40% de la hauteur d'écran une fois accroché en haut, surtout sur
-  // mobile. Une fois que le visiteur a scrollé au-delà de sa position
-  // naturelle, on ne garde donc que la barre de recherche + un bouton
-  // "Filtres" qui déplie le reste en overlay, plutôt que de figer tout
-  // le bloc en permanence.
-  //
-  // Sur mobile le bloc n'est pas collant : les filtres sont repliés
-  // derrière le bouton "Filtres" dès le départ, et on n'observe rien.
-  const filterSentinelRef = useRef(null);
-  const isMobile = useIsMobile();
-  const [isStuck, setIsStuck] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const compactFilters = isStuck || isMobile;
-
-  useEffect(() => {
-    const el = filterSentinelRef.current;
-    if (!el || isMobile) {
-      setIsStuck(false);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsStuck(!entry.isIntersecting),
-      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`, threshold: 0 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [races, isMobile]);
-
-  useEffect(() => {
-    if (!compactFilters) setFiltersOpen(false);
-  }, [compactFilters]);
-
-  // Géolocalisation : "idle" tant que le visiteur n'a rien demandé, on ne
-  // déclenche jamais la popup du navigateur sans une action de sa part —
-  // sauf si la permission a déjà été accordée lors d'une visite précédente.
+  // Géolocalisation : jamais demandée sans action du visiteur, sauf si la
+  // permission a déjà été accordée lors d'une visite précédente.
   const [geoStatus, setGeoStatus] = useState("idle"); // idle | loading | granted | denied | unsupported
   const [coords, setCoords] = useState(null);
 
   const requestLocation = () => {
-    if (!("geolocation" in navigator)) {
-      setGeoStatus("unsupported");
-      return;
-    }
+    if (!("geolocation" in navigator)) { setGeoStatus("unsupported"); return; }
     setGeoStatus("loading");
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-        setGeoStatus("granted");
-      },
+      (pos) => { setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }); setGeoStatus("granted"); },
       () => setGeoStatus("denied"),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
     );
   };
 
-  // Si le visiteur a déjà accepté par le passé, on relance sans le solliciter.
   useEffect(() => {
     if (!navigator.permissions?.query) return;
-    navigator.permissions
-      .query({ name: "geolocation" })
-      .then((res) => {
-        if (res.state === "granted") requestLocation();
-      })
-      .catch(() => { /* Permissions API indisponible, on garde le bouton */ });
+    navigator.permissions.query({ name: "geolocation" })
+      .then((res) => { if (res.state === "granted") requestLocation(); })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     supabase
       .from("races")
-      .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_date, created_at, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
+      .select(LIST_COLUMNS)
       .eq("status", "published")
       .eq("is_current", true)
       .then(({ data, error }) => {
         if (error) setError(error.message);
-        else setRaces(data);
+        else setRaces(data || []);
       });
   }, []);
 
-  const countries = useMemo(
-    () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort() : []),
+  const stats = useMemo(() => {
+    if (!races) return null;
+    const organizers = new Set(races.map((r) => r.organizer?.id || r.organizer_name).filter(Boolean));
+    const countries = new Set(races.map((r) => r.country).filter(Boolean));
+    const byDiscipline = Object.fromEntries(DISCIPLINES.map((d) => [d, races.filter((r) => r.discipline === d).length]));
+    return { total: races.length, organizers: organizers.size, countries: countries.size, byDiscipline };
+  }, [races]);
+
+  const upcoming = useMemo(
+    () => (races || []).filter(isUpcoming).sort(byStartDate),
     [races]
   );
 
-  const organizerCount = useMemo(
-    () => (races ? new Set(races.map((r) => r.organizer?.id).filter(Boolean)).size : 0),
-    [races]
+  // « À la une » : l'ultra à venir illustré le plus consulté, sinon le prochain départ.
+  const featured = useMemo(() => {
+    const withImage = upcoming.filter((r) => r.image_url);
+    const pool = withImage.length ? withImage : upcoming;
+    if (!pool.length) return null;
+    return [...pool].sort((a, b) => (b.view_count || 0) - (a.view_count || 0))[0];
+  }, [upcoming]);
+
+  const nextDepartures = useMemo(
+    () => upcoming.filter((r) => r.id !== featured?.id).slice(0, 6),
+    [upcoming, featured]
   );
-
-  const filtered = useMemo(() => {
-    if (!races) return [];
-    const q = normalize(search.trim());
-    const result = races.filter((r) => {
-      if (filters.discipline && r.discipline !== filters.discipline) return false;
-      if (filters.format && r.format !== filters.format) return false;
-      if (filters.parcours && r.parcours !== filters.parcours) return false;
-      if (filters.mode && r.mode !== filters.mode) return false;
-      if (filters.country && r.country !== filters.country) return false;
-      if (filters.month && r.month !== filters.month) return false;
-      if (filters.reg === "open" && !r.open) return false;
-      if (filters.reg === "closed" && r.open) return false;
-
-      if (q) {
-        const haystack = normalize([
-          r.name, r.country, r.discipline, r.format, r.parcours,
-          r.mode, r.month, r.blurb, r.organizer?.name,
-        ].filter(Boolean).join(" "));
-        if (!haystack.includes(q)) return false;
-      }
-      return true;
-    });
-
-    return result.sort(withImageFirst(byChrono));
-  }, [races, filters, search]);
-
-  // Les carrousels sont une vitrine éditoriale : dès que le visiteur filtre
-  // ou cherche, ils laissent place à la seule liste qui l'intéresse.
-  const isBrowsing = useMemo(
-    () =>
-      search.trim() === "" &&
-      Object.keys(EMPTY_FILTERS).every((k) => filters[k] === EMPTY_FILTERS[k]),
-    [filters, search]
-  );
-
-  const activeFilterCount = useMemo(
-    () => Object.keys(EMPTY_FILTERS).filter((k) => filters[k] !== EMPTY_FILTERS[k]).length,
-    [filters]
-  );
-
-  // Mois en cours, ou le prochain mois qui contient des courses.
-  const monthlyBlock = useMemo(() => {
-    if (!races || races.length === 0) return null;
-    const start = new Date().getMonth();
-    for (let offset = 0; offset < 12; offset++) {
-      const idx = (start + offset) % 12;
-      const label = MONTHS[idx];
-      const list = (offset === 0 ? races.filter(isThisMonth) : races.filter((r) => monthIndex(r.month) === idx))
-        .sort(withImageFirst(byChrono));
-      if (list.length > 0) {
-        const picked = list.slice(0, 12);
-        // L'année vient des courses elles-mêmes quand start_date est
-        // renseignée : c'est plus fiable que de la calculer, et ça reste
-        // juste quand le bloc bascule sur janvier de l'année suivante.
-        const dated = picked.find((r) => r.start_date);
-        const year = dated
-          ? new Date(dated.start_date).getFullYear()
-          : new Date().getFullYear() + (idx < start ? 1 : 0);
-        return { label, year, races: picked, isCurrent: offset === 0 };
-      }
-    }
-    return null;
-  }, [races]);
-
-  const mostViewed = useMemo(() => {
-    if (!races) return [];
-    return races
-      .filter((r) => (r.view_count || 0) > 0)
-      .sort(withImageFirst((a, b) => (b.view_count || 0) - (a.view_count || 0)))
-      .slice(0, 12);
-  }, [races]);
-
-  const latestAdditions = useMemo(() => {
-    if (!races) return [];
-    return [...races]
-      .sort(withImageFirst((a, b) => new Date(b.created_at) - new Date(a.created_at)))
-      .slice(0, 10);
-  }, [races]);
 
   const nearby = useMemo(() => {
-    if (!races || !coords) return [];
-    return races
+    if (!coords) return [];
+    return upcoming
       .map((r) => {
-        const lat = r.start_lat ?? r.lat;
-        const lon = r.start_lon ?? r.lon;
-        if (lat == null || lon == null) return null;
-        return { ...r, _distanceKm: haversineKm(coords.lat, coords.lon, lat, lon) };
+        const c = raceCoords(r);
+        return c ? { ...r, _distanceKm: haversineKm(coords.lat, coords.lon, c[0], c[1]) } : null;
       })
       .filter((r) => r && r._distanceKm <= NEARBY_RADIUS_KM)
-      .sort(withImageFirst((a, b) => a._distanceKm - b._distanceKm))
+      .sort((a, b) => a._distanceKm - b._distanceKm)
       .slice(0, NEARBY_LIMIT);
-  }, [races, coords]);
+  }, [upcoming, coords]);
 
-  const gridEntries = useMemo(() => groupByEvent(filtered), [filtered]);
-
-  const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: f[key] === value ? (typeof value === "string" ? "" : null) : value }));
-  const resetFilters = () => { setFilters(EMPTY_FILTERS); setSearch(""); };
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (when !== "upcoming") params.set("when", when);
+    navigate(`/ultras${params.toString() ? `?${params}` : ""}`);
+  };
 
   return (
-    <div>
-      <div className="wrap" style={{ paddingTop: 40 }}>
-        <div className="hero-intro">
-          <div className="eyebrow">Répertoire <span style={{ whiteSpace: "nowrap" }}>ultra-distance</span> · France &amp; Europe</div>
-          <h1 className="hero-title">Trouve ta trace.</h1>
-          <p className="hero-sub">
-            L'ultra-distance à vélo est un monde éclaté entre des dizaines de sites d'organisateurs, de groupes
-            Facebook et de forums épars. UltraRide rassemble ces épreuves : gravel, route, VTT, en autonomie,
-            semi-autonomie ou assisté ; dans un seul répertoire clair, pensé pour t'aider à trouver la course qui te
-            correspond sans passer des heures à chercher.
-          </p>
-        </div>
+    <div className="v2">
+      <div className="v2-wrap">
+        <section className="v2-hero">
+          <div className="v2-hero-text">
+            <div className="v2-eyebrow">
+              {stats ? `${stats.total} ultras · ${stats.organizers} organisateurs · ${stats.countries} pays` : "Répertoire ultra-distance"}
+            </div>
+            <h1 className="v2-hero-title">TROUVE TON<br />PROCHAIN ULTRA</h1>
+            <p className="v2-hero-sub">
+              Route, gravel et VTT en autonomie, en Europe et en Afrique du Nord. Les dates, les parcours et les
+              inscriptions au même endroit.
+            </p>
 
-        {races && (
-          <div className="hero-stats">
-            <div><div className="hero-stat-num">{races.length}</div><div className="hero-stat-label">Ultras référencés</div></div>
-            <div><div className="hero-stat-num">{countries.length}</div><div className="hero-stat-label">Pays couverts</div></div>
-            <div><div className="hero-stat-num">{DISCIPLINES.length}</div><div className="hero-stat-label">Disciplines</div></div>
-            <div><div className="hero-stat-num">{organizerCount}</div><div className="hero-stat-label">Organisateurs</div></div>
-          </div>
-        )}
-
-        <DataFreshness />
-      </div>
-
-      {error && <div className="wrap"><div className="error-box">{error}</div></div>}
-
-      {races === null ? (
-        <div className="wrap"><p className="muted">Chargement…</p></div>
-      ) : (
-        <>
-          <div ref={filterSentinelRef} />
-
-          <div
-            className={`search-filters-sticky${isStuck ? " search-filters-sticky--stuck" : ""}`}
-            style={{ top: HEADER_HEIGHT }}
-          >
-            <div className="wrap">
-              <div className="search-bar" style={{ marginBottom: isStuck ? 0 : 16 }}>
+            <form className="v2-search" onSubmit={submitSearch} role="search">
+              <label className="v2-search-field">
+                <SearchIcon />
+                <span className="sr-only">Rechercher un ultra</span>
                 <input
                   type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un ultra, un lieu, un organisateur…"
-                  aria-label="Rechercher"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Nom, pays, organisateur…"
                 />
-                {search && (
-                  <button type="button" className="filter-reset" onClick={() => setSearch("")}>
-                    Effacer
-                  </button>
-                )}
-                {compactFilters && (
-                  <button
-                    type="button"
-                    className={`btn ${filtersOpen ? "btn-primary" : ""}`}
-                    onClick={() => setFiltersOpen((v) => !v)}
-                    aria-expanded={filtersOpen}
-                  >
-                    Filtres{activeFilterCount > 0 && ` (${activeFilterCount})`}
-                  </button>
-                )}
-              </div>
+              </label>
+              <label className="v2-search-when">
+                <span className="sr-only">Quand</span>
+                <select value={when} onChange={(e) => setWhen(e.target.value)}>
+                  <option value="upcoming">Prochains départs</option>
+                  <option value="all">Toutes les dates</option>
+                </select>
+              </label>
+              <button type="submit" className="v2-btn v2-btn-rust">Rechercher</button>
+            </form>
+
+            <div className="v2-chips">
+              <Link to="/ultras" className="v2-chip v2-chip-active">Tous</Link>
+              {DISCIPLINES.map((d) => (
+                <Link key={d} to={`/ultras?discipline=${encodeURIComponent(d)}`} className="v2-chip">
+                  <span className="v2-dot" style={{ background: DISCIPLINE_COLOR[d] }} />
+                  {d}{stats ? ` · ${stats.byDiscipline[d]}` : ""}
+                </Link>
+              ))}
             </div>
-
-            {(!compactFilters || filtersOpen) && (
-              <div className="wrap">
-                <div className={`filter-panel${isStuck ? " filter-panel-overlay" : ""}`}>
-                  <div className="filter-panel-head" style={{ justifyContent: "flex-end" }}>
-                    <button onClick={resetFilters} className="filter-reset">Réinitialiser</button>
-                  </div>
-
-                  <div className="filter-section-title">Discipline</div>
-                  <div className="filter-row">
-                    {DISCIPLINES.map((d) => (
-                      <DisciplineFilterButton
-                        key={d}
-                        discipline={d}
-                        active={filters.discipline === d}
-                        onClick={() => setFilter("discipline", d)}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="filter-section-title" style={{ marginTop: "16px" }}>Format</div>
-                  <div className="filter-row">
-                    {FORMATS.map((f) => (
-                      <FormatFilterButton
-                        key={f.id}
-                        format={f.label}
-                        active={filters.format === f.id}
-                        onClick={() => setFilter("format", f.id)}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="filter-row" style={{ marginTop: "16px" }}>
-                    <select value={filters.country} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}>
-                      <option value="">Pays : tous</option>
-                      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <select value={filters.mode} onChange={(e) => setFilters((f) => ({ ...f, mode: e.target.value }))}>
-                      <option value="">Mode : tous</option>
-                      {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <select value={filters.parcours} onChange={(e) => setFilters((f) => ({ ...f, parcours: e.target.value }))}>
-                      <option value="">Parcours : tous</option>
-                      {PARCOURS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                    </select>
-                    <select value={filters.month} onChange={(e) => setFilters((f) => ({ ...f, month: e.target.value }))}>
-                      <option value="">Mois : tous</option>
-                      {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                    <select value={filters.reg} onChange={(e) => setFilters((f) => ({ ...f, reg: e.target.value }))}>
-                      <option value="">Inscription : toutes</option>
-                      <option value="open">Ouvertes</option>
-                      <option value="closed">Fermées</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="wrap">
-            <OverviewMap races={filtered} />
-          </div>
+          {featured && <FeaturedRace race={featured} />}
+        </section>
 
-          {isBrowsing && (
-            <div className="wrap">
-              {monthlyBlock && (
-                <RaceCarousel
-                  title={monthlyBlock.isCurrent
-                    ? `Ce mois-ci · ${monthlyBlock.label} ${monthlyBlock.year}`
-                    : `Prochainement · ${monthlyBlock.label} ${monthlyBlock.year}`}
-                  subtitle={monthlyBlock.isCurrent
-                    ? "Les départs du mois en cours"
-                    : "Aucun départ ce mois-ci, voici la suite"}
-                  races={monthlyBlock.races}
-                />
-              )}
+        <DataFreshness />
 
-              {geoStatus === "granted" && nearby.length > 0 ? (
-                <RaceCarousel
-                  title="Près de chez moi"
-                  subtitle={`Les ${nearby.length} départs les plus proches, à moins de ${NEARBY_RADIUS_KM} km`}
-                  races={nearby}
-                />
-              ) : (
-                <section className="carousel-section">
-                  <div className="carousel-head">
-                    <div>
-                      <h2 className="carousel-title">Près de chez moi</h2>
-                      <div className="carousel-sub">Les départs à moins de {NEARBY_RADIUS_KM} km</div>
-                    </div>
-                  </div>
-                  <div className="geo-prompt">
-                    {geoStatus === "loading" && (
-                      <p className="muted" style={{ margin: 0 }}>Localisation en cours…</p>
-                    )}
-                    {geoStatus === "granted" && nearby.length === 0 && (
-                      <p className="muted" style={{ margin: 0 }}>
-                        Aucun départ référencé à moins de {NEARBY_RADIUS_KM} km de toi pour l'instant.
-                      </p>
-                    )}
-                    {geoStatus === "denied" && (
-                      <>
-                        <p className="muted" style={{ margin: 0 }}>
-                          Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les ultras proches.
-                        </p>
-                        <button type="button" className="btn" onClick={requestLocation}>Réessayer</button>
-                      </>
-                    )}
-                    {geoStatus === "unsupported" && (
-                      <p className="muted" style={{ margin: 0 }}>
-                        Ton navigateur ne permet pas la géolocalisation.
-                      </p>
-                    )}
-                    {geoStatus === "idle" && (
-                      <>
-                        <p className="muted" style={{ margin: 0 }}>
-                          Autorise la géolocalisation pour découvrir les ultras les plus proches de toi.
-                          Ta position reste dans ton navigateur, elle n'est ni envoyée ni enregistrée.
-                        </p>
-                        <button type="button" className="btn btn-primary" onClick={requestLocation}>
-                          Activer la géolocalisation
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </section>
-              )}
+        {error && <div className="error-box">{error}</div>}
+        {races === null && !error && <p className="muted">Chargement…</p>}
 
-              <RaceCarousel
-                title="Les plus consultées"
-                subtitle="Ce que regardent les autres coureurs"
-                races={mostViewed}
-              />
-
-              <RaceCarousel
-                title="Derniers ajouts"
-                subtitle="Les nouvelles aventures qui viennent d'arriver"
-                races={latestAdditions}
-              />
+        {nextDepartures.length > 0 && (
+          <section className="v2-section">
+            <div className="v2-section-head">
+              <h2 className="v2-h2">Prochains départs</h2>
+              <Link to="/ultras" className="v2-link">Voir les {upcoming.length} départs à venir →</Link>
             </div>
-          )}
-
-          <div className="wrap" style={{ paddingBottom: 60 }}>
-            {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Tous les ultras</h2>}
-            <div className="results-count">
-              {filtered.length} ultra{filtered.length !== 1 ? "s" : ""} trouvé{filtered.length !== 1 ? "s" : ""}
-              {gridEntries.length !== filtered.length && ` · ${gridEntries.length} entrée${gridEntries.length !== 1 ? "s" : ""}`}
+            <div className="v2-grid-rows">
+              {nextDepartures.map((r) => <RaceRow key={r.id} race={r} />)}
             </div>
-            {filtered.length === 0 ? (
-              <div className="empty-box">
-                <p className="muted">Aucune trace ne correspond à ces filtres.</p>
-                <button className="filter-reset" onClick={resetFilters}>Réinitialiser les filtres</button>
+          </section>
+        )}
+
+        {races && (
+          <section className="v2-section">
+            <div className="v2-section-head">
+              <h2 className="v2-h2">Près de toi</h2>
+              <Link to="/ultras" className="v2-link">Voir sur la carte →</Link>
+            </div>
+            {geoStatus === "granted" && nearby.length > 0 ? (
+              <div className="v2-grid-tiles">
+                {nearby.map((r, i) => (
+                  <RaceTile
+                    key={r.id}
+                    race={r}
+                    index={i}
+                    footer={<span className="v2-countdown" style={{ color: "#15793F" }}>à {Math.round(r._distanceKm)} km de toi</span>}
+                  />
+                ))}
               </div>
             ) : (
-              <div className="race-grid">
-                {gridEntries.map((e) =>
-                  e.type === "event"
-                    ? <EventCard key={e.key} event={e} />
-                    : <RaceCard key={e.key} race={e.race} />
+              <div className="v2-geo">
+                <p className="muted" style={{ margin: 0, fontSize: 15, maxWidth: 640 }}>
+                  {geoStatus === "loading" && "Localisation en cours…"}
+                  {geoStatus === "granted" && `Aucun départ à venir à moins de ${NEARBY_RADIUS_KM} km de toi pour l'instant.`}
+                  {geoStatus === "denied" && "Localisation refusée. Autorise-la dans les réglages de ton navigateur pour voir les ultras proches."}
+                  {geoStatus === "unsupported" && "Ton navigateur ne permet pas la géolocalisation."}
+                  {geoStatus === "idle" && `Active la géolocalisation pour voir les départs à moins de ${NEARBY_RADIUS_KM} km. Ta position reste dans ton navigateur : elle n'est ni envoyée ni enregistrée.`}
+                </p>
+                {(geoStatus === "idle" || geoStatus === "denied") && (
+                  <button type="button" className="v2-btn v2-btn-ink" onClick={requestLocation}>
+                    {geoStatus === "denied" ? "Réessayer" : "Activer la géolocalisation"}
+                  </button>
                 )}
               </div>
             )}
+          </section>
+        )}
+
+        {stats && (
+          <section className="v2-section" style={{ paddingBottom: 56 }}>
+            <div className="v2-disc-tiles">
+              {DISCIPLINES.map((d) => (
+                <Link
+                  key={d}
+                  to={`/ultras?discipline=${encodeURIComponent(d)}`}
+                  className="v2-disc-tile"
+                  style={{ background: d === "VTT" ? "#9A4519" : DISCIPLINE_COLOR[d] }}
+                >
+                  <b>{stats.byDiscipline[d]}</b>
+                  <span>ULTRAS {d.toUpperCase()} →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      <section className="v2-band">
+        <div className="v2-wrap v2-band-inner">
+          <div style={{ flex: "1 1 460px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <span className="v2-eyebrow" style={{ color: "#E9A27A" }}>Organisateurs</span>
+            <h2>TU ORGANISES UN ULTRA ?</h2>
+            <p>Crée ton espace, ajoute tes éditions et tiens tes dates à jour. Chaque nouvelle édition garde l'historique des précédentes.</p>
           </div>
-        </>
-      )}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link to="/proposer-course" className="v2-btn v2-btn-rust">Proposer un ultra</Link>
+            <Link to="/login?mode=signup" className="v2-btn v2-btn-outline-light">Créer mon espace</Link>
+          </div>
+        </div>
+      </section>
 
       <SiteFooter />
     </div>
