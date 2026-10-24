@@ -3,6 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import RaceForm from "../admin/RaceForm";
+import { createNextEdition } from "../lib/editions";
 
 const STATUS_LABEL = {
   draft: "Brouillon",
@@ -19,6 +20,19 @@ export default function OrganizerRaces() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null); // objet course, ou {} pour une création
+  const [duplicating, setDuplicating] = useState(null);
+
+  // L'édition suivante reprend la fiche (parcours, textes, image) sans les
+  // dates, et part en validation comme toute soumission.
+  const newEdition = async (race) => {
+    if (!window.confirm(`Créer l'édition suivante de « ${race.name} » ? Tu pourras ensuite saisir ses dates.`)) return;
+    setDuplicating(race.id);
+    setError(null);
+    const { data, error } = await createNextEdition(race);
+    setDuplicating(null);
+    if (error) setError(error.message);
+    else { load(); setEditing(data); }
+  };
 
   // Deux chemins mènent à « mes courses » : celles que ce compte a
   // soumises (created_by), et celles rattachées à sa fiche organisateur
@@ -135,10 +149,16 @@ export default function OrganizerRaces() {
                     {r.discipline && ` · ${r.discipline}`}
                     {r.km ? ` · ${r.km} km` : ""}
                     {r.month && ` · ${r.month}`}
+                    {r.edition ? ` · Édition ${r.edition}` : ""}
                   </div>
                 </div>
                 {r.created_by === user.id ? (
-                  <button className="btn" onClick={() => setEditing(r)}>Modifier</button>
+                  <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                    <button className="btn" onClick={() => setEditing(r)}>Modifier</button>
+                    <button className="btn" disabled={duplicating === r.id} onClick={() => newEdition(r)}>
+                      Nouvelle édition
+                    </button>
+                  </div>
                 ) : (
                   <span className="muted mono" style={{ fontSize: 11, alignSelf: "center" }}>
                     Gérée par l'administrateur

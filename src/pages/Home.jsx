@@ -403,6 +403,7 @@ export default function Home() {
       .from("races")
       .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, start_lat, start_lon, start_date, created_at, view_count, blurb, image_url, event_name, event_slug, organizer:organizers!races_organizer_id_fkey(id, name, logo_url)")
       .eq("status", "published")
+      .eq("is_current", true)
       .then(({ data, error }) => {
         if (error) setError(error.message);
         else setRaces(data);

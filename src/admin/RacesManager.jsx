@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import RaceForm from "./RaceForm";
+import { createNextEdition } from "../lib/editions";
 
 const STATUS_LABEL = {
   draft: "Brouillon",
@@ -24,6 +25,7 @@ export default function RacesManager() {
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [duplicating, setDuplicating] = useState(null);
   const [search, setSearch] = useState("");
   const [openGroups, setOpenGroups] = useState({});
 
@@ -45,6 +47,16 @@ export default function RacesManager() {
     setDeleting(null);
     if (error) setError(error.message);
     else load();
+  };
+
+  const newEdition = async (race) => {
+    if (!window.confirm(`Créer l'édition suivante de « ${race.name} » ? Elle sera en attente jusqu'à sa validation.`)) return;
+    setDuplicating(race.id);
+    setError(null);
+    const { data, error } = await createNextEdition(race);
+    setDuplicating(null);
+    if (error) setError(error.message);
+    else { load(); setEditing(data); }
   };
 
   // Regroupement par organisateur. La recherche filtre d'abord, ce qui vide
@@ -162,6 +174,7 @@ export default function RacesManager() {
                         <th>Nom</th>
                         <th>Événement</th>
                         <th>Pays</th>
+                        <th>Éd.</th>
                         <th>Statut</th>
                         <th>Km</th>
                         <th />
@@ -180,6 +193,7 @@ export default function RacesManager() {
                           </td>
                           <td className="muted">{r.event_name || "—"}</td>
                           <td>{r.country}</td>
+                          <td className="mono">{r.edition ?? "—"}</td>
                           <td>
                             <span className={`badge badge-${r.status}`}>
                               {STATUS_LABEL[r.status] || r.status}
@@ -188,6 +202,9 @@ export default function RacesManager() {
                           <td className="mono">{r.km ?? "—"}</td>
                           <td style={{ whiteSpace: "nowrap" }}>
                             <button className="btn" onClick={() => setEditing(r)}>Modifier</button>{" "}
+                            <button className="btn" disabled={duplicating === r.id} onClick={() => newEdition(r)}>
+                              Nouvelle édition
+                            </button>{" "}
                             <button className="btn btn-danger" disabled={deleting === r.id} onClick={() => remove(r)}>
                               Suppr.
                             </button>

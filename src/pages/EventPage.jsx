@@ -16,6 +16,7 @@ export default function EventPage() {
       .select("*, organizer:organizers!races_organizer_id_fkey(id, name, logo_url, website, bio)")
       .eq("event_slug", slug)
       .eq("status", "published")
+      .eq("is_current", true)
       .then(({ data, error }) => {
         if (error) setError(error.message);
         else setRaces((data || []).sort((a, b) => (a.km || 0) - (b.km || 0)));

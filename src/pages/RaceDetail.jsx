@@ -123,10 +123,34 @@ function Comments({ raceId }) {
   );
 }
 
+function editionYear(r) {
+  if (r?.start_date) return String(r.start_date).slice(0, 4);
+  return r?.next_edition || null;
+}
+
+function EditionsBlock({ editions }) {
+  if (!editions.length) return null;
+  return (
+    <div style={{ marginTop: 32 }}>
+      <div className="h2">Éditions précédentes</div>
+      <ul style={{ listStyle: "none", padding: 0, margin: "10px 0 0", display: "grid", gap: 6 }}>
+        {editions.map((e) => (
+          <li key={e.id}>
+            <Link to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14 }}>
+              {[`Édition ${e.edition}`, editionYear(e), e.km ? `${e.km} km` : null].filter(Boolean).join(" — ")}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function RaceDetail() {
   const { id } = useParams();
   const [race, setRace] = useState(null);
   const [error, setError] = useState(null);
+  const [siblings, setSiblings] = useState([]);
 
   useEffect(() => {
     supabase
@@ -140,6 +164,19 @@ export default function RaceDetail() {
       });
   }, [id]);
 
+  // Autres éditions du même ultra (même lineage_id). La RLS ne renvoie au
+  // public que les éditions publiées.
+  useEffect(() => {
+    if (!race?.lineage_id) { setSiblings([]); return; }
+    supabase
+      .from("races")
+      .select("id, name, edition, start_date, next_edition, km, status, is_current")
+      .eq("lineage_id", race.lineage_id)
+      .neq("id", race.id)
+      .order("edition", { ascending: false })
+      .then(({ data }) => setSiblings(data || []));
+  }, [race?.id, race?.lineage_id]);
+
   // Comptage des vues, séparé du chargement de la fiche : si l'incrément
   // échoue, ça ne doit jamais empêcher l'affichage de la course.
   useEffect(() => {
@@ -152,11 +189,31 @@ export default function RaceDetail() {
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
   if (!race) return <div className="wrap" style={{ paddingTop: 40 }}><p className="muted">Chargement…</p></div>;
 
+  const newerEdition = !race.is_current
+    ? siblings.find((s) => s.is_current && s.status === "published" && s.edition > race.edition)
+    : null;
+  const previousEditions = siblings.filter((s) => s.edition < race.edition && s.status === "published");
+  const showEditionBadge = race.edition > 1 || siblings.length > 0;
+  const year = editionYear(race);
+
   return (
     <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60, maxWidth: 800 }}>
       <Link to="/" className="muted" style={{ fontSize: 13 }}>← Tous les ultras</Link>
+      {newerEdition && (
+        <div className="card" style={{ marginTop: 12, borderColor: "var(--rust, #C4622D)" }}>
+          Une édition plus récente existe :{" "}
+          <Link to={`/courses/${newerEdition.id}`} style={{ fontWeight: 600 }}>
+            {`Édition ${newerEdition.edition}${editionYear(newerEdition) ? ` · ${editionYear(newerEdition)}` : ""}`}
+          </Link>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
         <h1 className="h1" style={{ margin: 0 }}>{race.name}</h1>
+        {showEditionBadge && (
+          <span className="mono muted" style={{ fontSize: 12, border: "1px solid currentColor", borderRadius: 999, padding: "2px 8px", whiteSpace: "nowrap" }}>
+            {`Édition ${race.edition}${year ? ` · ${year}` : ""}`}
+          </span>
+        )}
         <FavoriteButton raceId={race.id} size={22} />
         {race.registration_url && (
           <a
@@ -212,6 +269,8 @@ export default function RaceDetail() {
       )}
 
       <OrganizerBox race={race} />
+
+      <EditionsBlock editions={previousEditions} />
 
       <Comments raceId={race.id} />
     </div>

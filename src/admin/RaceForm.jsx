@@ -199,6 +199,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       <div className="field">
         <label>Nom *</label>
         <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
+        {race?.id && race.edition && (
+          <div className="field-hint">Édition {race.edition} sur UltraRide</div>
+        )}
       </div>
 
       <ImageUploadField
