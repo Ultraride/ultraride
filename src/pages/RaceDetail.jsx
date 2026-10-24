@@ -7,7 +7,7 @@ import OrganizerBox from "../components/OrganizerBox";
 import FavoriteButton from "../components/FavoriteButton";
 import { priceTier, formatPrice } from "../lib/price";
 
-function RaceMap({ race }) {
+export function RaceMap({ race }) {
   const ref = useRef(null);
   const mapRef = useRef(null);
 
@@ -56,7 +56,7 @@ function RaceMap({ race }) {
   return <div ref={ref} style={{ width: "100%", height: 320, background: "var(--ink)" }} />;
 }
 
-function Comments({ raceId }) {
+export function Comments({ raceId }) {
   const { user, isOrganizer } = useAuth();
   const [comments, setComments] = useState([]);
   const [body, setBody] = useState("");

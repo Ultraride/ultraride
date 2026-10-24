@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { isAppScreen } from "../mobile/routes";
 
 const navClass = ({ isActive }) => (isActive ? "active" : "");
 
@@ -61,7 +62,7 @@ export default function Header() {
   );
 
   return (
-    <header className="site">
+    <header className={`site${isAppScreen(location.pathname) ? " site--app" : ""}`}>
       <NavLink to="/" className="brand">
         <img src="/logo.png" alt="UltraRide" className="brand-logo" />
       </NavLink>

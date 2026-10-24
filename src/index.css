@@ -1238,39 +1238,3 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
   margin: 8px 0 24px;
 }
 
-/* ───────────── Mode application (mobile) ─────────────
-   Barre d'onglets en bas + écrans dédiés (/, /ultras, /carte).
-   Rien ne change au-delà de 819px. */
-.tabbar{display:none;}
-@media(max-width:819px){
-  :root{--tabbar-h:64px;}
-  body{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent;}
-  header.site{padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:12px;}
-  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1500;height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(251,248,240,0.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);justify-content:space-around;align-items:stretch;}
-  .tabbar-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;font-size:11px;font-weight:500;color:#5E6254;}
-  .tabbar-item.active{color:#9A4519;font-weight:700;}
-  .tabbar-item.active svg{stroke-width:2.2;}
-
-  /* La bannière cookies et les modales passent au-dessus de la barre. */
-  .cookie-banner{bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 8px) !important;}
-
-  /* Vitrine : on garde le titre, on retire le long paragraphe. */
-  .home--home .hero-sub, .home--home .hero-stats{display:none;}
-  .home--home .hero-intro{text-align:left;}
-  .app-see-all{display:flex;justify-content:center;width:100%;padding:14px;font-size:15px;border-radius:12px;}
-
-  /* En-tête des écrans Ultras / Carte. */
-  .app-page-head{display:flex;align-items:baseline;justify-content:space-between;padding-top:20px;}
-  .app-page-title{margin:0;font-family:var(--disp);font-weight:400;font-size:30px;line-height:1;}
-  .home--list .search-filters-sticky, .home--map .search-filters-sticky{padding-top:12px;}
-
-  /* Carte plein écran. */
-  .home--map .wrap{padding-left:0;padding-right:0;}
-  .home--map .search-filters-sticky .wrap{padding-left:16px;padding-right:16px;}
-  .map-box--tall{border-left:none;border-right:none;border-radius:0;margin:0;}
-  .map-box--tall .map-box-canvas{height:calc(100dvh - 210px - var(--tabbar-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));min-height:320px;}
-
-  /* Cibles tactiles confortables. */
-  .search-bar input[type="search"]{min-height:46px;font-size:16px;border-radius:12px;}
-  .search-bar .btn{min-height:46px;border-radius:12px;}
-}

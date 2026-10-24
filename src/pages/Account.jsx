@@ -5,7 +5,7 @@ import { useAuth } from "../lib/AuthContext";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
 import PalmaresSection from "./PalmaresSection";
 
-function InfoSection() {
+export function InfoSection() {
   const { user, profile, refreshProfile } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name || "");
   const [marketingConsent, setMarketingConsent] = useState(profile?.marketing_consent ?? true);
@@ -73,7 +73,7 @@ function InfoSection() {
   );
 }
 
-function PasswordSection() {
+export function PasswordSection() {
   const { updatePassword } = useAuth();
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -120,7 +120,7 @@ function PasswordSection() {
   );
 }
 
-function FavoritesSection() {
+export function FavoritesSection() {
   const { user } = useAuth();
   const [favorites, setFavorites] = useState(null);
   const [error, setError] = useState(null);
@@ -173,7 +173,7 @@ function FavoritesSection() {
   );
 }
 
-function CommentsSection() {
+export function CommentsSection() {
   const { user } = useAuth();
   const [comments, setComments] = useState(null);
   const [error, setError] = useState(null);
@@ -230,7 +230,7 @@ function CommentsSection() {
   );
 }
 
-function DangerZone() {
+export function DangerZone() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);

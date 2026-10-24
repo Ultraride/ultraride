@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import OverviewMap from "../components/OverviewMap";
 import RaceCard from "../components/RaceCard";
@@ -327,11 +326,7 @@ function useIsMobile() {
   return isMobile;
 }
 
-// `view` ne change l'affichage que sur mobile, où chaque onglet de la barre
-// du bas montre une seule chose : "home" = vitrine (carrousels), "list" =
-// recherche + liste, "map" = recherche + carte plein écran. Sur desktop,
-// les trois routes affichent la page d'accueil complète.
-export default function Home({ view = "home" }) {
+export default function Home() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -351,10 +346,6 @@ export default function Home({ view = "home" }) {
   const [isStuck, setIsStuck] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const compactFilters = isStuck || isMobile;
-
-  const appView = isMobile ? view : "desktop";
-  const showHero = appView === "home" || appView === "desktop";
-  const showMap = appView === "map" || appView === "desktop";
 
   useEffect(() => {
     const el = filterSentinelRef.current;
@@ -523,17 +514,11 @@ export default function Home({ view = "home" }) {
 
   const gridEntries = useMemo(() => groupByEvent(filtered), [filtered]);
 
-  // Vitrine mobile : les carrousels seuls tant qu'on ne cherche rien, la
-  // liste complète reste à un onglet (ou un bouton) de distance.
-  const showCarousels = isBrowsing && (appView === "home" || appView === "desktop");
-  const showGrid = appView === "desktop" || appView === "list" || (appView === "home" && !isBrowsing);
-
   const setFilter = (key, value) => setFilters((f) => ({ ...f, [key]: f[key] === value ? (typeof value === "string" ? "" : null) : value }));
   const resetFilters = () => { setFilters(EMPTY_FILTERS); setSearch(""); };
 
   return (
-    <div className={`home home--${appView}`}>
-      {showHero && (
+    <div>
       <div className="wrap" style={{ paddingTop: 40 }}>
         <div className="hero-intro">
           <div className="eyebrow">Répertoire <span style={{ whiteSpace: "nowrap" }}>ultra-distance</span> · France &amp; Europe</div>
@@ -557,14 +542,6 @@ export default function Home({ view = "home" }) {
 
         <DataFreshness />
       </div>
-      )}
-
-      {appView === "list" && (
-        <div className="wrap app-page-head">
-          <h1 className="app-page-title">Ultras</h1>
-          {races && <span className="mono muted">{filtered.length} résultat{filtered.length !== 1 ? "s" : ""}</span>}
-        </div>
-      )}
 
       {error && <div className="wrap"><div className="error-box">{error}</div></div>}
 
@@ -664,13 +641,11 @@ export default function Home({ view = "home" }) {
             )}
           </div>
 
-          {showMap && (
-            <div className="wrap">
-              <OverviewMap races={filtered} tall={appView === "map"} />
-            </div>
-          )}
+          <div className="wrap">
+            <OverviewMap races={filtered} />
+          </div>
 
-          {showCarousels && (
+          {isBrowsing && (
             <div className="wrap">
               {monthlyBlock && (
                 <RaceCarousel
@@ -749,17 +724,8 @@ export default function Home({ view = "home" }) {
             </div>
           )}
 
-          {appView === "home" && isBrowsing && (
-            <div className="wrap" style={{ paddingBottom: 32 }}>
-              <Link to="/ultras" className="btn btn-primary app-see-all">
-                Voir les {races.length} ultras
-              </Link>
-            </div>
-          )}
-
-          {showGrid && (
           <div className="wrap" style={{ paddingBottom: 60 }}>
-            {isBrowsing && appView !== "list" && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Tous les ultras</h2>}
+            {isBrowsing && <h2 className="carousel-title" style={{ marginBottom: 4 }}>Tous les ultras</h2>}
             <div className="results-count">
               {filtered.length} ultra{filtered.length !== 1 ? "s" : ""} trouvé{filtered.length !== 1 ? "s" : ""}
               {gridEntries.length !== filtered.length && ` · ${gridEntries.length} entrée${gridEntries.length !== 1 ? "s" : ""}`}
@@ -779,11 +745,10 @@ export default function Home({ view = "home" }) {
               </div>
             )}
           </div>
-          )}
         </>
       )}
 
-      {appView !== "map" && <SiteFooter />}
+      <SiteFooter />
     </div>
   );
 }

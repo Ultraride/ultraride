@@ -5,15 +5,13 @@ import DisclaimerModal from "./components/DisclaimerModal";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import CookieBanner from "./components/CookieBanner";
 import MobileTabBar from "./components/MobileTabBar";
-import Home from "./pages/Home";
-import RaceDetail from "./pages/RaceDetail";
+import { HomeRoute, RaceRoute, AccountRoute } from "./mobile/routes";
 import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import OrganizerRaces from "./pages/OrganizerRaces";
 import OrganizerPage from "./pages/OrganizerPage";
-import Account from "./pages/Account";
 import Rules from "./pages/Rules";
 import Cookies from "./pages/Cookies";
 import SubmitRace from "./pages/SubmitRace";
@@ -45,17 +43,17 @@ export default function App() {
       <AnalyticsTracker />
       <CookieBanner />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/carte" element={<Home view="map" />} />
-        <Route path="/ultras" element={<Home view="list" />} />
-        <Route path="/courses/:id" element={<RaceDetail />} />
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/carte" element={<HomeRoute view="map" />} />
+        <Route path="/ultras" element={<HomeRoute view="list" />} />
+        <Route path="/courses/:id" element={<RaceRoute />} />
         <Route path="/evenements/:slug" element={<EventPage />} />
         <Route path="/organizers/:id" element={<OrganizerPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/organizer/profile" element={<OrganizerProfile />} />
         <Route path="/organizer/races" element={<OrganizerRaces />} />
-        <Route path="/account" element={<Account />} />
+        <Route path="/account" element={<AccountRoute />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/proposer-course" element={<SubmitRace />} />
