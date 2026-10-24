@@ -148,10 +148,10 @@ function Elevation({ profile, km }) {
   return (
     <div className="v2-panel" style={{ padding: "18px 18px 10px" }}>
       <svg width="100%" height="140" viewBox="0 0 800 140" preserveAspectRatio="none" role="img" aria-label="Profil d'élévation du parcours">
-        <path d={`${line} L 800 140 L 0 140 Z`} fill="#F3DCCD" />
+        <path d={`${line} L 800 140 L 0 140 Z`} fill="var(--elev-fill)" />
         <path d={line} fill="none" stroke="#B4541F" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--mono)", fontSize: 11, color: "#5E6254", paddingTop: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--mono)", fontSize: 11, color: "var(--text2)", paddingTop: 6 }}>
         <span>0 km · {formatNumber(minY)} m</span>
         <span>Altitude max {formatNumber(maxY)} m</span>
         <span>{formatNumber(km || maxX)} km</span>
@@ -366,7 +366,7 @@ export default function RaceDetail() {
             <h2 className="v2-h3">Roadbook</h2>
             {(race.start_place || endPlace) && (
               <div className="v2-roadbook">
-                <span style={{ width: 14, height: 14, borderRadius: 7, border: "2px solid #1B2B20", flexShrink: 0 }} />
+                <span style={{ width: 14, height: 14, borderRadius: 7, border: "2px solid var(--paper)", flexShrink: 0 }} />
                 <b>{race.start_place || "Départ"}</b>
                 <span className="v2-roadbook-line" />
                 <span className="mono muted v2-roadbook-stats" style={{ fontSize: 13 }}>
@@ -395,7 +395,7 @@ export default function RaceDetail() {
         <aside className="v2-race-aside" aria-label="Inscription et informations">
           <div className="v2-panel" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0 8px 24px rgba(27,43,32,0.06)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-              <span className="v2-eyebrow" style={{ fontSize: 12, color: race.open ? "#15793F" : "#B3382C" }}>
+              <span className="v2-eyebrow" style={{ fontSize: 12, color: race.open ? "var(--moss)" : "#D9614F" }}>
                 {race.open ? "Inscriptions ouvertes" : "Inscriptions fermées"}
               </span>
               {countdown && <span className="v2-countdown">{countdown}</span>}
@@ -423,7 +423,7 @@ export default function RaceDetail() {
           <OrganizerBox race={race} />
           {orgRaces.length > 0 && (race.organizer?.id) && (
             <div className="v2-panel" style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: -8 }}>
-              <span style={{ fontSize: 14, color: "#33392E" }}>
+              <span style={{ fontSize: 14, color: "var(--text3)" }}>
                 Aussi : {orgRaces.slice(0, 3).map((r) => r.name).join(", ")}{orgRaces.length > 3 ? "…" : "."}
               </span>
               <Link to={`/organizers/${race.organizer.id}`} className="v2-link" style={{ fontSize: 14 }}>
@@ -444,7 +444,7 @@ export default function RaceDetail() {
               </div>
             </div>
             {previousEditions.map((e) => (
-              <Link key={e.id} to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14, color: "#9A4519" }}>
+              <Link key={e.id} to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14, color: "var(--rust-text)" }}>
                 {[`Édition ${e.edition}`, editionYear(e), e.km ? `${formatNumber(e.km)} km` : null].filter(Boolean).join(" — ")}
               </Link>
             ))}

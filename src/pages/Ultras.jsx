@@ -201,7 +201,7 @@ export default function Ultras() {
           <aside className={`v2-filters${filtersOpen ? " v2-filters-open" : ""}`} aria-label="Filtres">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <span className="v2-h3" style={{ fontSize: 12 }}>Filtres{activeCount ? ` · ${activeCount}` : ""}</span>
-              <button type="button" onClick={reset} style={{ border: "none", background: "none", padding: "8px 0", fontSize: 13, color: "#9A4519", fontWeight: 600 }}>
+              <button type="button" onClick={reset} style={{ border: "none", background: "none", padding: "8px 0", fontSize: 13, color: "var(--rust-text)", fontWeight: 600 }}>
                 Réinitialiser
               </button>
             </div>

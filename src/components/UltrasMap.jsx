@@ -67,7 +67,7 @@ export default function UltrasMap({ races, hoveredId, onBoundsChange, onOpen }) 
           <span class="v2-popup-tag">${escapeHtml([r.start_place || r.country, when].filter(Boolean).join(" · ").toUpperCase())}</span>
           <span class="v2-popup-name">${escapeHtml(r.name)}</span>
           <span class="v2-popup-stats">${escapeHtml([r.discipline, statsLine(r)].filter(Boolean).join(" · "))}</span>
-          <a href="/courses/${encodeURIComponent(r.id)}" data-race="${escapeHtml(r.id)}" style="color:#9A4519;font-weight:600;margin-top:4px">Voir la fiche →</a>
+          <a href="/courses/${encodeURIComponent(r.id)}" data-race="${escapeHtml(r.id)}" style="color:var(--rust-text);font-weight:600;margin-top:4px">Voir la fiche →</a>
         </div>`,
         { closeButton: true, autoPan: true }
       );

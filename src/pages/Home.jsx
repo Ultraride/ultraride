@@ -306,7 +306,7 @@ export default function Home() {
                     key={r.id}
                     race={r}
                     index={i}
-                    footer={<span className="v2-countdown" style={{ color: "#15793F" }}>à {Math.round(r._distanceKm)} km de toi</span>}
+                    footer={<span className="v2-countdown" style={{ color: "var(--moss)" }}>à {Math.round(r._distanceKm)} km de toi</span>}
                   />
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
+import { ThemeCycleButton, ThemeSegmented } from "./ThemeToggle";
 
 const navClass = ({ isActive }) => (isActive ? "active" : "");
 
@@ -60,6 +61,7 @@ export default function Header() {
       </NavLink>
       <nav className="top-nav" aria-label="Navigation principale">{mainLinks}</nav>
       <div className="top-actions">
+        <ThemeCycleButton />
         <Link to={user ? "/account" : "/login"} className="nav-passport">
           <PassportIcon />Mon passeport
         </Link>
@@ -79,6 +81,7 @@ export default function Header() {
       </button>
       {menuOpen && (
         <nav id="mobile-nav" className="mobile-nav" aria-label="Menu">
+          <ThemeSegmented />
           {mainLinks}
           {user ? (
             <>
