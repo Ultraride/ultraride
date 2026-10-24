@@ -131,7 +131,7 @@ export default function OrganizerRaces() {
 
   if (editing !== null) {
     return (
-      <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60, maxWidth: 720 }}>
+      <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60, maxWidth: 780 }}>
         <button className="mu-back" onClick={() => setEditing(null)}>← Retour à mes ultras</button>
         <RaceForm
           race={editing.id ? editing : null}

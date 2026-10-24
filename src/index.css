@@ -1946,3 +1946,43 @@ a.mu-name:hover{color:var(--rust-text);}
 .mu-past-row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line2);font-size:14px;color:var(--text2);}
 .mu-past-row a{color:var(--paper);font-weight:600;}
 .mu-back{border:0;background:none;padding:6px 0;margin-bottom:12px;color:var(--text3);font:600 14px var(--sans);cursor:pointer;}
+
+/* ───────── Formulaire ultra (v2) ───────── */
+.rf{display:flex;flex-direction:column;gap:16px;}
+.rf-head{display:flex;flex-direction:column;gap:6px;margin-bottom:4px;}
+.rf-eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--rust-text);font-weight:600;}
+.rf-title{margin:0;font-family:var(--disp);font-weight:400;font-size:38px;line-height:1.05;overflow-wrap:anywhere;}
+.rf-intro{margin:0;font-size:15px;color:var(--text2);line-height:1.5;}
+.rf-section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;}
+.rf-section-head{display:flex;gap:12px;align-items:flex-start;}
+.rf-step{width:30px;height:30px;border-radius:15px;background:var(--paper);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:600;font-size:13px;flex-shrink:0;}
+.rf-section-head h3{margin:3px 0 0;font-family:var(--disp);font-weight:400;font-size:21px;letter-spacing:.01em;}
+.rf-section-head p{margin:2px 0 0;font-size:13.5px;color:var(--text2);}
+.rf-section-body{display:flex;flex-direction:column;gap:14px;}
+.rf .grid-2{gap:14px 16px;}
+.rf .field{margin:0;}
+.rf .field > label{font-family:var(--sans);font-size:14px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--paper);margin-bottom:6px;}
+.rf .field input:not([type="checkbox"]):not([type="radio"]),.rf .field select,.rf .field textarea{min-height:46px;border-radius:10px;font-size:15px;padding:10px 12px;border:1px solid var(--line3);background:var(--ink);}
+.rf .field textarea{line-height:1.5;resize:vertical;}
+.rf .field input:focus,.rf .field select:focus,.rf .field textarea:focus{border-color:var(--paper);box-shadow:0 0 0 3px color-mix(in srgb,var(--paper) 15%,transparent);}
+.rf .field-hint{font-size:13px;color:var(--text2);margin-top:6px;}
+.rf .field-hint.rf-over{color:var(--rust-text);font-weight:600;}
+.rf .image-upload-row .btn,.rf .image-upload-row label{min-height:46px;border-radius:10px;display:inline-flex;align-items:center;}
+.rf-pills{display:flex;flex-wrap:wrap;gap:8px;}
+.rf-pills button{min-height:42px;padding:0 16px;border-radius:999px;border:1px solid var(--line3);background:var(--ink);color:var(--text3);font:600 14px var(--sans);cursor:pointer;}
+.rf-pills button:hover{border-color:var(--paper);}
+.rf-pills button[aria-checked="true"]{background:var(--paper);border-color:var(--paper);color:var(--ink);}
+.rf-pills button:focus-visible{outline:2px solid #B4541F;outline-offset:2px;}
+.rf-toggle{display:inline-flex;align-items:center;gap:12px;font-weight:600;font-size:15px;cursor:pointer;align-self:flex-start;}
+.rf-toggle input{position:absolute;opacity:0;width:1px;height:1px;}
+.rf-toggle-track{width:46px;height:26px;border-radius:13px;background:var(--line3);position:relative;transition:background .2s;flex-shrink:0;}
+.rf-toggle-track span{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.rf-toggle input:checked + .rf-toggle-track{background:#15793F;}
+.rf-toggle input:checked + .rf-toggle-track span{transform:translateX(20px);}
+.rf-toggle input:focus-visible + .rf-toggle-track{outline:2px solid #B4541F;outline-offset:2px;}
+.rf-actions{position:sticky;bottom:16px;z-index:4;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px var(--shadow);}
+.rf-btn{min-height:48px;padding:0 20px;border-radius:12px;border:1px solid var(--line3);background:transparent;color:var(--paper);font:600 15px var(--sans);cursor:pointer;}
+.rf-btn:hover{border-color:var(--paper);}
+.rf .deletion-request{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0;}
+.rf .card{border-radius:12px;}
+@media(max-width:600px){.rf-section{padding:16px;}.rf-title{font-size:30px;}.rf-actions .v2-btn,.rf-actions .rf-btn{flex:1;}}

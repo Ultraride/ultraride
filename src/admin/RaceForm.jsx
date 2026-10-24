@@ -53,6 +53,40 @@ const NUMERIC_COLUMNS = [
   "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
 ];
 
+// Choix exclusif en pastilles (remplace une liste déroulante courte).
+function Choice({ label, value, options, onChange }) {
+  return (
+    <div className="field rf-choice">
+      <label>{label}</label>
+      <div className="rf-pills" role="radiogroup" aria-label={label.replace(" *", "")}>
+        {options.map((o) => {
+          const [v, l] = Array.isArray(o) ? o : [o, o];
+          return (
+            <button key={v} type="button" role="radio" aria-checked={value === v} onClick={() => onChange(v)}>
+              {l}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Section({ n, title, hint, children }) {
+  return (
+    <section className="rf-section">
+      <header className="rf-section-head">
+        <span className="rf-step">{n}</span>
+        <div>
+          <h3>{title}</h3>
+          {hint && <p>{hint}</p>}
+        </div>
+      </header>
+      <div className="rf-section-body">{children}</div>
+    </section>
+  );
+}
+
 export default function RaceForm({ race, onSaved, onCancel }) {
   const { isAdmin, isOrganizer, user } = useAuth();
   const [form, setForm] = useState(race ? { ...EMPTY, ...race, organizer_id: race.organizer_id || "" } : EMPTY);
@@ -254,15 +288,20 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="panel">
-      <div className="h2">{race?.id ? "Modifier l'ultra" : "Nouvel ultra"}</div>
-      {!isAdmin && (
-        <p className="muted" style={{ fontSize: 13, marginTop: -4 }}>
-          Ta soumission sera relue par un administrateur avant d'apparaître dans le répertoire.
-        </p>
-      )}
+    <form onSubmit={handleSubmit} className="rf">
+      <header className="rf-head">
+        <span className="rf-eyebrow">{race?.id ? "MODIFICATION" : "NOUVEL ULTRA"}</span>
+        <h2 className="rf-title">{race?.id ? (form.name || "Modifier l'ultra") : "Soumettre un ultra"}</h2>
+        {!isAdmin && (
+          <p className="rf-intro">
+            Ta soumission sera relue par un administrateur avant d'apparaître dans le répertoire.
+            {race?.status === "published" && " Une fois enregistrée, la fiche repasse en validation."}
+          </p>
+        )}
+      </header>
       {error && <div className="error-box">{error}</div>}
 
+      <Section n="1" title="L'ultra" hint="Nom, édition et visuel principal.">
       <div className="field">
         <label>Nom *</label>
         <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
@@ -331,6 +370,21 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         folder="races"
       />
 
+      <div className="field">
+        <label>Événement</label>
+        <input
+          value={form.event_name || ""}
+          onChange={(e) => field("event_name", e.target.value)}
+          placeholder="Race Across France"
+        />
+        <div className="field-hint">
+          Facultatif. Renseigné à l'identique sur plusieurs ultras, ce libellé les regroupe en une
+          seule carte dans le répertoire, avec une page dédiée listant les formats.
+        </div>
+      </div>
+      </Section>
+
+      <Section n="2" title="Type d'épreuve">
       <div className="grid-2">
         <div className="field">
           <label>Pays *</label>
@@ -339,49 +393,20 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             {EMEA_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <div className="field">
-          <label>Discipline *</label>
-          <select required value={form.discipline} onChange={(e) => field("discipline", e.target.value)}>
-            <option>Gravel</option><option>Route</option><option>VTT</option>
-          </select>
-        </div>
+        <Choice label="Discipline *" value={form.discipline} options={["Gravel", "Route", "VTT"]}
+          onChange={(v) => field("discipline", v)} />
       </div>
+      <Choice label="Format *" value={form.format}
+        options={[["course", "Course"], ["aventure", "Aventure"], ["endurance", "Endurance"]]}
+        onChange={(v) => field("format", v)} />
+      <Choice label="Mode *" value={form.mode} options={["Autonomie", "Semi-autonomie", "Assisté"]}
+        onChange={(v) => field("mode", v)} />
+      <Choice label="Parcours *" value={form.parcours}
+        options={[["boucle", "Boucle"], ["point", "Point à point"], ["ar", "Aller-retour"]]}
+        onChange={(v) => field("parcours", v)} />
+      </Section>
 
-      <div className="grid-2">
-        <div className="field">
-          <label>Format *</label>
-          <select required value={form.format} onChange={(e) => field("format", e.target.value)}>
-            <option value="course">Course</option>
-            <option value="aventure">Aventure</option>
-            <option value="endurance">Endurance</option>
-          </select>
-        </div>
-        <div className="field">
-          <label>Mode *</label>
-          <select required value={form.mode} onChange={(e) => field("mode", e.target.value)}>
-            <option>Autonomie</option><option>Semi-autonomie</option><option>Assisté</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid-2">
-        <div className="field">
-          <label>Parcours *</label>
-          <select required value={form.parcours} onChange={(e) => field("parcours", e.target.value)}>
-            <option value="boucle">Boucle</option>
-            <option value="point">Point à point</option>
-            <option value="ar">Aller-retour</option>
-          </select>
-        </div>
-        <div className="field">
-          <label>Mois *</label>
-          <select required value={form.month} onChange={(e) => field("month", e.target.value)}>
-            <option value="">— Sélectionner —</option>
-            {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-      </div>
-
+      <Section n="3" title="Parcours" hint="Distance, dénivelé, départ et arrivée.">
       <div className="grid-2">
         <div className="field">
           <label>Distance (km) *</label>
@@ -390,47 +415,6 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         <div className="field">
           <label>Dénivelé + (m) *</label>
           <input required type="number" value={form.dplus ?? ""} onChange={(e) => field("dplus", e.target.value)} />
-        </div>
-      </div>
-
-      <div className="field">
-        <label>Prix d'inscription (€)</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={form.price ?? ""}
-          onChange={(e) => field("price", e.target.value)}
-          placeholder="149"
-        />
-        <div className="field-hint">
-          Le tarif le plus bas. Laisse vide s'il n'est pas encore fixé : le répertoire n'affichera
-          alors aucune indication de prix, plutôt qu'un montant faux.
-        </div>
-      </div>
-
-      <div className="field">
-        <label>
-          <input
-            type="checkbox"
-            checked={!!form.open}
-            onChange={(e) => field("open", e.target.checked)}
-            style={{ width: "auto", marginRight: 8 }}
-          />
-          Inscriptions ouvertes
-        </label>
-      </div>
-
-      <div className="field">
-        <label>Lien d'inscription</label>
-        <input
-          type="url"
-          value={form.registration_url || ""}
-          onChange={(e) => field("registration_url", e.target.value)}
-          placeholder="https://..."
-        />
-        <div className="field-hint">
-          URL vers la page d'inscription du prestataire (HelloAsso, site officiel, etc.)
         </div>
       </div>
 
@@ -463,11 +447,9 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         }))}
       />
 
-      <div className="field">
-        <label>Heure de départ *</label>
-        <input required value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
-      </div>
+      </Section>
 
+      <Section n="4" title="Dates" hint="Le mois se remplit tout seul à partir de la date de début.">
       <div className="grid-2">
         <div className="field">
           <label>Date de début *</label>
@@ -475,7 +457,13 @@ export default function RaceForm({ race, onSaved, onCancel }) {
             required
             type="date"
             value={form.start_date || ""}
-            onChange={(e) => field("start_date", e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm((f) => {
+                const m = v ? MONTHS[Number(v.slice(5, 7)) - 1] : null;
+                return { ...f, start_date: v, ...(m ? { month: m } : {}) };
+              });
+            }}
           />
           <div className="field-hint">jj/mm/aaaa — date du jour de départ officiel</div>
         </div>
@@ -490,6 +478,61 @@ export default function RaceForm({ race, onSaved, onCancel }) {
           <div className="field-hint">jj/mm/aaaa — date limite d'arrivée</div>
         </div>
       </div>
+
+      <div className="grid-2">
+        <div className="field">
+          <label>Mois *</label>
+          <select required value={form.month} onChange={(e) => field("month", e.target.value)}>
+            <option value="">— Sélectionner —</option>
+            {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>Heure de départ *</label>
+          <input required value={form.departure_time || ""} onChange={(e) => field("departure_time", e.target.value)} placeholder="7h21" />
+        </div>
+      </div>
+      </Section>
+
+      <Section n="5" title="Inscriptions">
+      <div className="field">
+        <label>Prix d'inscription (€)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={form.price ?? ""}
+          onChange={(e) => field("price", e.target.value)}
+          placeholder="149"
+        />
+        <div className="field-hint">
+          Le tarif le plus bas. Laisse vide s'il n'est pas encore fixé : le répertoire n'affichera
+          alors aucune indication de prix, plutôt qu'un montant faux.
+        </div>
+      </div>
+
+      <label className="rf-toggle">
+        <input type="checkbox" checked={!!form.open} onChange={(e) => field("open", e.target.checked)} />
+        <span className="rf-toggle-track" aria-hidden="true"><span /></span>
+        <span>Inscriptions {form.open ? "ouvertes" : "fermées"}</span>
+      </label>
+
+      <div className="field">
+        <label>Lien d'inscription</label>
+        <input
+          type="url"
+          value={form.registration_url || ""}
+          onChange={(e) => field("registration_url", e.target.value)}
+          placeholder="https://..."
+        />
+        <div className="field-hint">
+          URL vers la page d'inscription du prestataire (HelloAsso, site officiel, etc.)
+        </div>
+      </div>
+
+      </Section>
+
+      <Section n="6" title="Organisateur">
 
       {isAdmin ? (
         <div className="grid-2">
@@ -551,29 +594,22 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </div>
       )}
 
-      <div className="field">
-        <label>Événement</label>
-        <input
-          value={form.event_name || ""}
-          onChange={(e) => field("event_name", e.target.value)}
-          placeholder="Race Across France"
-        />
-        <div className="field-hint">
-          Laisse vide si l'ultra est isolé. Renseigné à l'identique sur plusieurs ultras, ce
-          libellé les regroupe en une seule carte dans le répertoire, avec une page dédiée listant
-          les formats.
-        </div>
-      </div>
+      </Section>
 
+      <Section n="7" title="Présentation" hint="La description courte apparaît sur les cartes, la longue sur la fiche.">
       <div className="field">
         <label>Description courte *</label>
-        <textarea required rows={2} value={form.blurb || ""} onChange={(e) => field("blurb", e.target.value)} />
+        <textarea required rows={2} value={form.blurb || ""} onChange={(e) => field("blurb", e.target.value)}
+          placeholder="Une phrase qui donne envie : le terrain, l'ambiance, ce qui rend l'épreuve unique." />
+        <div className={`field-hint${(form.blurb || "").length > 220 ? " rf-over" : ""}`}>{(form.blurb || "").length} / 220 caractères conseillés{(form.blurb || "").length > 220 ? " : le texte sera coupé sur les cartes" : ""}</div>
       </div>
 
       <div className="field">
         <label>Description longue *</label>
-        <textarea required rows={4} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)} />
+        <textarea required rows={6} value={form.long_blurb || ""} onChange={(e) => field("long_blurb", e.target.value)}
+          placeholder="Le parcours, les points de passage, le règlement, l'esprit de l'épreuve…" />
       </div>
+      </Section>
 
       {isAdmin && (
         <div className="field">
@@ -587,11 +623,11 @@ export default function RaceForm({ race, onSaved, onCancel }) {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 10 }}>
-        <button className="btn btn-primary" type="submit" disabled={saving}>
+      <div className="rf-actions">
+        <button className="rf-btn" type="button" onClick={onCancel}>Annuler</button>
+        <button className="v2-btn v2-btn-rust" type="submit" disabled={saving}>
           {saving ? "Enregistrement…" : isAdmin ? "Enregistrer" : "Envoyer pour validation"}
         </button>
-        <button className="btn" type="button" onClick={onCancel}>Annuler</button>
       </div>
 
       {!isAdmin && race?.id && (
