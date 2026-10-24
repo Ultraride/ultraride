@@ -31,7 +31,7 @@ export default function MobileAccount() {
     supabase.from("race_results").select("id, race_name, event_date, distance_km, elevation_gain").eq("user_id", user.id)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(({ data }) => setResults(data || []));
-    supabase.from("favorites").select("id, race:races(id, name, discipline, km, start_date, month, parcours)").eq("user_id", user.id)
+    supabase.from("favorites").select("id, race:races(id, name, discipline, km, start_date, month, parcours, image_url)").eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => setFavorites((data || []).filter((f) => f.race)));
   }, [user, managing]);

@@ -165,11 +165,15 @@ export function MiniCard({ race, extra }) {
   const r = routePath(race.id, 156, 84, loop);
   return (
     <Link to={`/courses/${race.id}`} className="m-mini">
-      <span className="m-mini-cover" style={{ background: disciplineBg(race.discipline) }}>
-        <svg width="100%" height="84" viewBox="0 0 156 84" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <path d={r.d} stroke="#F5F1E6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx={r.start[0]} cy={r.start[1]} r="4" fill="#F5F1E6" />
-        </svg>
+      <span className={`m-mini-cover${race.image_url ? " m-mini-cover--img" : ""}`} style={{ background: disciplineBg(race.discipline) }}>
+        {race.image_url ? (
+          <img src={race.image_url} alt="" loading="lazy" />
+        ) : (
+          <svg width="100%" height="96" viewBox="0 0 156 84" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d={r.d} stroke="#F5F1E6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={r.start[0]} cy={r.start[1]} r="4" fill="#F5F1E6" />
+          </svg>
+        )}
         {daysUntil(race) != null && <span className="m-mini-j">J-{daysUntil(race)}</span>}
       </span>
       <span className="m-mini-body">

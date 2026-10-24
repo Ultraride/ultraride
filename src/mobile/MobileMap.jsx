@@ -31,7 +31,13 @@ export default function MobileMap() {
     map.fitBounds(EUROPE_BOUNDS);
     map.on("click", () => setSelected(null));
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; markersRef.current.clear(); };
+    // Safari ajuste la hauteur visible (barres qui apparaissent/disparaissent) :
+    // la carte recalcule sa taille à chaque changement pour rester pleine page.
+    const fit = () => map.invalidateSize();
+    const ro = new ResizeObserver(fit);
+    ro.observe(boxRef.current);
+    const t = setTimeout(fit, 50);
+    return () => { clearTimeout(t); ro.disconnect(); map.remove(); mapRef.current = null; markersRef.current.clear(); };
   }, []);
 
   useEffect(() => {
