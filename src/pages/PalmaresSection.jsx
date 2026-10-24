@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
@@ -332,88 +333,114 @@ function AddResultForm({ onSaved, onCancel }) {
 }
 
 // Passeport Ultra : fiche A4 verticale, masquée à l'écran et révélée
-// uniquement à l'impression
-// (voir la règle @media print dans index.css). Le visiteur passe par la boîte
-// d'impression de son navigateur et choisit "Enregistrer au format PDF".
+// uniquement à l'impression (voir « Passeport Ultra — impression » dans
+// index.css). Le visiteur passe par la boîte d'impression de son navigateur
+// et choisit « Enregistrer au format PDF ».
+const ROLE_LABEL = { participant: "Participant", organizer: "Organisateur", admin: "Administrateur" };
+const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+function initials(name, email) {
+  const src = (name || email || "?").replace(/@.*/, "").replace(/[._-]+/g, " ").trim();
+  const parts = src.split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
 function AthleteCard({ profile, user, results, stats }) {
-  const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const since = profile?.created_at ? new Date(profile.created_at) : null;
+  const name = profile?.display_name || user?.email?.split("@")[0] || "—";
+  // Numéro de passeport stable, tiré de l'identifiant du compte.
+  const number = (user?.id || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+  const countries = new Set(results.map((r) => r.race?.country).filter(Boolean)).size;
+  const fmt = (n) => Math.round(n || 0).toLocaleString("fr-FR");
 
-  return (
-    <div className="print-sheet">
-      <div className="print-head">
-        <img src="/logo.png" alt="UltraRide" className="print-logo" />
-        <div className="print-doc-type">Passeport Ultra</div>
-      </div>
-
-      <div className="print-identity">
-        <div className="print-name">{profile?.display_name || "—"}</div>
-        <div className="print-email">{user?.email}</div>
-      </div>
-
-      <div className="print-section-title">Réalisations</div>
-      {results.length === 0 ? (
-        <p>Aucune réalisation enregistrée.</p>
-      ) : (
-        <table className="print-table">
-          <thead>
-            <tr>
-              <th>Année</th>
-              <th>Épreuve</th>
-              <th>Organisateur</th>
-              <th>Distance</th>
-              <th>D+</th>
-              <th>Temps total</th>
-              <th>Moyenne</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => (
-              <tr key={r.id}>
-                <td>{r.event_date ? new Date(r.event_date).getFullYear() : "—"}</td>
-                <td>{r.race_name}</td>
-                <td>{r.organizer_name || "—"}</td>
-                <td>{r.distance_km ? `${r.distance_km} km` : "—"}</td>
-                <td>{r.elevation_gain ? `${r.elevation_gain.toLocaleString("fr-FR")} m` : "—"}</td>
-                <td>{formatDuration(r.total_seconds)}</td>
-                <td>{formatSpeed(r.distance_km, r.total_seconds)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="print-stats">
-        <div>
-          <div className="print-stat-num">{stats.count}</div>
-          <div className="print-stat-label">Ultra{stats.count !== 1 ? "s" : ""}</div>
+  // Rendue directement sous <body> : à l'impression, le reste du site est
+  // retiré de la mise en page (pas seulement masqué), donc aucune page blanche.
+  return createPortal(
+    <div className="pp-portal">
+    <div className="print-sheet pp-sheet">
+      <header className="pp-head">
+        <div className="pp-brand">
+          <span className="pp-wordmark">ULTRA<span>RIDE</span></span>
+          <span className="pp-tagline">ULTRA-CYCLING ALMANAC</span>
         </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Kilomètres cumulés</div>
+        <div className="pp-doc">
+          <span className="pp-doc-title">PASSEPORT ULTRA</span>
+          <span className="pp-doc-meta">N° {number} · délivré le {today}</span>
         </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Mètres de D+ cumulés</div>
+      </header>
+
+      <section className="pp-holder">
+        <div className="pp-holder-id">
+          <div className="pp-initials">{initials(profile?.display_name, user?.email)}</div>
+          <div className="pp-holder-text">
+            <span className="pp-label">TITULAIRE</span>
+            <span className="pp-name">{name}</span>
+            <span className="pp-meta">
+              {[ROLE_LABEL[profile?.role] || "Participant",
+                since ? `membre depuis ${MONTHS[since.getMonth()]} ${since.getFullYear()}` : null,
+                user?.email].filter(Boolean).join(" · ")}
+            </span>
+          </div>
         </div>
-        {stats.totalSeconds > 0 && (
-          <>
-            <div>
-              <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
-              <div className="print-stat-label">Temps total cumulé</div>
-            </div>
-            <div>
-              <div className="print-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
-              <div className="print-stat-label">km/h de moyenne</div>
-            </div>
-          </>
+        {stats.count > 0 && (
+          <div className="pp-stamp"><span>FINISHER</span><span>×{stats.count}</span></div>
         )}
-      </div>
+      </section>
 
-      <div className="print-footer">
-        Fiche générée le {today} depuis ultraride.eu — chaque réalisation listée est associée à une trace GPS
-        déposée par le participant.
-      </div>
+      <section className="pp-stats">
+        <div><b>{stats.count}</b><span>ULTRA{stats.count !== 1 ? "S" : ""} TERMINÉ{stats.count !== 1 ? "S" : ""}</span></div>
+        <div><b>{fmt(stats.km)}</b><span>KM CUMULÉS</span></div>
+        <div><b>{fmt(stats.dplus)}</b><span>M DE D+ CUMULÉS</span></div>
+        <div><b>{countries}</b><span>PAYS TRAVERSÉ{countries !== 1 ? "S" : ""}</span></div>
+      </section>
+
+      <section className="pp-results">
+        <span className="pp-label pp-section">RÉALISATIONS</span>
+        {results.length === 0 ? (
+          <p className="pp-empty">Aucune réalisation enregistrée.</p>
+        ) : (
+          <table className="pp-table">
+            <thead>
+              <tr>
+                <th>ANNÉE</th>
+                <th>ÉPREUVE</th>
+                <th>ORGANISATEUR</th>
+                <th className="pp-num">DISTANCE</th>
+                <th className="pp-num">D+</th>
+                <th className="pp-num">TEMPS</th>
+                <th className="pp-center">TRACE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => (
+                <tr key={r.id}>
+                  <td className="pp-mono">{r.event_date ? new Date(r.event_date).getFullYear() : "—"}</td>
+                  <td className="pp-strong">{r.race_name}</td>
+                  <td>{r.organizer_name || "—"}</td>
+                  <td className="pp-num">{r.distance_km ? `${fmt(r.distance_km)} km` : "—"}</td>
+                  <td className="pp-num">{r.elevation_gain ? `${fmt(r.elevation_gain)} m` : "—"}</td>
+                  <td className="pp-num">{r.total_seconds != null ? formatDuration(r.total_seconds) : "—"}</td>
+                  <td className="pp-center pp-mono">{r.gpx_track ? "✓" : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <footer className="pp-footer">
+        <span className="pp-footer-title">ATTESTATION</span>
+        <p>
+          Chaque réalisation listée est associée à une trace GPS (.FIT) déposée par le titulaire sur ultraride.eu.
+          Ce passeport résume des déclarations du participant ; il ne remplace pas le classement officiel de
+          l'organisateur.
+        </p>
+        <span className="pp-mono">Édité par ultraride.eu</span>
+      </footer>
     </div>
+    </div>,
+    document.body
   );
 }
 
@@ -427,7 +454,7 @@ export default function PalmaresSection({ onChange }) {
   const load = () => {
     supabase
       .from("race_results")
-      .select("*, race:races(id, name)")
+      .select("*, race:races(id, name, country)")
       .eq("user_id", user.id)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(({ data, error }) => {

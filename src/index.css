@@ -1641,3 +1641,67 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 /* Le formulaire d'ajout du palmarès hérite des champs du site. */
 .acc-card-accent .field input, .acc-card-accent .field select, .acc-card-accent .field textarea{background:var(--ink);border-radius:10px;min-height:40px;font-size:15px;}
 .nav-passport.active{background:var(--paper);color:var(--ink);}
+
+/* =====================================================================
+   Passeport Ultra — impression (remplace la mise en forme .print-*)
+   ===================================================================== */
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  .pp-sheet{
+    display:flex !important;flex-direction:column;gap:16pt;
+    min-height:277mm;box-sizing:border-box;padding:12mm 13mm 11mm;
+    background:#FBF8F0 !important;color:#1B2B20 !important;
+    border:1.5px solid #1B2B20;border-radius:10px;
+    box-shadow:inset 0 0 0 4px #FBF8F0, inset 0 0 0 5px #B4541F;
+    font-family:"IBM Plex Sans",sans-serif;font-size:10pt;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .pp-sheet *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .pp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12pt;padding-bottom:10pt;border-bottom:2px solid #1B2B20;}
+  .pp-brand,.pp-doc{display:flex;flex-direction:column;gap:3pt;}
+  .pp-doc{align-items:flex-end;text-align:right;}
+  .pp-wordmark{font-family:"Anton",sans-serif;font-size:22pt;line-height:1;letter-spacing:.02em;}
+  .pp-wordmark span{color:#B4541F;}
+  .pp-tagline,.pp-doc-meta,.pp-meta,.pp-mono{font-family:"IBM Plex Mono",monospace;}
+  .pp-tagline{font-size:8.5pt;letter-spacing:.12em;color:#4F5447;}
+  .pp-doc-title{font-family:"Anton",sans-serif;font-size:19pt;line-height:1;letter-spacing:.04em;}
+  .pp-doc-meta{font-size:8.5pt;color:#4F5447;}
+  .pp-holder{display:flex;justify-content:space-between;align-items:center;gap:14pt;}
+  .pp-holder-id{display:flex;gap:13pt;align-items:center;min-width:0;}
+  .pp-initials{width:22mm;height:22mm;border-radius:50%;border:2px solid #1B2B20;display:flex;align-items:center;justify-content:center;font-family:"Anton",sans-serif;font-size:22pt;flex-shrink:0;}
+  .pp-holder-text{display:flex;flex-direction:column;gap:4pt;min-width:0;}
+  .pp-label{font-family:"IBM Plex Mono",monospace;font-size:8.5pt;letter-spacing:.14em;font-weight:600;color:#9A4519;}
+  .pp-name{font-family:"Anton",sans-serif;font-size:30pt;line-height:1;text-transform:uppercase;}
+  .pp-meta{font-size:8.5pt;color:#4F5447;font-family:"IBM Plex Sans",sans-serif;}
+  .pp-stamp{width:27mm;height:27mm;border-radius:50%;border:2.5px solid #B4541F;color:#B4541F;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(10deg);font-family:"IBM Plex Mono",monospace;line-height:1.1;flex-shrink:0;}
+  .pp-stamp span:first-child{font-size:8.5pt;letter-spacing:.12em;font-weight:600;}
+  .pp-stamp span:last-child{font-family:"Anton",sans-serif;font-size:24pt;}
+  .pp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1.5px solid #1B2B20;border-radius:8px;overflow:hidden;background:#fff !important;}
+  .pp-stats div{display:flex;flex-direction:column;gap:3pt;padding:9pt 11pt;border-right:1px solid #1B2B20;}
+  .pp-stats div:last-child{border-right:none;}
+  .pp-stats b{font-family:"Anton",sans-serif;font-weight:400;font-size:22pt;line-height:1;}
+  .pp-stats span{font-family:"IBM Plex Mono",monospace;font-size:8.5pt;color:#4F5447;}
+  .pp-results{display:flex;flex-direction:column;gap:7pt;}
+  .pp-section{color:#1B2B20;}
+  .pp-empty{margin:0;color:#4F5447;}
+  .pp-table{width:100%;border-collapse:collapse;font-size:9.5pt;background:#fff !important;border:1.5px solid #1B2B20;}
+  .pp-table th{background:#1B2B20 !important;color:#FBF8F0 !important;text-align:left;font-family:"IBM Plex Mono",monospace;font-size:8pt;font-weight:600;padding:6pt 7pt;}
+  .pp-table td{padding:8pt 7pt;border-top:1px solid #1B2B20;vertical-align:top;}
+  .pp-table tr{page-break-inside:avoid;break-inside:avoid;}
+  .pp-num{text-align:right !important;white-space:nowrap;}
+  .pp-center{text-align:center !important;}
+  .pp-strong{font-weight:700;}
+  .pp-footer{margin-top:auto;display:flex;flex-direction:column;gap:6pt;padding-top:11pt;border-top:2px solid #1B2B20;}
+  .pp-footer-title{font-family:"Anton",sans-serif;font-size:13pt;letter-spacing:.02em;}
+  .pp-footer p{margin:0;font-size:9pt;line-height:1.5;color:#33392E;}
+  .pp-footer .pp-mono{font-size:8.5pt;color:#4F5447;}
+}
+
+.pp-portal{display:none;}
+@media print {
+  body > *:not(.pp-portal){display:none !important;}
+  .pp-portal{display:block !important;}
+  .pp-portal .pp-sheet{position:static !important;visibility:visible !important;}
+  .pp-portal, .pp-portal *{visibility:visible !important;}
+  html, body{background:#FBF8F0 !important;}
+}
