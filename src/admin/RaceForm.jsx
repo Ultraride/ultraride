@@ -26,7 +26,18 @@ const EMPTY = {
   organizer_name: "", blurb: "", long_blurb: "",
   event_name: "",
   status: "published", organizer_id: "", image_url: "",
+  edition: "",
 };
+
+function editionYear(r) {
+  if (r?.start_date) return String(r.start_date).slice(0, 4);
+  return r?.next_edition || "";
+}
+
+// Échappe les jokers de ILIKE pour une comparaison de nom exacte (casse ignorée).
+function escapeLike(str) {
+  return str.replace(/[\\%_]/g, (c) => "\\" + c);
+}
 
 // Colonnes de `races` modifiables depuis ce formulaire.
 const ALLOWED_COLUMNS = [
@@ -34,7 +45,7 @@ const ALLOWED_COLUMNS = [
   "lat","lon","start_lat","start_lon","end_lat","end_lon","turn_lat","turn_lon",
   "start_place","end_place","departure_time","start_date","end_date",
   "organizer_name","organizer_id","terrain","next_edition","blurb","long_blurb",
-  "status","image_url","registration_url","event_name","event_slug","price"
+  "status","image_url","registration_url","event_name","event_slug","price","edition"
 ];
 
 const NUMERIC_COLUMNS = [
@@ -52,6 +63,10 @@ export default function RaceForm({ race, onSaved, onCancel }) {
   const [linkedOrganizer, setLinkedOrganizer] = useState(null);
   const [deletionRequested, setDeletionRequested] = useState(!!race?.deletion_requested);
   const [requestingDeletion, setRequestingDeletion] = useState(false);
+  // Création uniquement : ultras déjà référencés sous le même nom, et choix
+  // de l'utilisateur ("new" = ultra différent, sinon lineage_id rattaché).
+  const [homonyms, setHomonyms] = useState([]);
+  const [lineageChoice, setLineageChoice] = useState(null);
 
   const loadOrganizers = () => {
     supabase
@@ -86,6 +101,39 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       });
   }, [isAdmin, user]);
 
+  // Détection des homonymes pendant la saisie du nom (création seulement).
+  useEffect(() => {
+    if (race?.id) return;
+    const name = (form.name || "").trim();
+    if (name.length < 3) { setHomonyms([]); return; }
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("races")
+        .select("id, name, discipline, edition, lineage_id, start_date, next_edition, km, organizer_name, status")
+        .ilike("name", escapeLike(name))
+        .neq("status", "rejected")
+        .order("edition", { ascending: false });
+      // Une ligne par ultra (lignée) : la plus récente édition visible.
+      const byLineage = new Map();
+      (data || []).forEach((r) => {
+        const cur = byLineage.get(r.lineage_id);
+        if (!cur) byLineage.set(r.lineage_id, { ...r, maxEdition: r.edition });
+        else cur.maxEdition = Math.max(cur.maxEdition, r.edition);
+      });
+      const list = [...byLineage.values()];
+      setHomonyms(list);
+      setLineageChoice((c) => (c === "new" || list.some((h) => h.lineage_id === c) ? c : null));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.name, race?.id]);
+
+  const chooseLineage = (choice) => {
+    setLineageChoice(choice);
+    const h = homonyms.find((x) => x.lineage_id === choice);
+    // Numéro proposé : l'édition suivante de l'ultra choisi, modifiable.
+    setForm((f) => ({ ...f, edition: h ? String(h.maxEdition + 1) : f.edition }));
+  };
+
   const field = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const numOrNull = (v) => (v === "" || v === null ? null : Number(v));
 
@@ -102,6 +150,12 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       missing.push("Lieu d'arrivée (choisis une suggestion dans la liste pour récupérer les coordonnées GPS)");
     if (isAdmin && !form.organizer_id && !form.organizer_name?.trim())
       missing.push("Organisateur (lié ou nom libre)");
+    if (!race?.id && homonyms.length > 0 && !lineageChoice)
+      missing.push("Ultra du même nom déjà référencé : indique s'il s'agit d'une nouvelle édition ou d'un ultra différent");
+    if (form.edition !== "" && form.edition != null) {
+      const n = Number(form.edition);
+      if (!Number.isInteger(n) || n < 1 || n > 500) missing.push("Numéro d'édition (nombre entier entre 1 et 500)");
+    }
     if (form.start_date && form.end_date && form.end_date < form.start_date)
       missing.push("Date de fin postérieure ou égale à la date de début");
     if (missing.length) {
@@ -133,6 +187,19 @@ export default function RaceForm({ race, onSaved, onCancel }) {
 
     payload.event_name = form.event_name?.trim() || null;
     payload.event_slug = payload.event_name ? slugify(payload.event_name) : null;
+
+    // Vide = numéro attribué automatiquement (édition suivante) à la création.
+    payload.edition = form.edition === "" || form.edition == null ? null : Number(form.edition);
+    if (race?.id && payload.edition === null) delete payload.edition;
+    if (!race?.id) {
+      if (lineageChoice === "new") {
+        // Ultra différent d'un homonyme : nouvelle lignée explicite.
+        payload.id = crypto.randomUUID();
+        payload.lineage_id = payload.id;
+      } else if (lineageChoice) {
+        payload.lineage_id = lineageChoice;
+      }
+    }
 
     let result;
     if (race?.id) {
@@ -199,9 +266,62 @@ export default function RaceForm({ race, onSaved, onCancel }) {
       <div className="field">
         <label>Nom *</label>
         <input required value={form.name} onChange={(e) => field("name", e.target.value)} />
-        {race?.id && race.edition && (
-          <div className="field-hint">Édition {race.edition} sur UltraRide</div>
-        )}
+      </div>
+
+      {!race?.id && homonyms.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, borderColor: "var(--rust, #C4622D)" }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>
+            {homonyms.length === 1 ? "Un ultra porte déjà ce nom." : "Plusieurs ultras portent déjà ce nom."}{" "}
+            S'agit-il d'une nouvelle édition ?
+          </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            {homonyms.map((h) => (
+              <label key={h.lineage_id} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontWeight: 400 }}>
+                <input
+                  type="radio"
+                  name="lineage-choice"
+                  checked={lineageChoice === h.lineage_id}
+                  onChange={() => chooseLineage(h.lineage_id)}
+                  style={{ width: "auto", marginTop: 3 }}
+                />
+                <span>
+                  Oui, nouvelle édition de <strong>{h.name}</strong>
+                  <span className="muted mono" style={{ fontSize: 12 }}>
+                    {" "}— {[h.discipline, h.km ? `${h.km} km` : null, `dernière édition : ${h.maxEdition}`, editionYear(h), h.organizer_name].filter(Boolean).join(" · ")}
+                  </span>
+                </span>
+              </label>
+            ))}
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontWeight: 400 }}>
+              <input
+                type="radio"
+                name="lineage-choice"
+                checked={lineageChoice === "new"}
+                onChange={() => chooseLineage("new")}
+                style={{ width: "auto", marginTop: 3 }}
+              />
+              <span>Non, c'est un ultra différent</span>
+            </label>
+          </div>
+        </div>
+      )}
+
+      <div className="field">
+        <label>Numéro d'édition</label>
+        <input
+          type="number"
+          min={1}
+          max={500}
+          step={1}
+          value={form.edition ?? ""}
+          onChange={(e) => field("edition", e.target.value)}
+          placeholder={race?.id ? "" : "Automatique"}
+          style={{ maxWidth: 140 }}
+        />
+        <div className="field-hint">
+          Le numéro officiel de cette édition (ex. 10 pour la 10e édition).
+          {!race?.id && " Laisse vide pour qu'il soit attribué automatiquement."}
+        </div>
       </div>
 
       <ImageUploadField
