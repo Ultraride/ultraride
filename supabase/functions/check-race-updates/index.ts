@@ -133,6 +133,11 @@ async function authorize(req: Request, supabase: SupabaseClient): Promise<"cron"
   const cronSecret = Deno.env.get("CRON_SECRET");
   const sentSecret = req.headers.get("x-cron-secret");
   if (cronSecret && sentSecret && sentSecret === cronSecret) return "cron";
+  // Jeton de la tâche planifiée rangé dans le coffre Supabase (race_check_token).
+  if (sentSecret) {
+    const { data: ok } = await supabase.rpc("race_check_token_ok", { p_token: sentSecret });
+    if (ok === true) return "cron";
+  }
 
   const auth = req.headers.get("Authorization") || "";
   const jwt = auth.replace(/^Bearer\s+/i, "").trim();
