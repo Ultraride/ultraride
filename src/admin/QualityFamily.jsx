@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { QUALITY, fr } from "./AdminOverview";
+import { eur, tokens } from "../lib/aiCost";
 
 // Ce que l'IA ne sait pas corriger : on l'explique au lieu d'afficher le bouton.
 const MANUAL_REASON = {
@@ -120,6 +121,10 @@ export default function QualityFamily() {
               Campagne lancée {since(running.created_at)} · <b>{running.sources_done}</b> sites vérifiés sur {running.sources_total}
               {" "}· <b>{running.suggestions_created}</b> suggestions{running.errors ? ` · ${running.errors} sites en erreur` : ""}
             </p>
+            <p className="qf-cost">
+              <b>{eur(running.cost_usd)}</b> dépensés · {tokens(running.input_tokens)} tokens en entrée, {tokens(running.output_tokens)} en sortie
+              {running.sources_done > 0 && <> · ≈ {eur((running.cost_usd / running.sources_done) * running.sources_total)} pour toute la campagne</>}
+            </p>
             <div className="sv-bar-track qf-progress"><div className="sv-bar-fill sv-fill-rust" style={{ width: `${pct}%` }} /></div>
             <div className="qf-actions">
               <span className="sv-dim">Environ {minutesLeft} min restantes · continue même si tu fermes la page.</span>
@@ -136,7 +141,8 @@ export default function QualityFamily() {
             {lastDone && (
               <p className="sv-dim qf-last">
                 Dernière campagne {since(lastDone.created_at)}{lastDone.status === "cancelled" ? " (arrêtée)" : ""} : {lastDone.sources_done}/{lastDone.sources_total} sites,
-                {" "}{lastDone.suggestions_created} suggestions{lastDone.errors ? `, ${lastDone.errors} erreurs` : ""}.
+                {" "}{lastDone.suggestions_created} suggestions{lastDone.errors ? `, ${lastDone.errors} erreurs` : ""}
+                {" "}· {tokens(lastDone.input_tokens)} / {tokens(lastDone.output_tokens)} tokens · <b>{eur(lastDone.cost_usd)}</b>.
               </p>
             )}
             <div className="qf-actions">

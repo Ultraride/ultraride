@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { eur, tokens, usd } from "../lib/aiCost";
 import { supabase } from "../lib/supabaseClient";
 import { normalizeUrl } from "../lib/organizerLinks";
 
@@ -39,8 +40,6 @@ const SOURCE_STATUS = {
 const MAX_CHECK = 5;
 
 // Tarif Claude Haiku 5.5, en $ par token.
-const INPUT_PRICE = 0.1 / 1_000_000;
-const OUTPUT_PRICE = 0.5 / 1_000_000;
 
 function Pill({ label, bg, title }) {
   return (
@@ -648,8 +647,8 @@ function SourcesTab({ onChanged }) {
             {checkResult.sources_checked} source{checkResult.sources_checked !== 1 ? "s" : ""} vérifiée
             {checkResult.sources_checked !== 1 ? "s" : ""} · {checkResult.suggestions_created} suggestion
             {checkResult.suggestions_created !== 1 ? "s" : ""} · {checkResult.errors} erreur
-            {checkResult.errors !== 1 ? "s" : ""} · {checkResult.input_tokens} tokens en entrée,{" "}
-            {checkResult.output_tokens} en sortie
+            {checkResult.errors !== 1 ? "s" : ""} · {tokens(checkResult.input_tokens)} tokens en entrée,{" "}
+            {tokens(checkResult.output_tokens)} en sortie · <b>{eur(checkResult.cost_usd)}</b>
           </div>
           {(checkResult.details || []).map((d) => {
             const st = SOURCE_STATUS[d.status] || SOURCE_STATUS.error;
@@ -657,6 +656,7 @@ function SourcesTab({ onChanged }) {
               <div key={d.url} style={{ fontSize: 12, marginBottom: 6 }}>
                 <Pill label={st.label} bg={st.bg} /> <span className="mono">{d.url}</span>
                 {d.suggestions > 0 && <> · {d.suggestions} suggestion{d.suggestions !== 1 ? "s" : ""}</>}
+                {d.cost_usd > 0 && <span className="mono"> · {tokens(d.input_tokens)} / {tokens(d.output_tokens)} tokens · {eur(d.cost_usd)}</span>}
                 {d.error && <div style={{ color: "var(--brick)", marginTop: 2, wordBreak: "break-word" }}>{d.error}</div>}
               </div>
             );
@@ -750,19 +750,40 @@ function SourcesTab({ onChanged }) {
 
 /* ---------- onglet Historique ---------- */
 
+const TRIGGER_LABEL = { cron: "Automatique", manual: "Manuel", campagne: "Campagne qualité" };
+
 function HistoryTab() {
   const [runs, setRuns] = useState(null);
   const [error, setError] = useState(null);
+  const [open, setOpen] = useState({});
+  const [month, setMonth] = useState(null);
 
   useEffect(() => {
     supabase
       .from("race_check_runs")
       .select("*")
       .order("run_at", { ascending: false })
-      .limit(20)
+      .limit(50)
       .then(({ data, error }) => {
         if (error) setError(error.message);
         else setRuns(data);
+      });
+    // Total du mois en cours, sur tous les passages (pas seulement les 50 affichés).
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    supabase
+      .from("race_check_runs")
+      .select("cost_usd, input_tokens, output_tokens")
+      .gte("run_at", start.toISOString())
+      .then(({ data }) => {
+        if (!data) return;
+        setMonth({
+          n: data.length,
+          cost: data.reduce((t, r) => t + Number(r.cost_usd || 0), 0),
+          inp: data.reduce((t, r) => t + (r.input_tokens || 0), 0),
+          out: data.reduce((t, r) => t + (r.output_tokens || 0), 0),
+        });
       });
   }, []);
 
@@ -770,41 +791,78 @@ function HistoryTab() {
   if (runs === null) return <p className="muted">Chargement…</p>;
   if (runs.length === 0) return <p className="muted">Aucune vérification pour l'instant.</p>;
 
-  const cost = (r) => (r.input_tokens || 0) * INPUT_PRICE + (r.output_tokens || 0) * OUTPUT_PRICE;
-  const total = runs.reduce((n, r) => n + cost(r), 0);
+  const total = runs.reduce((n, r) => n + Number(r.cost_usd || 0), 0);
+  const monthName = new Date().toLocaleDateString("fr-FR", { month: "long" });
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Déclenchement</th>
-            <th>Sources</th>
-            <th>Suggestions</th>
-            <th>Erreurs</th>
-            <th>Tokens (entrée / sortie)</th>
-            <th>Coût estimé</th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((r) => (
-            <tr key={r.id}>
-              <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{formatDateTime(r.run_at)}</td>
-              <td>{r.trigger === "cron" ? "Automatique" : r.trigger === "manual" ? "Manuel" : r.trigger}</td>
-              <td className="mono">{r.sources_checked}</td>
-              <td className="mono">{r.suggestions_created}</td>
-              <td className="mono">{typeof r.errors === "object" && r.errors !== null ? JSON.stringify(r.errors) : r.errors}</td>
-              <td className="mono" style={{ fontSize: 12 }}>
-                {(r.input_tokens || 0).toLocaleString("fr-FR")} / {(r.output_tokens || 0).toLocaleString("fr-FR")}
-              </td>
-              <td className="mono">{cost(r).toFixed(4)} $</td>
+    <div>
+      {month && (
+        <div className="ru-cost-summary">
+          <div><span className="ru-cost-big">{eur(month.cost)}</span><span className="muted"> en {monthName}</span></div>
+          <div className="muted mono" style={{ fontSize: 12 }}>
+            {month.n} vérifications · {tokens(month.inp)} tokens en entrée · {tokens(month.out)} en sortie · {usd(month.cost)}
+          </div>
+        </div>
+      )}
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Déclenchement</th>
+              <th>Sites</th>
+              <th>Suggestions</th>
+              <th>Erreurs</th>
+              <th>Tokens entrée / sortie</th>
+              <th>Coût</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {runs.map((r) => {
+              const hasDetails = Array.isArray(r.details) && r.details.length > 0;
+              const cacheInfo = r.cache_read_tokens || r.cache_write_tokens
+                ? `dont ${tokens(r.cache_read_tokens)} lus en cache et ${tokens(r.cache_write_tokens)} mis en cache`
+                : undefined;
+              return (
+                <Fragment key={r.id}>
+                  <tr
+                    className={hasDetails ? "ru-run-row" : undefined}
+                    onClick={hasDetails ? () => setOpen((o) => ({ ...o, [r.id]: !o[r.id] })) : undefined}
+                  >
+                    <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                      {hasDetails && <span className="ru-caret">{open[r.id] ? "▾" : "▸"}</span>}
+                      {formatDateTime(r.run_at)}
+                    </td>
+                    <td>{TRIGGER_LABEL[r.trigger] || r.trigger}</td>
+                    <td className="mono">{r.sources_checked}</td>
+                    <td className="mono">{r.suggestions_created}</td>
+                    <td className="mono">{typeof r.errors === "object" && r.errors !== null ? JSON.stringify(r.errors) : r.errors}</td>
+                    <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }} title={cacheInfo}>
+                      {tokens(r.input_tokens)} / {tokens(r.output_tokens)}
+                    </td>
+                    <td className="mono" style={{ whiteSpace: "nowrap" }} title={`${usd(r.cost_usd)}${r.cost_estimated ? " (estimé, détail du cache non enregistré)" : ""}`}>
+                      {eur(r.cost_usd, { approx: r.cost_estimated })}
+                    </td>
+                  </tr>
+                  {open[r.id] && r.details.map((d) => (
+                    <tr key={`${r.id}-${d.url}`} className="ru-run-detail">
+                      <td colSpan={2} className="mono" style={{ fontSize: 12, wordBreak: "break-all" }}>{shortUrl(d.url)}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{(SOURCE_STATUS[d.status] || SOURCE_STATUS.error).label}</td>
+                      <td className="mono">{d.suggestions}</td>
+                      <td style={{ fontSize: 12, color: "var(--brick)" }}>{d.error ? "oui" : ""}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{tokens(d.input_tokens)} / {tokens(d.output_tokens)}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{eur(d.cost_usd)}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <p className="muted mono" style={{ fontSize: 12, marginTop: 8 }}>
-        Total des {runs.length} dernières vérifications : {total.toFixed(4)} $
+        Total des {runs.length} dernières vérifications : {eur(total)} ({usd(total)}) · tarif Claude Haiku 5.5,
+        1 € = 1,12 $. Touche une ligne pour le détail par site.
       </p>
     </div>
   );

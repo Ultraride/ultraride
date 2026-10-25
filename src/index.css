@@ -2104,3 +2104,11 @@ a.sv-bar-link:hover{background:var(--track);}
 .qf-edit{flex-shrink:0;font-size:13px;font-weight:600;color:var(--rust-text);}
 @media(max-width:600px){.qf-edit{display:none;}}
 .qf-actions .sv-dim{font-size:13px;}
+.qf-cost{margin:0 0 10px;font-size:13px;font-family:var(--mono);color:var(--text2);}
+.qf-cost b{color:var(--paper);}
+.ru-cost-summary{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;justify-content:space-between;margin-bottom:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);}
+.ru-cost-big{font-family:var(--disp);font-size:26px;}
+.ru-run-row{cursor:pointer;}
+.ru-run-row:hover td{background:var(--track);}
+.ru-caret{display:inline-block;width:14px;color:var(--text2);}
+.ru-run-detail td{background:var(--track);border-top:0;}

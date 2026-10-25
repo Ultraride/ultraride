@@ -134,8 +134,47 @@ const CAMPAIGN_FOCUS: Record<string, string> = {
 type Race = Record<string, unknown> & { id: string; name: string };
 type Link = { url: string; label: string };
 type Page = { url: string; text: string };
-type Detail = { url: string; status: string; suggestions: number; error: string | null };
-type Usage = { input: number; output: number };
+type Usage = { input: number; output: number; cacheRead: number; cacheWrite: number; costUsd: number };
+type Detail = {
+  url: string; status: string; suggestions: number; error: string | null;
+  input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_write_tokens: number; cost_usd: number;
+};
+
+// Tarif Claude Haiku 5.5 en $ par million de tokens. Au-delà de 100 000 tokens
+// de prompt (cache compris), toute la requête passe au tarif haut.
+const PRICE = {
+  low: { input: 0.10, cacheWrite: 0.125, cacheRead: 0.01, output: 0.50 },
+  high: { input: 0.50, cacheWrite: 0.625, cacheRead: 0.05, output: 2.50 },
+};
+const LONG_PROMPT = 100_000;
+
+function newUsage(): Usage {
+  return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costUsd: 0 };
+}
+
+function emptyDetail(url: string): Detail {
+  return {
+    url, status: "error", suggestions: 0, error: null,
+    input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, cost_usd: 0,
+  };
+}
+
+// Totaux d'un lot de vérifications, pour race_check_runs.
+function summarize(details: Detail[]) {
+  const sum = (k: keyof Detail) => details.reduce((n, d) => n + (Number(d[k]) || 0), 0);
+  return {
+    sources_checked: details.length,
+    suggestions_created: sum("suggestions"),
+    input_tokens: sum("input_tokens"),
+    output_tokens: sum("output_tokens"),
+    cache_read_tokens: sum("cache_read_tokens"),
+    cache_write_tokens: sum("cache_write_tokens"),
+    cost_usd: Math.round(sum("cost_usd") * 1e6) / 1e6,
+    errors: details.filter((d) => d.status === "error" || d.status === "unreadable").length,
+    details: details.map(({ url, status, suggestions, error, input_tokens, output_tokens, cost_usd }) =>
+      ({ url, status, suggestions, error, input_tokens, output_tokens, cost_usd })),
+  };
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -432,9 +471,17 @@ async function callClaude(pages: Page[], races: Race[], usage: Usage, focus?: st
 
   const data = JSON.parse(raw);
   const u = data.usage || {};
-  usage.input +=
-    (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
-  usage.output += u.output_tokens || 0;
+  const fresh = u.input_tokens || 0;
+  const cacheWrite = u.cache_creation_input_tokens || 0;
+  const cacheRead = u.cache_read_input_tokens || 0;
+  const out = u.output_tokens || 0;
+  const p = fresh + cacheWrite + cacheRead > LONG_PROMPT ? PRICE.high : PRICE.low;
+  // input = tout le prompt (comme avant), le détail du cache à part.
+  usage.input += fresh + cacheWrite + cacheRead;
+  usage.cacheWrite += cacheWrite;
+  usage.cacheRead += cacheRead;
+  usage.output += out;
+  usage.costUsd += (fresh * p.input + cacheWrite * p.cacheWrite + cacheRead * p.cacheRead + out * p.output) / 1e6;
 
   const block = (data.content || []).find(
     (b: { type: string; name?: string }) => b.type === "tool_use" && b.name === "report_updates",
@@ -448,12 +495,18 @@ async function callClaude(pages: Page[], races: Race[], usage: Usage, focus?: st
 
 /* ---------- traitement d'une source ---------- */
 
-async function checkSource(supabase: SupabaseClient, source: Source, usage: Usage, focus?: string): Promise<Detail> {
-  const detail: Detail = { url: source.url, status: "error", suggestions: 0, error: null };
+async function checkSource(supabase: SupabaseClient, source: Source, focus?: string): Promise<Detail> {
+  const detail = emptyDetail(source.url);
+  const usage = newUsage();
 
   const finish = async (status: string, error: string | null) => {
     detail.status = status;
     detail.error = error;
+    detail.input_tokens = usage.input;
+    detail.output_tokens = usage.output;
+    detail.cache_read_tokens = usage.cacheRead;
+    detail.cache_write_tokens = usage.cacheWrite;
+    detail.cost_usd = Math.round(usage.costUsd * 1e6) / 1e6;
     await supabase
       .from("race_sources")
       .update({ last_checked_at: new Date().toISOString(), last_status: status, last_error: error })
@@ -619,25 +672,15 @@ Deno.serve(async (req) => {
     sources = data || [];
   }
 
-  const usage: Usage = { input: 0, output: 0 };
-  const settled = await Promise.allSettled(sources.map((s) => checkSource(supabase, s, usage)));
+  const settled = await Promise.allSettled(sources.map((s) => checkSource(supabase, s)));
   const details: Detail[] = settled.map((r, i) =>
-    r.status === "fulfilled"
-      ? r.value
-      : { url: sources[i].url, status: "error", suggestions: 0, error: String(r.reason) }
+    r.status === "fulfilled" ? r.value : { ...emptyDetail(sources[i].url), error: String(r.reason) }
   );
 
-  const summary = {
-    sources_checked: details.length,
-    suggestions_created: details.reduce((n, d) => n + d.suggestions, 0),
-    input_tokens: usage.input,
-    output_tokens: usage.output,
-    errors: details.filter((d) => d.status === "error").length,
-  };
-
+  const summary = summarize(details);
   const { error: runError } = await supabase.from("race_check_runs").insert({ trigger, ...summary });
 
-  return json({ ...summary, details, ...(runError ? { run_log_error: runError.message } : {}) });
+  return json({ ...summary, ...(runError ? { run_log_error: runError.message } : {}) });
 });
 
 /* ---------- campagnes de qualité ---------- */
@@ -651,14 +694,11 @@ async function runCampaignBatch(supabase: SupabaseClient) {
   const items = ((data || []) as CampaignItem[]).map((i) => ({ ...i, id: i.source_id }));
   if (items.length === 0) return json({ sources_checked: 0, idle: true });
 
-  const usage: Usage = { input: 0, output: 0 };
   const settled = await Promise.allSettled(
-    items.map((i) => checkSource(supabase, i, usage, CAMPAIGN_FOCUS[i.family])),
+    items.map((i) => checkSource(supabase, i, CAMPAIGN_FOCUS[i.family])),
   );
   const details: Detail[] = settled.map((r, k) =>
-    r.status === "fulfilled"
-      ? r.value
-      : { url: items[k].url, status: "error", suggestions: 0, error: String(r.reason) }
+    r.status === "fulfilled" ? r.value : { ...emptyDetail(items[k].url), error: String(r.reason) }
   );
 
   for (let k = 0; k < items.length; k++) {
@@ -670,16 +710,13 @@ async function runCampaignBatch(supabase: SupabaseClient) {
       p_status: failed ? "error" : "done",
       p_suggestions: d.suggestions,
       p_error: d.error,
+      p_input: d.input_tokens,
+      p_output: d.output_tokens,
+      p_cost: d.cost_usd,
     });
   }
 
-  const summary = {
-    sources_checked: details.length,
-    suggestions_created: details.reduce((n, d) => n + d.suggestions, 0),
-    input_tokens: usage.input,
-    output_tokens: usage.output,
-    errors: details.filter((d) => d.status === "error" || d.status === "unreadable").length,
-  };
+  const summary = summarize(details);
   await supabase.from("race_check_runs").insert({ trigger: "campagne", ...summary });
-  return json({ ...summary, details });
+  return json(summary);
 }
