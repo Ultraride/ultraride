@@ -17,9 +17,10 @@ function nextYear(race) {
   return Number.isFinite(year) ? String(year + 1) : null;
 }
 
-// Crée l'édition suivante d'un ultra, en attente de validation.
+// Crée l'édition suivante d'un ultra, en attente de validation par défaut.
+// `overrides` remplace des valeurs (dates trouvées par la vérification IA…).
 // Renvoie la nouvelle fiche complète, prête à ouvrir dans RaceForm.
-export async function createNextEdition(race) {
+export async function createNextEdition(race, overrides = {}, status = "pending") {
   const payload = {};
   for (const key of COPIED_COLUMNS) {
     if (key in race) payload[key] = race[key];
@@ -29,8 +30,9 @@ export async function createNextEdition(race) {
   payload.end_date = null;
   payload.departure_time = null;
   payload.open = true;
-  payload.status = "pending";
+  payload.status = status;
   payload.next_edition = nextYear(race);
+  Object.assign(payload, overrides);
 
   return supabase.from("races").insert(payload).select("*").single();
 }

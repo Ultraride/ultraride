@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { eur, tokens, usd } from "../lib/aiCost";
 import { supabase } from "../lib/supabaseClient";
+import { createNextEdition } from "../lib/editions";
 import { normalizeUrl } from "../lib/organizerLinks";
 
 // Suggestions produites chaque semaine par l'Edge Function check-race-updates.
@@ -188,11 +189,25 @@ function SourceLink({ url }) {
   );
 }
 
-function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onValidate, onIgnoreAll, busy, error }) {
+// Édition passée + dates cochées dans le futur : c'est l'édition suivante qui
+// est annoncée, pas une correction. Renvoie l'année de cette édition.
+function newEditionYear(race, checked) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!race.start_date || race.start_date >= today) return null;
+  const start = checked.find((s) => s.field === "start_date");
+  if (start && String(start.new_value).slice(0, 10) > today) return String(start.new_value).slice(0, 4);
+  const next = checked.find((s) => s.field === "next_edition");
+  if (next && Number(next.new_value) > Number(race.start_date.slice(0, 4))) return String(next.new_value);
+  return null;
+}
+
+function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onValidate, onIgnoreAll, busy, error, asUpdate, onAsUpdate }) {
   const checked = items.filter((s) => selection[s.id]);
   // « Tout cocher » prend une suggestion par champ : tout est coché quand
   // chaque champ proposé a sa suggestion retenue.
   const allChecked = new Set(checked.map((s) => s.field)).size === new Set(items.map((s) => s.field)).size;
+  const editionYear = newEditionYear(race, checked);
+  const asEdition = editionYear && !asUpdate;
   const suggestedFields = new Set(items.map((s) => s.field));
 
   const after = { ...race };
@@ -213,12 +228,28 @@ function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onVali
             {allChecked ? "Tout décocher" : "Tout cocher"}
           </button>
           <button className="btn btn-primary" disabled={busy || checked.length === 0} onClick={onValidate}>
-            Valider la sélection ({checked.length})
+            {asEdition ? `Créer l'édition ${editionYear} (${checked.length})` : `Valider la sélection (${checked.length})`}
           </button>
         </div>
       </div>
 
       {error && <div className="error-box" style={{ whiteSpace: "pre-line" }}>{error}</div>}
+
+      {editionYear && (
+        <div className={`ru-edition${asEdition ? " ru-edition-on" : ""}`}>
+          <label>
+            <input type="radio" checked={!!asEdition} onChange={() => onAsUpdate(false)} disabled={busy} />
+            <span>
+              <b>Créer l'édition {editionYear}</b> : la fiche {race.start_date.slice(0, 4)} reste telle quelle dans
+              l'historique, et une nouvelle fiche publiée reprend tout avec les valeurs cochées.
+            </span>
+          </label>
+          <label>
+            <input type="radio" checked={!asEdition} onChange={() => onAsUpdate(true)} disabled={busy} />
+            <span>Corriger la fiche existante (ses dates {race.start_date.slice(0, 4)} étaient fausses)</span>
+          </label>
+        </div>
+      )}
 
       <div className="ru-compare">
         <div className="ru-block">
@@ -240,7 +271,7 @@ function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onVali
         </div>
 
         <div className="ru-block">
-          <div className="ru-block-title">Après · si tu valides</div>
+          <div className="ru-block-title">{asEdition ? `Édition ${editionYear} · nouvelle fiche` : "Après · si tu valides"}</div>
           {ROWS.map((row) => {
             const rowItems = items.filter((s) => row.fields.includes(s.field));
             const changed = row.fields.some((f) => checkedFields.has(f));
@@ -292,6 +323,8 @@ function SuggestionsTab({ onChanged }) {
   const [cardErrors, setCardErrors] = useState({});
   const [busy, setBusy] = useState({});
   const [selection, setSelection] = useState({});
+  // Par fiche : true = corriger la fiche plutôt que créer l'édition suivante.
+  const [asUpdate, setAsUpdate] = useState({});
   const [flashes, setFlashes] = useState([]);
 
   const load = useCallback(async () => {
@@ -398,9 +431,22 @@ function SuggestionsTab({ onChanged }) {
     }
 
     setBusy((b) => ({ ...b, [raceId]: true }));
-    // Un seul update pour tous les champs cochés : en cas d'échec, rien n'est
-    // marqué et les suggestions restent en attente.
-    const { error: updateError } = await supabase.from("races").update(payload).eq("id", raceId);
+    const editionYear = !asUpdate[raceId] && newEditionYear(group.race, accepted);
+    let updateError = null;
+    if (editionYear) {
+      // Nouvelle édition publiée, à partir de la fiche complète ; l'ancienne
+      // reste intacte et cède sa place d'édition courante (trigger is_current).
+      const { data: full, error: readError } = await supabase.from("races").select("*").eq("id", raceId).single();
+      updateError = readError;
+      if (!readError) {
+        if (!payload.next_edition) payload.next_edition = editionYear;
+        ({ error: updateError } = await createNextEdition(full, payload, "published"));
+      }
+    } else {
+      // Un seul update pour tous les champs cochés : en cas d'échec, rien n'est
+      // marqué et les suggestions restent en attente.
+      ({ error: updateError } = await supabase.from("races").update(payload).eq("id", raceId));
+    }
     if (updateError) {
       setCardError(raceId, updateError.message);
       setBusy((b) => ({ ...b, [raceId]: false }));
@@ -415,7 +461,7 @@ function SuggestionsTab({ onChanged }) {
     if (markError) {
       setError(`${group.race.name} a été mis à jour, mais les suggestions n'ont pas pu être marquées : ${markError.message}`);
     } else {
-      flash(`${group.race.name} mis à jour ✓`);
+      flash(editionYear ? `${group.race.name} : édition ${editionYear} créée ✓` : `${group.race.name} mis à jour ✓`);
     }
     await finish(raceId);
   };
@@ -454,6 +500,8 @@ function SuggestionsTab({ onChanged }) {
             selection={selection}
             onToggle={(s) => toggle(g, s)}
             onSelectAll={(on) => selectAll(g, on)}
+            asUpdate={!!asUpdate[g.race.id]}
+            onAsUpdate={(v) => setAsUpdate((m) => ({ ...m, [g.race.id]: v }))}
             onValidate={() => validate(g)}
             onIgnoreAll={() => ignoreAll(g)}
             busy={!!busy[g.race.id]}

@@ -528,7 +528,10 @@ async function checkSource(supabase: SupabaseClient, source: Source, focus?: str
     const { data: races, error: racesError } = await supabase
       .from("races")
       .select("id, name, km, dplus, month, start_date, end_date, open, next_edition, registration_url")
-      .eq("organizer_id", source.organizer_id);
+      .eq("organizer_id", source.organizer_id)
+      // Éditions courantes seulement : les éditions passées sont de l'historique,
+      // et l'IA y reporterait les dates de l'édition suivante.
+      .eq("is_current", true);
     if (racesError) throw new Error(`Lecture des ultras : ${racesError.message}`);
     if (!races || races.length === 0) {
       return await finish("error", "Aucun ultra lié à cet organisateur");

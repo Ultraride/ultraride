@@ -2112,3 +2112,7 @@ a.sv-bar-link:hover{background:var(--track);}
 .ru-run-row:hover td{background:var(--track);}
 .ru-caret{display:inline-block;width:14px;color:var(--text2);}
 .ru-run-detail td{background:var(--track);border-top:0;}
+.ru-edition{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px;line-height:1.45;}
+.ru-edition-on{border-color:#15793F;background:color-mix(in srgb, #15793F 8%, var(--surface));}
+.ru-edition label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;}
+.ru-edition input{margin-top:3px;width:auto;}
