@@ -189,8 +189,11 @@ function SourceLink({ url }) {
   );
 }
 
-function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnoreAll, busy, error }) {
+function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onValidate, onIgnoreAll, busy, error }) {
   const checked = items.filter((s) => selection[s.id]);
+  // « Tout cocher » prend une suggestion par champ : tout est coché quand
+  // chaque champ proposé a sa suggestion retenue.
+  const allChecked = new Set(checked.map((s) => s.field)).size === new Set(items.map((s) => s.field)).size;
   const suggestedFields = new Set(items.map((s) => s.field));
 
   const after = { ...race };
@@ -207,6 +210,9 @@ function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnor
         </Link>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn" disabled={busy} onClick={onIgnoreAll}>Tout ignorer</button>
+          <button className="btn" disabled={busy} onClick={() => onSelectAll(!allChecked)}>
+            {allChecked ? "Tout décocher" : "Tout cocher"}
+          </button>
           <button className="btn btn-primary" disabled={busy || checked.length === 0} onClick={onValidate}>
             Valider la sélection ({checked.length})
           </button>
@@ -332,6 +338,24 @@ function SuggestionsTab({ onChanged }) {
       return next;
     });
 
+  // Tout cocher : pour chaque champ, la suggestion la plus sûre (haute >
+  // moyenne > faible), ou celle déjà cochée. Tout décocher : vide la carte.
+  const CONFIDENCE_RANK = { high: 0, medium: 1, low: 2 };
+  const selectAll = (group, on) =>
+    setSelection((prev) => {
+      const next = { ...prev };
+      group.items.forEach((o) => { next[o.id] = false; });
+      if (!on) return next;
+      const best = new Map();
+      group.items.forEach((o) => {
+        const cur = best.get(o.field);
+        const score = (x) => (prev[x.id] ? -1 : CONFIDENCE_RANK[x.confidence] ?? 3);
+        if (!cur || score(o) < score(cur)) best.set(o.field, o);
+      });
+      best.forEach((o) => { next[o.id] = true; });
+      return next;
+    });
+
   const flash = (message) => {
     const id = `${Date.now()}-${Math.random()}`;
     setFlashes((f) => [...f, { id, message }]);
@@ -430,6 +454,7 @@ function SuggestionsTab({ onChanged }) {
             items={g.items}
             selection={selection}
             onToggle={(s) => toggle(g, s)}
+            onSelectAll={(on) => selectAll(g, on)}
             onValidate={() => validate(g)}
             onIgnoreAll={() => ignoreAll(g)}
             busy={!!busy[g.race.id]}
