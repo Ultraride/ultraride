@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import RaceForm from "./RaceForm";
 import { createNextEdition } from "../lib/editions";
@@ -27,9 +27,18 @@ export default function RacesManager() {
   const [searchParams, setSearchParams] = useSearchParams();
   // « + Nouvel ultra » depuis la supervision arrive avec ?new=1 : formulaire ouvert.
   const [editing, setEditing] = useState(() => (searchParams.get("new") ? {} : null));
+  // ?edit=<id>&back=<chemin> : ouvre directement une fiche (depuis une famille
+  // de qualité) et y revient après l'enregistrement ou l'annulation.
+  const navigate = useNavigate();
+  const [editId] = useState(() => searchParams.get("edit"));
+  const [backTo] = useState(() => searchParams.get("back"));
   useEffect(() => {
-    if (searchParams.get("new")) setSearchParams({}, { replace: true });
+    if (searchParams.get("new") || searchParams.get("edit")) setSearchParams({}, { replace: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const closeEditor = () => {
+    setEditing(null);
+    if (backTo && backTo.startsWith("/admin")) navigate(backTo);
+  };
   const [deleting, setDeleting] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [search, setSearch] = useState("");
@@ -45,6 +54,12 @@ export default function RacesManager() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (editId && races) {
+      const r = races.find((x) => x.id === editId);
+      if (r) setEditing(r);
+    }
+  }, [editId, races]);
 
   const remove = async (race) => {
     if (!window.confirm(`Supprimer définitivement « ${race.name} » ?`)) return;
@@ -112,8 +127,8 @@ export default function RacesManager() {
     return (
       <RaceForm
         race={editing.id ? editing : null}
-        onSaved={() => { setEditing(null); load(); }}
-        onCancel={() => setEditing(null)}
+        onSaved={() => { load(); closeEditor(); }}
+        onCancel={closeEditor}
       />
     );
   }

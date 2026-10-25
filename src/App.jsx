@@ -33,6 +33,7 @@ import Analytics from "./admin/Analytics";
 import AdminOverview from "./admin/AdminOverview";
 import InstagramGenerator from "./admin/InstagramGenerator";
 import ImageOptimizer from "./admin/ImageOptimizer";
+import QualityFamily from "./admin/QualityFamily";
 import RaceUpdates from "./admin/RaceUpdates";
 import { trackVisit } from "./lib/trackVisit";
 
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="instagram" element={<InstagramGenerator />} />
           <Route path="images" element={<ImageOptimizer />} />
           <Route path="mises-a-jour" element={<RaceUpdates />} />
+          <Route path="qualite/:family" element={<QualityFamily />} />
         </Route>
       </Routes>
     </>

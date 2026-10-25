@@ -2076,3 +2076,31 @@ a.mu-name:hover{color:var(--rust-text);}
 .auth-foot{margin:0;font-size:14px;text-align:center;color:var(--text2);}
 /* Sur mobile, le formulaire passe avant le panneau de présentation. */
 @media(max-width:900px){.auth-main{order:-1;}}
+
+/* Qualité des fiches : barres cliquables et page famille */
+a.sv-bar-link{display:block;color:inherit;text-decoration:none;border-radius:8px;margin:0 -8px 4px;padding:6px 8px;}
+a.sv-bar-link:hover{background:var(--track);}
+.sv-bar-chev{margin-left:8px;color:var(--text2);font-family:var(--sans);}
+.sv-bar-badge{margin-left:8px;font-family:var(--mono);font-size:11px;font-weight:600;color:#fff;background:#B4541F;border-radius:999px;padding:2px 8px;}
+.sv-small{font-size:12.5px;margin:6px 0 0;}
+.qf .sv-head{display:flex;flex-direction:column;gap:8px;}
+.qf-count{font-family:var(--mono);font-size:13px;color:var(--text2);}
+.qf-count b{font-family:var(--disp);font-weight:400;font-size:30px;color:var(--paper);margin-right:6px;}
+.qf-text{margin:0 0 10px;font-size:14.5px;line-height:1.5;}
+.qf-last{margin:0 0 12px;font-size:13px;}
+.qf-progress{height:10px;margin:4px 0 12px;}
+.qf-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;}
+.qf-actions .sv-btn{cursor:pointer;}
+.qf-actions .sv-btn:disabled{opacity:.5;cursor:default;}
+.qf-filter{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--text2);}
+.qf-list{list-style:none;margin:0;padding:0;}
+.qf-row{display:flex;gap:12px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line2);color:inherit;text-decoration:none;border-radius:8px;}
+.qf-list li:last-child .qf-row{border-bottom:0;}
+.qf-row:hover{background:var(--track);}
+.qf-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.qf-name{font-weight:600;font-size:14.5px;}
+.qf-sub{font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qf-tag{flex-shrink:0;font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:999px;background:#F3E6C8;color:#8A6220;}
+.qf-edit{flex-shrink:0;font-size:13px;font-weight:600;color:var(--rust-text);}
+@media(max-width:600px){.qf-edit{display:none;}}
+.qf-actions .sv-dim{font-size:13px;}

@@ -27,27 +27,29 @@ export function Kpi({ value, label, sub, tone }) {
   );
 }
 
-// Barre horizontale « libellé · valeur / total ».
-export function Bar({ label, value, total, tone }) {
+// Barre horizontale « libellé · valeur / total ». Avec `to`, la barre
+// entière devient un lien (familles de qualité → liste des fiches).
+export function Bar({ label, value, total, tone, to, badge }) {
   const pct = total ? Math.min(100, Math.round((value / total) * 100)) : 0;
-  return (
-    <div className="sv-bar">
+  const inner = (
+    <>
       <div className="sv-bar-head">
-        <span>{label}</span>
-        <span className="mono">{fr(value)}{total ? <span className="sv-dim"> · {pct} %</span> : null}</span>
+        <span>{label}{badge && <span className="sv-bar-badge">{badge}</span>}</span>
+        <span className="mono">{fr(value)}{total ? <span className="sv-dim"> · {pct} %</span> : null}{to && <span className="sv-bar-chev" aria-hidden="true">›</span>}</span>
       </div>
       <div className="sv-bar-track"><div className={`sv-bar-fill${tone ? ` sv-fill-${tone}` : ""}`} style={{ width: `${pct}%` }} /></div>
-    </div>
+    </>
   );
+  return to ? <Link to={to} className="sv-bar sv-bar-link">{inner}</Link> : <div className="sv-bar">{inner}</div>;
 }
 
-const QUALITY = [
-  { key: "to_renew", label: "Édition passée, à renouveler", tone: "rust" },
-  { key: "no_signup", label: "Sans lien d'inscription" },
-  { key: "no_dplus", label: "Sans dénivelé" },
+export const QUALITY = [
+  { key: "to_renew", label: "Édition passée, à renouveler", tone: "rust", ai: true },
+  { key: "no_signup", label: "Sans lien d'inscription", ai: true },
+  { key: "no_dplus", label: "Sans dénivelé", ai: true },
   { key: "no_image", label: "Sans image" },
   { key: "no_org", label: "Sans organisateur rattaché" },
-  { key: "no_date", label: "Sans date" },
+  { key: "no_date", label: "Sans date", ai: true },
   { key: "odd_disc", label: "Discipline hors filtres", tone: "rust" },
 ];
 
@@ -56,8 +58,11 @@ const ROLE_LABEL = { participant: "Participants", organizer: "Organisateurs", ad
 export default function AdminOverview() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [running, setRunning] = useState({});
 
   useEffect(() => {
+    supabase.from("race_check_campaigns").select("family, sources_done, sources_total").eq("status", "running")
+      .then(({ data }) => setRunning(Object.fromEntries((data || []).map((c) => [c.family, c]))));
     supabase.rpc("admin_overview").then(({ data, error }) => {
       if (error) setError(error.message);
       else setData(data);
@@ -178,7 +183,18 @@ export default function AdminOverview() {
             <h2>Qualité des fiches</h2>
             <span className="sv-dim">{fr(q.total)} fiches</span>
           </div>
-          {QUALITY.map((it) => <Bar key={it.key} label={it.label} value={q[it.key] || 0} total={q.total} tone={it.tone} />)}
+          {QUALITY.map((it) => (
+            <Bar
+              key={it.key}
+              label={it.label}
+              value={q[it.key] || 0}
+              total={q.total}
+              tone={it.tone}
+              to={`/admin/qualite/${it.key}`}
+              badge={running[it.key] ? `IA ${running[it.key].sources_done}/${running[it.key].sources_total}` : null}
+            />
+          ))}
+          <p className="sv-dim sv-small">Touche une famille pour voir ses fiches et lancer une vérification IA.</p>
         </section>
 
         </div>

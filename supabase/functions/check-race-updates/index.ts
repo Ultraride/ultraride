@@ -4,8 +4,16 @@
 // (Edge Functions → Deploy a new function → Via Editor), avec
 // « Enforce JWT verification » désactivé : l'authentification est faite ici.
 //
-// Secrets attendus : ANTHROPIC_API_KEY, CRON_SECRET (appel planifié).
+// Secrets attendus : ANTHROPIC_API_KEY. Appel planifié : en-tête x-cron-secret
+// comparé au jeton « race_check_token » du coffre (ou au secret CRON_SECRET).
 // Fournis par Supabase : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+//
+// Trois façons de l'appeler (corps JSON) :
+//   {}                     → tâche hebdo : les sites les moins récemment vérifiés ;
+//   { source_ids: [...] }  → « Vérifier maintenant » depuis l'admin ;
+//   { campaign: true }     → campagne de qualité : les prochains sites en file
+//                            (race_check_campaign_items), appelée chaque minute
+//                            par la tâche planifiée check-race-campaigns.
 //
 // La fonction ne modifie JAMAIS la table races : elle écrit des suggestions
 // dans race_update_suggestions, validées à la main dans l'admin.
@@ -114,6 +122,15 @@ const TOOL = {
 };
 
 type Source = { id: string; organizer_id: string; url: string };
+
+// Consigne ajoutée au message pour une campagne de qualité : l'IA vérifie
+// toujours tout, mais cherche en priorité ce qui manque à la famille visée.
+const CAMPAIGN_FOCUS: Record<string, string> = {
+  to_renew: "Ces ultras ont une édition passée. Cherche en priorité les dates de la prochaine édition (start_date, end_date, month, next_edition) et l'état des inscriptions (open).",
+  no_signup: "Ces ultras n'ont pas de lien d'inscription. Cherche en priorité un lien d'inscription clairement dédié à chaque ultra (registration_url).",
+  no_dplus: "Ces ultras n'ont pas de dénivelé positif. Cherche en priorité le dénivelé (dplus) indiqué pour chaque ultra.",
+  no_date: "Ces ultras n'ont pas de date. Cherche en priorité les dates de la prochaine édition (start_date, end_date, month, next_edition).",
+};
 type Race = Record<string, unknown> & { id: string; name: string };
 type Link = { url: string; label: string };
 type Page = { url: string; text: string };
@@ -319,7 +336,7 @@ async function fetchPage(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<{ h
 const GENERIC_WORDS = new Set(["race", "gravel", "ultra", "tour", "bike", "cycling", "series"]);
 
 function fold(text: string): string {
-  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function distinctiveWords(name: string): string[] {
@@ -379,7 +396,7 @@ function normalizeValue(field: Field, value: string | null): string {
 
 /* ---------- appel Anthropic ---------- */
 
-async function callClaude(pages: Page[], races: Race[], usage: Usage) {
+async function callClaude(pages: Page[], races: Race[], usage: Usage, focus?: string) {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) throw new Error("Secret ANTHROPIC_API_KEY absent");
 
@@ -387,6 +404,7 @@ async function callClaude(pages: Page[], races: Race[], usage: Usage) {
   const userText =
     `Date du jour : ${today}\n` +
     `Page source de l'organisateur : ${pages[0].url}\n\n` +
+    (focus ? `Objectif de cette vérification : ${focus}\n\n` : "") +
     `Ultras actuels (JSON) :\n${JSON.stringify(races, null, 2)}\n\n` +
     pages.map((p) => `=== PAGE: ${p.url} ===\n${p.text}`).join("\n\n");
 
@@ -430,7 +448,7 @@ async function callClaude(pages: Page[], races: Race[], usage: Usage) {
 
 /* ---------- traitement d'une source ---------- */
 
-async function checkSource(supabase: SupabaseClient, source: Source, usage: Usage): Promise<Detail> {
+async function checkSource(supabase: SupabaseClient, source: Source, usage: Usage, focus?: string): Promise<Detail> {
   const detail: Detail = { url: source.url, status: "error", suggestions: 0, error: null };
 
   const finish = async (status: string, error: string | null) => {
@@ -494,7 +512,7 @@ async function checkSource(supabase: SupabaseClient, source: Source, usage: Usag
     }
     const readUrls = new Map(pages.map((p) => [urlKey(p.url), p.url]));
 
-    const result = await callClaude(pages, races as Race[], usage);
+    const result = await callClaude(pages, races as Race[], usage, focus);
     const updates = Array.isArray(result.updates) ? result.updates : [];
 
     const raceById = new Map((races as Race[]).map((r) => [String(r.id), r]));
@@ -569,13 +587,15 @@ Deno.serve(async (req) => {
   const trigger = await authorize(req, supabase);
   if (!trigger) return json({ error: "Non autorisé" }, 401);
 
-  let body: { source_ids?: unknown } = {};
+  let body: { source_ids?: unknown; campaign?: unknown } = {};
   try {
     const raw = await req.text();
     if (raw.trim()) body = JSON.parse(raw);
   } catch {
     return json({ error: "Corps JSON invalide" }, 400);
   }
+
+  if (body.campaign === true) return await runCampaignBatch(supabase);
 
   let sources: Source[] = [];
   if (Array.isArray(body.source_ids) && body.source_ids.length > 0) {
@@ -619,3 +639,47 @@ Deno.serve(async (req) => {
 
   return json({ ...summary, details, ...(runError ? { run_log_error: runError.message } : {}) });
 });
+
+/* ---------- campagnes de qualité ---------- */
+
+type CampaignItem = Source & { campaign_id: string; family: string; source_id: string };
+
+async function runCampaignBatch(supabase: SupabaseClient) {
+  // Réservation atomique : deux appels simultanés ne prennent jamais le même site.
+  const { data, error } = await supabase.rpc("claim_campaign_items", { p_limit: BATCH_SIZE });
+  if (error) return json({ error: error.message }, 500);
+  const items = ((data || []) as CampaignItem[]).map((i) => ({ ...i, id: i.source_id }));
+  if (items.length === 0) return json({ sources_checked: 0, idle: true });
+
+  const usage: Usage = { input: 0, output: 0 };
+  const settled = await Promise.allSettled(
+    items.map((i) => checkSource(supabase, i, usage, CAMPAIGN_FOCUS[i.family])),
+  );
+  const details: Detail[] = settled.map((r, k) =>
+    r.status === "fulfilled"
+      ? r.value
+      : { url: items[k].url, status: "error", suggestions: 0, error: String(r.reason) }
+  );
+
+  for (let k = 0; k < items.length; k++) {
+    const d = details[k];
+    const failed = d.status === "error" || d.status === "unreadable";
+    await supabase.rpc("finish_campaign_item", {
+      p_campaign: items[k].campaign_id,
+      p_source: items[k].source_id,
+      p_status: failed ? "error" : "done",
+      p_suggestions: d.suggestions,
+      p_error: d.error,
+    });
+  }
+
+  const summary = {
+    sources_checked: details.length,
+    suggestions_created: details.reduce((n, d) => n + d.suggestions, 0),
+    input_tokens: usage.input,
+    output_tokens: usage.output,
+    errors: details.filter((d) => d.status === "error" || d.status === "unreadable").length,
+  };
+  await supabase.from("race_check_runs").insert({ trigger: "campagne", ...summary });
+  return json({ ...summary, details });
+}
