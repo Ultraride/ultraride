@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import UltrasMap from "../components/UltrasMap";
@@ -6,7 +6,7 @@ import SiteFooter from "../components/SiteFooter";
 import { RaceRow } from "../components/RaceBits";
 import {
   LIST_COLUMNS, DISCIPLINE_COLOR, FORMAT_LABEL, PARCOURS_LABEL,
-  normalize, isUpcoming, byStartDate, monthGroup, raceCoords,
+  normalize, isUpcoming, byStartDate, monthGroup, raceCoords, parseDate, MONTH_NAMES,
 } from "../lib/raceDisplay";
 
 const DISCIPLINES = ["Route", "Gravel", "VTT"];
@@ -29,6 +29,60 @@ function SearchIcon() {
   );
 }
 
+// Mois de départ d'une fiche (0-11) : celui de la date, sinon le mois saisi.
+function raceMonth(r) {
+  const d = parseDate(r.start_date);
+  if (d) return d.getMonth();
+  const i = MONTH_NAMES.indexOf(r.month);
+  return i >= 0 ? i : null;
+}
+
+// Menu déroulant à cases à cocher : plusieurs mois possibles.
+function MonthPicker({ selected, onChange, counts }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const list = [...selected].sort((a, b) => a - b);
+  const label = list.length === 0 ? "Tous"
+    : list.length <= 2 ? list.map((m) => MONTH_NAMES[m]).join(", ")
+    : `${list.length} mois`;
+
+  return (
+    <div className="v2-months" ref={ref}>
+      <button type="button" className="v2-input v2-months-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span className="muted" style={{ fontSize: 14 }}>Mois :</span>
+        <strong>{label}</strong>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="v2-months-pop" role="group" aria-label="Mois de départ">
+          <div className="v2-months-grid">
+            {MONTH_NAMES.map((name, i) => (
+              <label key={name} className={`v2-month${selected.has(i) ? " on" : ""}${counts[i] ? "" : " empty"}`}>
+                <input type="checkbox" checked={selected.has(i)} onChange={() => onChange(toggleInSet(selected, i))} />
+                <span>{name}</span>
+                <small>{counts[i] || 0}</small>
+              </label>
+            ))}
+          </div>
+          <div className="v2-months-foot">
+            <button type="button" className="v2-months-clear" disabled={!selected.size} onClick={() => onChange(new Set())}>Effacer</button>
+            <button type="button" className="v2-btn v2-btn-ink" onClick={() => setOpen(false)}>OK</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function toggleInSet(set, value) {
   const next = new Set(set);
   if (next.has(value)) next.delete(value); else next.add(value);
@@ -41,7 +95,7 @@ export default function Ultras() {
   const [races, setRaces] = useState(null);
   const [error, setError] = useState(null);
 
-  // Les liens de l'accueil arrivent avec ?q=…, ?discipline=… ou ?when=all.
+  // Les liens de l'accueil arrivent avec ?q=… ou ?discipline=… ; ?mois=5 (1-12) filtre par mois.
   const [search, setSearch] = useState(params.get("q") || "");
   const [disciplines, setDisciplines] = useState(() => new Set(params.getAll("discipline")));
   const [formats, setFormats] = useState(() => new Set());
@@ -50,8 +104,11 @@ export default function Ultras() {
   const [mode, setMode] = useState("");
   const [parcours, setParcours] = useState("");
   const [openOnly, setOpenOnly] = useState(false);
-  const [when, setWhen] = useState(params.get("when") === "all" ? "all" : "upcoming");
-  const [sort, setSort] = useState("date");
+  const [months, setMonths] = useState(
+    () => new Set(params.getAll("mois").map((m) => Number(m) - 1).filter((m) => m >= 0 && m < 12))
+  );
+  // Tri unique par date de départ (le menu « Trier » a été retiré).
+  const sort = "date";
   const [view, setView] = useState("split");
   const [zoneOnly, setZoneOnly] = useState(false);
   const [bounds, setBounds] = useState(null);
@@ -71,29 +128,35 @@ export default function Ultras() {
       });
   }, []);
 
-  // Garde la recherche, les disciplines et la période dans l'URL : la page
+  // Garde la recherche, les disciplines et les mois dans l'URL : la page
   // filtrée se partage telle quelle.
   useEffect(() => {
     const next = new URLSearchParams();
     if (search.trim()) next.set("q", search.trim());
     disciplines.forEach((d) => next.append("discipline", d));
-    if (when === "all") next.set("when", "all");
+    [...months].sort((a, b) => a - b).forEach((m) => next.append("mois", String(m + 1)));
     setParams(next, { replace: true });
-  }, [search, disciplines, when, setParams]);
+  }, [search, disciplines, months, setParams]);
 
-  useEffect(() => { setLimit(PAGE); }, [search, disciplines, formats, minKm, country, mode, parcours, openOnly, when, sort, zoneOnly]);
+  useEffect(() => { setLimit(PAGE); }, [search, disciplines, formats, minKm, country, mode, parcours, openOnly, months, sort, zoneOnly]);
 
   const countries = useMemo(
     () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort((a, b) => a.localeCompare(b)) : []),
     [races]
   );
 
-  // Base commune : période choisie (à venir = départs datés à venir + fiches sans date).
+  // Base commune : départs à venir + fiches sans date. Sur douze mois glissants,
+  // chaque mois coché désigne donc un seul mois du calendrier.
   const base = useMemo(() => {
     if (!races) return [];
-    if (when === "all") return races;
     return races.filter((r) => !r.start_date || isUpcoming(r));
-  }, [races, when]);
+  }, [races]);
+
+  const monthCounts = useMemo(() => {
+    const c = Array(12).fill(0);
+    base.forEach((r) => { const m = raceMonth(r); if (m !== null) c[m] += 1; });
+    return c;
+  }, [base]);
 
   const disciplineCounts = useMemo(
     () => Object.fromEntries(DISCIPLINES.map((d) => [d, base.filter((r) => r.discipline === d).length])),
@@ -103,6 +166,7 @@ export default function Ultras() {
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
     const list = base.filter((r) => {
+      if (months.size && !months.has(raceMonth(r))) return false;
       if (disciplines.size && !disciplines.has(r.discipline)) return false;
       if (formats.size && !formats.has(r.format)) return false;
       if (minKm && !(Number(r.km) >= minKm)) return false;
@@ -123,7 +187,7 @@ export default function Ultras() {
       recent: (a, b) => new Date(b.created_at) - new Date(a.created_at),
     };
     return list.sort(sorters[sort]);
-  }, [base, search, disciplines, formats, minKm, country, mode, parcours, openOnly, sort]);
+  }, [base, search, months, disciplines, formats, minKm, country, mode, parcours, openOnly, sort]);
 
   // Filtre « zone visible » : la liste suit la carte quand on la déplace.
   const listed = useMemo(() => {
@@ -135,16 +199,17 @@ export default function Ultras() {
   }, [filtered, zoneOnly, bounds]);
 
   const activeCount =
-    (disciplines.size ? 1 : 0) + (formats.size ? 1 : 0) + (minKm ? 1 : 0) + (country ? 1 : 0) +
+    (months.size ? 1 : 0) + (disciplines.size ? 1 : 0) + (formats.size ? 1 : 0) + (minKm ? 1 : 0) + (country ? 1 : 0) +
     (mode ? 1 : 0) + (parcours ? 1 : 0) + (openOnly ? 1 : 0);
 
   const reset = () => {
-    setDisciplines(new Set()); setFormats(new Set()); setMinKm(0); setCountry("");
+    setMonths(new Set()); setDisciplines(new Set()); setFormats(new Set()); setMinKm(0); setCountry("");
     setMode(""); setParcours(""); setOpenOnly(false); setSearch(""); setZoneOnly(false);
   };
 
   const summary = [
     `${listed.length} ultra${listed.length !== 1 ? "s" : ""}`,
+    months.size ? [...months].sort((a, b) => a - b).map((m) => MONTH_NAMES[m]).join(", ") : null,
     disciplines.size ? [...disciplines].join(", ") : null,
     formats.size ? [...formats].map((f) => FORMAT_LABEL[f]).join(", ") : null,
     openOnly ? "inscriptions ouvertes" : null,
@@ -165,22 +230,7 @@ export default function Ultras() {
             <span className="sr-only">Rechercher un ultra</span>
             <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nom, lieu, pays, organisateur…" />
           </label>
-          <label className="v2-input" style={{ fontSize: 14 }}>
-            <span className="muted" style={{ fontSize: 14 }}>Période :</span>
-            <select value={when} onChange={(e) => setWhen(e.target.value)}>
-              <option value="upcoming">À venir</option>
-              <option value="all">Toutes les dates</option>
-            </select>
-          </label>
-          <label className="v2-input" style={{ fontSize: 14 }}>
-            <span className="muted" style={{ fontSize: 14 }}>Trier :</span>
-            <select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="date">Prochains départs</option>
-              <option value="km">Distance</option>
-              <option value="dplus">Dénivelé</option>
-              <option value="recent">Derniers ajouts</option>
-            </select>
-          </label>
+          <MonthPicker selected={months} onChange={setMonths} counts={monthCounts} />
           <div className="v2-toggle" role="group" aria-label="Affichage">
             <button type="button" aria-pressed={view === "split"} onClick={() => setView("split")}>Liste<span className="v2-desk-only"> + carte</span></button>
             <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>Carte<span className="v2-desk-only"> seule</span></button>

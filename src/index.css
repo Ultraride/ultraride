@@ -1377,7 +1377,7 @@ table.admin-table tr:hover td{background:rgba(255,255,255,0.02);}
 .v2-mapcol{flex:1 1 440px;min-width:0;position:sticky;top:96px;}
 .v2-mapbox{height:calc(100vh - 128px);min-height:480px;max-height:900px;border-radius:20px;overflow:hidden;position:relative;border:1px solid var(--line);background:var(--map-bg);}
 .v2-mapbox .leaflet-container{width:100%;height:100%;background:var(--map-bg);font-family:var(--sans);}
-.v2-map-only .v2-mapcol{flex:1 1 100%;}
+.v2-map-only .v2-mapcol{flex:999 1 600px;}
 .v2-map-only .v2-results{display:none;}
 .v2-map-overlay{position:absolute;z-index:500;}
 .v2-map-legend{left:16px;bottom:16px;display:flex;gap:14px;padding:10px 14px;background:var(--overlay);border-radius:12px;font-size:12px;}
@@ -1986,3 +1986,22 @@ a.mu-name:hover{color:var(--rust-text);}
 .rf .deletion-request{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0;}
 .rf .card{border-radius:12px;}
 @media(max-width:600px){.rf-section{padding:16px;}.rf-title{font-size:30px;}.rf-actions .v2-btn,.rf-actions .rf-btn{flex:1;}}
+
+/* ───────── Ultras : filtre Mois (choix multiple) ───────── */
+.v2-months{position:relative;}
+.v2-months-btn{cursor:pointer;gap:8px;font:inherit;font-size:15px;color:var(--paper);white-space:nowrap;}
+.v2-months-btn strong{font-weight:700;}
+.v2-months-pop{position:absolute;top:calc(100% + 8px);left:0;z-index:1200;width:340px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px;}
+.v2-months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.v2-month{font-family:var(--sans);letter-spacing:0;text-transform:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--line3);border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text3);user-select:none;}
+.v2-month input{position:absolute;opacity:0;width:1px;height:1px;}
+.v2-month small{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--text2);}
+.v2-month:hover{border-color:var(--paper);}
+.v2-month.on{background:var(--paper);border-color:var(--paper);color:var(--ink);}
+.v2-month.on small{color:inherit;opacity:.75;}
+.v2-month.empty:not(.on){opacity:.5;}
+.v2-month:focus-within{outline:2px solid #B4541F;outline-offset:2px;}
+.v2-months-foot{display:flex;justify-content:space-between;align-items:center;}
+.v2-months-clear{border:0;background:none;padding:8px 0;font:600 14px var(--sans);color:var(--rust-text);cursor:pointer;}
+.v2-months-clear:disabled{opacity:.4;cursor:default;}
+.v2-months-foot .v2-btn{min-height:40px;padding:0 18px;font-size:14px;}
