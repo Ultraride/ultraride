@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getPosition, geoAlreadyGranted } from "../lib/geo";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import SiteFooter from "../components/SiteFooter";
@@ -165,20 +166,14 @@ export default function Home() {
   const [coords, setCoords] = useState(null);
 
   const requestLocation = () => {
-    if (!("geolocation" in navigator)) { setGeoStatus("unsupported"); return; }
     setGeoStatus("loading");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }); setGeoStatus("granted"); },
-      () => setGeoStatus("denied"),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
-    );
+    getPosition()
+      .then((c) => { setCoords(c); setGeoStatus("granted"); })
+      .catch((e) => setGeoStatus(e.message === "unsupported" ? "unsupported" : "denied"));
   };
 
   useEffect(() => {
-    if (!navigator.permissions?.query) return;
-    navigator.permissions.query({ name: "geolocation" })
-      .then((res) => { if (res.state === "granted") requestLocation(); })
-      .catch(() => {});
+    geoAlreadyGranted().then((ok) => { if (ok) requestLocation(); });
   }, []);
 
   useEffect(() => {

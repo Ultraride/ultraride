@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getPosition, geoAlreadyGranted } from "../lib/geo";
 
 // Liste des ultras publiés, chargée une seule fois et partagée entre les
 // onglets Découvrir / Ultras / Carte : passer d'un onglet à l'autre est
@@ -142,24 +143,15 @@ export function useGeo() {
   const [status, setStatus] = useState(lastCoords ? "granted" : "idle");
 
   const request = () => {
-    if (!("geolocation" in navigator)) { setStatus("unsupported"); return; }
     setStatus("loading");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        lastCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setCoords(lastCoords);
-        setStatus("granted");
-      },
-      () => setStatus("denied"),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
-    );
+    getPosition()
+      .then((c) => { lastCoords = c; setCoords(c); setStatus("granted"); })
+      .catch((e) => setStatus(e.message === "unsupported" ? "unsupported" : "denied"));
   };
 
   useEffect(() => {
-    if (lastCoords || !navigator.permissions?.query) return;
-    navigator.permissions.query({ name: "geolocation" })
-      .then((res) => { if (res.state === "granted") request(); })
-      .catch(() => {});
+    if (lastCoords) return;
+    geoAlreadyGranted().then((ok) => { if (ok) request(); });
   }, []);
 
   return { coords, status, request };

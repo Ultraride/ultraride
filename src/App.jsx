@@ -5,6 +5,8 @@ import DisclaimerModal from "./components/DisclaimerModal";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import CookieBanner from "./components/CookieBanner";
 import MobileTabBar from "./components/MobileTabBar";
+import NativeBridge from "./components/NativeBridge";
+import { NotificationsScreen } from "./mobile/NotificationSettings";
 import { HomeRoute, RaceRoute, AccountRoute } from "./mobile/routes";
 import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
@@ -44,6 +46,7 @@ export default function App() {
       <DisclaimerModal />
       <AnalyticsTracker />
       <CookieBanner />
+      <NativeBridge />
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/carte" element={<HomeRoute view="map" />} />
@@ -51,6 +54,7 @@ export default function App() {
         <Route path="/courses/:id" element={<RaceRoute />} />
         <Route path="/evenements/:slug" element={<EventPage />} />
         <Route path="/organizers/:id" element={<OrganizerPage />} />
+        <Route path="/notifications" element={<NotificationsScreen />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/organizer/profile" element={<OrganizerProfile />} />

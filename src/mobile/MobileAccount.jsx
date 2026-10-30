@@ -6,6 +6,8 @@ import PalmaresSection from "../pages/PalmaresSection";
 import { InfoSection, PasswordSection, CommentsSection, DangerZone } from "../pages/Account";
 import { formatNumber } from "./data";
 import { MiniCard, MenuButton, Stamp, Icon } from "./ui";
+import { NotificationSettings } from "./NotificationSettings";
+import { isNative } from "../lib/native";
 
 function Collapsible({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -123,6 +125,7 @@ export default function MobileAccount() {
         <div className="m-legacy">
           {!isOrganizer && <Collapsible title="MES AVIS"><CommentsSection /></Collapsible>}
           <Collapsible title="MES INFORMATIONS"><InfoSection /></Collapsible>
+          {isNative && <Collapsible title="NOTIFICATIONS"><NotificationSettings /></Collapsible>}
           <Collapsible title="MOT DE PASSE"><PasswordSection /></Collapsible>
           <Collapsible title="SUPPRIMER MON COMPTE"><DangerZone /></Collapsible>
         </div>

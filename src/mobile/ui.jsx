@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { dateTile, formatNumber, daysUntil, formatDate } from "./data";
+import { isNative } from "../lib/native";
 
 export const DISCIPLINE_BG = {
   Route: "#6E6E66",
@@ -242,6 +243,7 @@ export function MenuButton({ variant = "light" }) {
             </div>
             <nav className="m-sheet-links">
               <NavLink to="/proposer-course" onClick={close}>Proposer un ultra</NavLink>
+              {isNative && <NavLink to="/notifications" onClick={close}>Notifications</NavLink>}
               <NavLink to="/le-projet" onClick={close}>Le projet</NavLink>
               <NavLink to="/mode-d-emploi" onClick={close}>Mode d'emploi</NavLink>
               {(isOrganizer || isAdmin) && <NavLink to="/organizer/races" onClick={close}>Mes ultras (organisateur)</NavLink>}

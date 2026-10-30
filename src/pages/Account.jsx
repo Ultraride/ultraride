@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
+import { disablePush } from "../lib/push";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
 import PalmaresSection from "./PalmaresSection";
 import SiteFooter from "../components/SiteFooter";
@@ -296,7 +297,6 @@ export function CommentsSection() {
 }
 
 export function DangerZone() {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -305,23 +305,25 @@ export function DangerZone() {
   const handleDelete = async () => {
     setDeleting(true);
     setError(null);
-    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-    setDeleting(false);
+    // Supprime données ET compte de connexion (fonction delete_my_account).
+    const { error } = await supabase.rpc("delete_my_account");
     if (error) {
-      setError(error.message);
+      setDeleting(false);
+      setError(`La suppression a échoué : ${error.message}. Écris-nous à hello@ultraride.eu.`);
       return;
     }
-    await signOut();
-    navigate("/");
+    await disablePush();
+    // Le compte n'existe plus côté serveur : on efface la session locale.
+    await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+    navigate("/", { replace: true });
   };
 
   return (
     <div id="compte" className="acc-danger-zone">
       <span className="acc-danger-title">Supprimer mon compte</span>
       <p className="acc-hint" style={{ margin: 0 }}>
-        Ton profil, ton palmarès et tes favoris sont supprimés et tu es déconnecté. Tes avis restent visibles sous
-        « utilisateur supprimé ». Pour l'instant, ton adresse permet encore de te reconnecter : écris à
-        hello@ultraride.eu pour une suppression complète.
+        Ton compte est supprimé définitivement, avec ton profil, ton palmarès et tes favoris. Ton adresse email
+        ne permet plus de te connecter. Tes avis restent visibles, signés « utilisateur supprimé ».
       </p>
       {error && <div className="error-box">{error}</div>}
       {!confirming ? (

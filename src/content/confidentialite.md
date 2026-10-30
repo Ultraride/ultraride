@@ -63,6 +63,7 @@ Toutes les données sont hébergées en France, à l'exception des statistiques 
 | Supabase | Base de données et authentification | Paris, France |
 | Brevo | Envoi des emails (confirmation, récap de modération, informations) | France |
 | Google Ireland Limited | Mesure d'audience (Google Analytics 4), seulement avec votre accord | Union européenne, transferts possibles vers les États-Unis |
+| Google (Firebase Cloud Messaging) et Apple (APNs) | Envoi des notifications de l'app mobile, seulement si vous les activez | Union européenne et États-Unis |
 
 Chaque prestataire agit sur instruction de l'association, dans le cadre d'un contrat conforme à l'article 28 du RGPD.
 
@@ -84,7 +85,9 @@ Vous pouvez retirer votre consentement à tout moment via le lien « Gérer les 
 
 ## 8. Géolocalisation et services tiers
 
-La fonction « Près de chez moi » demande l'accès à votre position via votre navigateur, uniquement si vous cliquez sur « Activer la géolocalisation ». Le calcul des distances se fait sur votre appareil : votre position n'est ni envoyée à nos serveurs ni enregistrée. Vous pouvez retirer cette autorisation dans les réglages du navigateur.
+La fonction « Près de chez moi » demande l'accès à votre position via votre navigateur, uniquement si vous cliquez sur « Activer la géolocalisation ». Le calcul des distances se fait sur votre appareil : votre position n'est ni envoyée à nos serveurs ni enregistrée. Vous pouvez retirer cette autorisation dans les réglages du navigateur. Dans l'app mobile, l'autorisation est demandée par le téléphone et se retire dans ses réglages.
+
+**Notifications de l'app mobile.** Si vous les activez, l'app reçoit un identifiant technique de notification (attribué par Google Firebase et, sur iPhone, par Apple) et s'abonne aux sujets choisis : « Nouveaux ultras » et/ou « Ultras mis à jour ». Cet identifiant n'est pas relié à votre compte et nous ne le conservons pas. Vous pouvez désactiver chaque sujet dans le menu « Notifications » de l'app ou dans les réglages du téléphone.
 
 L'affichage des cartes et la recherche de lieux s'appuient sur OpenStreetMap (fonds de carte et service de recherche Nominatim), opéré par l'OpenStreetMap Foundation. Ce service reçoit l'adresse IP de votre appareil et, lors d'une recherche de lieu, le texte saisi, sans compte ni identification.
 
@@ -96,7 +99,7 @@ Les liens vers les sites des organisateurs et les réseaux sociaux vous mènent 
 
 Vous disposez sur vos données des droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité, ainsi que du droit de retirer votre consentement à tout moment.
 
-- Modifier ou supprimer votre compte : depuis votre espace personnel.
+- Modifier ou supprimer votre compte : depuis votre espace personnel (site ou app). La suppression est immédiate et définitive : profil, palmarès, favoris et compte de connexion sont effacés ; vos avis restent visibles, signés « utilisateur supprimé ».
 - Vous désinscrire des emails d'information : lien présent en bas de chaque email, ou depuis votre espace.
 - Toute autre demande : hello@ultraride.eu. Une réponse vous est apportée sous un mois maximum. Une preuve d'identité peut être demandée en cas de doute.
 

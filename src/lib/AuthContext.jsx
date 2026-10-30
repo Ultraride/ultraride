@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "./supabaseClient";
+import { isNative } from "./native";
+
+// Dans l'app, window.location.origin vaut « capacitor://localhost » : les
+// liens des emails (confirmation, mot de passe) pointent vers le site.
+const SITE_ORIGIN = isNative ? "https://ultraride.eu" : window.location.origin;
 
 const AuthContext = createContext(null);
 
@@ -45,7 +50,7 @@ export function AuthProvider({ children }) {
   // Sends a reset email with a recovery link pointing back to /reset-password.
   const sendPasswordReset = async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${SITE_ORIGIN}/reset-password`,
     });
     return { error };
   };
@@ -64,7 +69,7 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin, data: extraData },
+      options: { emailRedirectTo: SITE_ORIGIN, data: extraData },
     });
     return { error };
   };

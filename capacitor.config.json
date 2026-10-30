@@ -1,0 +1,26 @@
+{
+  "appId": "eu.ultraride.app",
+  "appName": "UltraRide",
+  "webDir": "dist",
+  "backgroundColor": "#F5F1E6",
+  "plugins": {
+    "FirebaseMessaging": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    }
+  },
+  "experimental": {
+    "ios": {
+      "spm": {
+        "packageOptions": {
+          "@capacitor-firebase/messaging": {
+            "symlink": true
+          }
+        }
+      }
+    }
+  }
+}

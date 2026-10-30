@@ -30,5 +30,5 @@ export function AccountRoute() {
 
 // Écrans qui ont leur propre en-tête façon app : le header du site s'efface.
 export function isAppScreen(pathname) {
-  return ["/", "/ultras", "/carte", "/account"].includes(pathname) || pathname.startsWith("/courses/");
+  return ["/", "/ultras", "/carte", "/account", "/notifications"].includes(pathname) || pathname.startsWith("/courses/");
 }
