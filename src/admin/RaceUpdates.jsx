@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { eur, tokens, usd } from "../lib/aiCost";
 import { supabase } from "../lib/supabaseClient";
+import { createNextEdition } from "../lib/editions";
 import { normalizeUrl } from "../lib/organizerLinks";
 
 // Suggestions produites chaque semaine par l'Edge Function check-race-updates.
@@ -39,8 +41,6 @@ const SOURCE_STATUS = {
 const MAX_CHECK = 5;
 
 // Tarif Claude Haiku 5.5, en $ par token.
-const INPUT_PRICE = 0.1 / 1_000_000;
-const OUTPUT_PRICE = 0.5 / 1_000_000;
 
 function Pill({ label, bg, title }) {
   return (
@@ -189,8 +189,26 @@ function SourceLink({ url }) {
   );
 }
 
-function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnoreAll, busy, error }) {
+// Édition passée + dates cochées dans le futur : c'est l'édition suivante qui
+// est annoncée, pas une correction. Renvoie l'année de cette édition.
+function newEditionYear(race, checked) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!race.start_date || race.start_date >= today) return null;
+  const start = checked.find((s) => s.field === "start_date");
+  if (start && String(start.new_value).slice(0, 10) > today) return String(start.new_value).slice(0, 4);
+  const next = checked.find((s) => s.field === "next_edition");
+  if (next && Number(next.new_value) > Number(race.start_date.slice(0, 4))) return String(next.new_value);
+  return null;
+}
+
+function RaceCompareCard({ race, items, selection, onToggle, onSelectAll, onValidate, onIgnoreAll, busy, error, asUpdate, onAsUpdate }) {
   const checked = items.filter((s) => selection[s.id]);
+  // « Tout cocher » prend une suggestion par champ : tout est coché quand
+  // chaque champ proposé a sa suggestion retenue.
+  const allChecked = new Set(checked.map((s) => s.field)).size === new Set(items.map((s) => s.field)).size;
+  const editionYear = newEditionYear(race, checked);
+  const possibleEdition = newEditionYear(race, items);
+  const asEdition = editionYear && !asUpdate;
   const suggestedFields = new Set(items.map((s) => s.field));
 
   const after = { ...race };
@@ -202,18 +220,44 @@ function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnor
   return (
     <div className="panel ru-card">
       <div className="ru-card-head">
-        <Link to={`/courses/${race.id}`} className="h2" style={{ margin: 0 }} target="_blank">
-          {race.name} ↗
-        </Link>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <Link to={`/courses/${race.id}`} className="h2" style={{ margin: 0 }} target="_blank">
+            {race.name} ↗
+          </Link>
+          {possibleEdition && (
+            <span className="ru-tag-edition" title="La fiche actuelle est passée : en cochant les dates, tu crées l'édition suivante.">
+              Édition passée → {possibleEdition}
+            </span>
+          )}
+        </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn" disabled={busy} onClick={onIgnoreAll}>Tout ignorer</button>
+          <button className="btn" disabled={busy} onClick={() => onSelectAll(!allChecked)}>
+            {allChecked ? "Tout décocher" : "Tout cocher"}
+          </button>
           <button className="btn btn-primary" disabled={busy || checked.length === 0} onClick={onValidate}>
-            Valider la sélection ({checked.length})
+            {asEdition ? `Créer l'édition ${editionYear} (${checked.length})` : `Valider la sélection (${checked.length})`}
           </button>
         </div>
       </div>
 
       {error && <div className="error-box" style={{ whiteSpace: "pre-line" }}>{error}</div>}
+
+      {editionYear && (
+        <div className={`ru-edition${asEdition ? " ru-edition-on" : ""}`}>
+          <label>
+            <input type="radio" checked={!!asEdition} onChange={() => onAsUpdate(false)} disabled={busy} />
+            <span>
+              <b>Créer l'édition {editionYear}</b> : la fiche {race.start_date.slice(0, 4)} reste telle quelle dans
+              l'historique, et une nouvelle fiche publiée reprend tout avec les valeurs cochées.
+            </span>
+          </label>
+          <label>
+            <input type="radio" checked={!asEdition} onChange={() => onAsUpdate(true)} disabled={busy} />
+            <span>Corriger la fiche existante (ses dates {race.start_date.slice(0, 4)} étaient fausses)</span>
+          </label>
+        </div>
+      )}
 
       <div className="ru-compare">
         <div className="ru-block">
@@ -235,7 +279,7 @@ function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnor
         </div>
 
         <div className="ru-block">
-          <div className="ru-block-title">Après · si tu valides</div>
+          <div className="ru-block-title">{asEdition ? `Édition ${editionYear} · nouvelle fiche` : "Après · si tu valides"}</div>
           {ROWS.map((row) => {
             const rowItems = items.filter((s) => row.fields.includes(s.field));
             const changed = row.fields.some((f) => checkedFields.has(f));
@@ -281,12 +325,194 @@ function RaceCompareCard({ race, items, selection, onToggle, onValidate, onIgnor
   );
 }
 
+/* ---------- synthèse et validation par paquet ---------- */
+
+const PACKETS = [
+  { key: "editions", title: "Nouvelles éditions", desc: "Fiches passées dont l'édition suivante est annoncée : une nouvelle fiche publiée est créée, l'ancienne reste dans l'historique." },
+  { key: "dates", title: "Dates et édition", desc: "Dates, mois ou année de prochaine édition d'ultras à venir." },
+  { key: "signup", title: "Liens d'inscription", desc: "Page d'inscription trouvée sur le site de l'organisateur." },
+  { key: "open", title: "Ouverture des inscriptions", desc: "Inscriptions ouvertes ou fermées." },
+  { key: "size", title: "Distance et dénivelé", desc: "Kilomètres et D+ annoncés par l'organisateur." },
+];
+const FIELD_PACKET = {
+  start_date: "dates", end_date: "dates", month: "dates", next_edition: "dates",
+  registration_url: "signup", open: "open", km: "size", dplus: "size",
+};
+const RANK = { high: 0, medium: 1, low: 2 };
+
+// Répartit les suggestions en paquets. Pour chaque fiche et chaque champ, on
+// retient la suggestion la plus sûre (haute > moyenne) ; ses rivales sont
+// ignorées avec elle. Les champs où seule une suggestion faible existe
+// restent à revoir à la main.
+function buildPackets(groups) {
+  const packets = Object.fromEntries(PACKETS.map((p) => [p.key, []]));
+  let manual = 0;
+  groups.forEach(({ race, items }) => {
+    const byField = new Map();
+    items.forEach((s) => {
+      if (!byField.has(s.field)) byField.set(s.field, []);
+      byField.get(s.field).push(s);
+    });
+    const best = [];
+    const rivals = new Map();
+    byField.forEach((list, field) => {
+      const sorted = [...list].sort((a, b) => RANK[a.confidence] - RANK[b.confidence]);
+      if (sorted[0].confidence === "low") { manual += list.length; return; }
+      best.push(sorted[0]);
+      rivals.set(field, sorted.slice(1));
+    });
+    if (best.length === 0) return;
+    const worst = (list) => list.reduce((w, s) => (RANK[s.confidence] > RANK[w] ? s.confidence : w), "high");
+
+    const editionYear = newEditionYear(race, best);
+    if (editionYear) {
+      packets.editions.push({
+        id: `${race.id}-ed`, race, editionYear, accepted: best,
+        ignored: best.flatMap((s) => rivals.get(s.field)), confidence: worst(best),
+      });
+      return;
+    }
+    const byPacket = new Map();
+    best.forEach((s) => {
+      const key = FIELD_PACKET[s.field];
+      if (!byPacket.has(key)) byPacket.set(key, []);
+      byPacket.get(key).push(s);
+    });
+    byPacket.forEach((list, key) => {
+      packets[key].push({
+        id: `${race.id}-${key}`, race, accepted: list,
+        ignored: list.flatMap((s) => rivals.get(s.field)), confidence: worst(list),
+      });
+    });
+  });
+  Object.values(packets).forEach((list) => list.sort((a, b) => RANK[a.confidence] - RANK[b.confidence] || a.race.name.localeCompare(b.race.name)));
+  return { packets, manual };
+}
+
+function displayValue(field, v) {
+  if (v === null || v === undefined || v === "") return "—";
+  if (field === "open") return v === "true" || v === true ? "Ouvertes" : "Fermées";
+  if (field === "start_date" || field === "end_date") return formatDateRange(v, null) || v;
+  if (field === "registration_url") return shortUrl(v);
+  if (field === "km") return `${formatThousands(v)} km`;
+  if (field === "dplus") return `${formatThousands(v)} m`;
+  return String(v);
+}
+
+function UpdatesSummary({ groups, onApply, bulk }) {
+  const { packets, manual } = useMemo(() => buildPackets(groups), [groups]);
+  const [open, setOpen] = useState(null);
+  const [picked, setPicked] = useState({});
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
+
+  // Par défaut, seules les lignes de confiance haute sont cochées.
+  const isPicked = (it) => (it.id in picked ? picked[it.id] : it.confidence === "high");
+  const setMany = (list, pred) => setPicked((p) => ({ ...p, ...Object.fromEntries(list.map((it) => [it.id, pred(it)])) }));
+
+  return (
+    <section className="panel ru-summary">
+      <div className="ru-summary-head">
+        <h2 className="h2" style={{ margin: 0 }}>Synthèse</h2>
+        <span className="muted">{total} suggestions sur {groups.length} ultras</span>
+      </div>
+
+      {bulk && (
+        <div className="ru-bulk">
+          Validation en cours : {bulk.done}/{bulk.total} · {bulk.current}
+          <div className="sv-bar-track" style={{ marginTop: 6 }}>
+            <div className="sv-bar-fill sv-fill-rust" style={{ width: `${(bulk.done / bulk.total) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      <div className="ru-packets">
+        {PACKETS.map((p) => {
+          const list = packets[p.key];
+          if (list.length === 0) return null;
+          const high = list.filter((it) => it.confidence === "high").length;
+          const chosen = list.filter(isPicked);
+          const changes = chosen.reduce((n, it) => n + it.accepted.length, 0);
+          const isOpen = open === p.key;
+          return (
+            <div key={p.key} className={`ru-packet${isOpen ? " ru-packet-open" : ""}`}>
+              <button type="button" className="ru-packet-head" onClick={() => setOpen(isOpen ? null : p.key)}>
+                <span className="ru-packet-title">{p.title}</span>
+                <span className="ru-packet-count mono">
+                  {list.length} ultra{list.length > 1 ? "s" : ""} · {high} sûr{high > 1 ? "s" : ""}
+                </span>
+                <span className="ru-packet-chev" aria-hidden="true">{isOpen ? "▾" : "▸"}</span>
+              </button>
+              {isOpen && (
+                <div className="ru-packet-body">
+                  <p className="muted" style={{ margin: "0 0 10px", fontSize: 13.5 }}>{p.desc}</p>
+                  <div className="ru-packet-tools">
+                    <button type="button" className="filter-reset" onClick={() => setMany(list, () => true)}>Tout cocher</button>
+                    <button type="button" className="filter-reset" onClick={() => setMany(list, (it) => it.confidence === "high")}>Confiance haute seulement</button>
+                    <button type="button" className="filter-reset" onClick={() => setMany(list, () => false)}>Tout décocher</button>
+                  </div>
+                  <ul className="ru-packet-list">
+                    {list.map((it) => (
+                      <li key={it.id}>
+                        <label className="ru-packet-row">
+                          <input
+                            type="checkbox"
+                            checked={isPicked(it)}
+                            onChange={(e) => setPicked((pk) => ({ ...pk, [it.id]: e.target.checked }))}
+                            disabled={!!bulk}
+                          />
+                          <span className="ru-packet-main">
+                            <span className="ru-packet-race">
+                              {it.race.name}
+                              {it.editionYear && <span className="ru-tag-edition">→ édition {it.editionYear}</span>}
+                            </span>
+                            {it.accepted.map((s) => (
+                              <span key={s.id} className="ru-packet-change" title={s.evidence ? `« ${s.evidence} »` : undefined}>
+                                <Pill label={CONFIDENCE[s.confidence]?.label} bg={CONFIDENCE[s.confidence]?.bg} />{" "}
+                                {FIELD_LABEL[s.field]} : <s>{displayValue(s.field, s.old_value)}</s> → <b>{displayValue(s.field, s.new_value)}</b>
+                              </span>
+                            ))}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!!bulk || chosen.length === 0}
+                    onClick={() => {
+                      if (window.confirm(`Appliquer ${changes} modification${changes > 1 ? "s" : ""} sur ${chosen.length} ultra${chosen.length > 1 ? "s" : ""} ?`)) {
+                        onApply(chosen).then(() => setPicked({}));
+                      }
+                    }}
+                  >
+                    {p.key === "editions"
+                      ? `Créer ${chosen.length} édition${chosen.length > 1 ? "s" : ""} (${changes} valeurs)`
+                      : `Valider ${changes} modification${changes > 1 ? "s" : ""} sur ${chosen.length} ultra${chosen.length > 1 ? "s" : ""}`}
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {manual > 0 && (
+        <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>
+          {manual} suggestion{manual > 1 ? "s" : ""} en confiance faible, hors paquets : à revoir fiche par fiche ci-dessous.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function SuggestionsTab({ onChanged }) {
   const [suggestions, setSuggestions] = useState(null);
   const [error, setError] = useState(null);
   const [cardErrors, setCardErrors] = useState({});
   const [busy, setBusy] = useState({});
   const [selection, setSelection] = useState({});
+  // Par fiche : true = corriger la fiche plutôt que créer l'édition suivante.
+  const [asUpdate, setAsUpdate] = useState({});
   const [flashes, setFlashes] = useState([]);
 
   const load = useCallback(async () => {
@@ -332,6 +558,24 @@ function SuggestionsTab({ onChanged }) {
       return next;
     });
 
+  // Tout cocher : pour chaque champ, la suggestion la plus sûre (haute >
+  // moyenne > faible), ou celle déjà cochée. Tout décocher : vide la carte.
+  const CONFIDENCE_RANK = { high: 0, medium: 1, low: 2 };
+  const selectAll = (group, on) =>
+    setSelection((prev) => {
+      const next = { ...prev };
+      group.items.forEach((o) => { next[o.id] = false; });
+      if (!on) return next;
+      const best = new Map();
+      group.items.forEach((o) => {
+        const cur = best.get(o.field);
+        const score = (x) => (prev[x.id] ? -1 : CONFIDENCE_RANK[x.confidence] ?? 3);
+        if (!cur || score(o) < score(cur)) best.set(o.field, o);
+      });
+      best.forEach((o) => { next[o.id] = true; });
+      return next;
+    });
+
   const flash = (message) => {
     const id = `${Date.now()}-${Math.random()}`;
     setFlashes((f) => [...f, { id, message }]);
@@ -354,12 +598,10 @@ function SuggestionsTab({ onChanged }) {
     onChanged();
   };
 
-  const validate = async (group) => {
-    const raceId = group.race.id;
-    const accepted = group.items.filter((s) => selection[s.id]);
-    const rejected = group.items.filter((s) => !selection[s.id]);
-    setCardError(raceId, null);
-
+  // Applique des suggestions à une fiche : mise à jour, ou création de
+  // l'édition suivante si `editionYear` est fourni. Les suggestions de
+  // `accepted` passent en « accepted », celles de `ignored` en « ignored ».
+  const applyToRace = async (race, accepted, ignored, editionYear) => {
     const payload = {};
     const conversionErrors = [];
     accepted.forEach((s) => {
@@ -369,32 +611,71 @@ function SuggestionsTab({ onChanged }) {
         conversionErrors.push(`${FIELD_LABEL[s.field] || s.field} : ${e.message}`);
       }
     });
-    if (conversionErrors.length) {
-      setCardError(raceId, conversionErrors.join("\n"));
-      return;
-    }
+    if (conversionErrors.length) return { error: conversionErrors.join("\n") };
 
-    setBusy((b) => ({ ...b, [raceId]: true }));
-    // Un seul update pour tous les champs cochés : en cas d'échec, rien n'est
-    // marqué et les suggestions restent en attente.
-    const { error: updateError } = await supabase.from("races").update(payload).eq("id", raceId);
-    if (updateError) {
-      setCardError(raceId, updateError.message);
-      setBusy((b) => ({ ...b, [raceId]: false }));
-      return;
+    let writeError = null;
+    if (editionYear) {
+      // Nouvelle édition publiée, à partir de la fiche complète ; l'ancienne
+      // reste intacte et cède sa place d'édition courante (trigger is_current).
+      const { data: full, error: readError } = await supabase.from("races").select("*").eq("id", race.id).single();
+      writeError = readError;
+      if (!readError) {
+        if (!payload.next_edition) payload.next_edition = editionYear;
+        ({ error: writeError } = await createNextEdition(full, payload, "published"));
+      }
+    } else {
+      // Un seul update pour tous les champs : en cas d'échec, rien n'est
+      // marqué et les suggestions restent en attente.
+      ({ error: writeError } = await supabase.from("races").update(payload).eq("id", race.id));
     }
+    if (writeError) return { error: writeError.message };
 
     const [acc, rej] = await Promise.all([
       markReviewed(accepted.map((s) => s.id), "accepted"),
-      markReviewed(rejected.map((s) => s.id), "ignored"),
+      markReviewed(ignored.map((s) => s.id), "ignored"),
     ]);
     const markError = acc.error || rej.error;
-    if (markError) {
-      setError(`${group.race.name} a été mis à jour, mais les suggestions n'ont pas pu être marquées : ${markError.message}`);
-    } else {
-      flash(`${group.race.name} mis à jour ✓`);
+    return markError ? { warning: `les suggestions n'ont pas pu être marquées : ${markError.message}` } : {};
+  };
+
+  const validate = async (group) => {
+    const raceId = group.race.id;
+    const accepted = group.items.filter((s) => selection[s.id]);
+    const rejected = group.items.filter((s) => !selection[s.id]);
+    setCardError(raceId, null);
+    setBusy((b) => ({ ...b, [raceId]: true }));
+    const editionYear = !asUpdate[raceId] && newEditionYear(group.race, accepted);
+    const res = await applyToRace(group.race, accepted, rejected, editionYear);
+    if (res.error) {
+      setCardError(raceId, res.error);
+      setBusy((b) => ({ ...b, [raceId]: false }));
+      return;
     }
+    if (res.warning) setError(`${group.race.name} a été mis à jour, mais ${res.warning}`);
+    else flash(editionYear ? `${group.race.name} : édition ${editionYear} créée ✓` : `${group.race.name} mis à jour ✓`);
     await finish(raceId);
+  };
+
+  // Validation par paquet (synthèse) : fiche par fiche, sans toucher aux
+  // autres suggestions de la fiche qui ne font pas partie du paquet.
+  const [bulk, setBulk] = useState(null);
+  const applyPacket = async (items) => {
+    setError(null);
+    const failures = [];
+    let editions = 0;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      setBulk({ done: i, total: items.length, current: it.race.name });
+      const res = await applyToRace(it.race, it.accepted, it.ignored, it.editionYear || null);
+      if (res.error) failures.push(`${it.race.name} : ${res.error}`);
+      else if (it.editionYear) editions += 1;
+    }
+    setBulk(null);
+    const ok = items.length - failures.length;
+    flash(`${ok} fiche${ok > 1 ? "s" : ""} mise${ok > 1 ? "s" : ""} à jour${editions ? `, dont ${editions} nouvelle${editions > 1 ? "s" : ""} édition${editions > 1 ? "s" : ""}` : ""} ✓`);
+    if (failures.length) setError(`Non appliqué :\n${failures.join("\n")}`);
+    await load();
+    onChanged();
   };
 
   const ignoreAll = async (group) => {
@@ -422,6 +703,8 @@ function SuggestionsTab({ onChanged }) {
         <p className="muted">Aucune suggestion en attente.</p>
       )}
 
+      {groups.length > 0 && <UpdatesSummary groups={groups} onApply={applyPacket} bulk={bulk} />}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {groups.map((g) => (
           <RaceCompareCard
@@ -430,6 +713,9 @@ function SuggestionsTab({ onChanged }) {
             items={g.items}
             selection={selection}
             onToggle={(s) => toggle(g, s)}
+            onSelectAll={(on) => selectAll(g, on)}
+            asUpdate={!!asUpdate[g.race.id]}
+            onAsUpdate={(v) => setAsUpdate((m) => ({ ...m, [g.race.id]: v }))}
             onValidate={() => validate(g)}
             onIgnoreAll={() => ignoreAll(g)}
             busy={!!busy[g.race.id]}
@@ -623,8 +909,8 @@ function SourcesTab({ onChanged }) {
             {checkResult.sources_checked} source{checkResult.sources_checked !== 1 ? "s" : ""} vérifiée
             {checkResult.sources_checked !== 1 ? "s" : ""} · {checkResult.suggestions_created} suggestion
             {checkResult.suggestions_created !== 1 ? "s" : ""} · {checkResult.errors} erreur
-            {checkResult.errors !== 1 ? "s" : ""} · {checkResult.input_tokens} tokens en entrée,{" "}
-            {checkResult.output_tokens} en sortie
+            {checkResult.errors !== 1 ? "s" : ""} · {tokens(checkResult.input_tokens)} tokens en entrée,{" "}
+            {tokens(checkResult.output_tokens)} en sortie · <b>{eur(checkResult.cost_usd)}</b>
           </div>
           {(checkResult.details || []).map((d) => {
             const st = SOURCE_STATUS[d.status] || SOURCE_STATUS.error;
@@ -632,6 +918,7 @@ function SourcesTab({ onChanged }) {
               <div key={d.url} style={{ fontSize: 12, marginBottom: 6 }}>
                 <Pill label={st.label} bg={st.bg} /> <span className="mono">{d.url}</span>
                 {d.suggestions > 0 && <> · {d.suggestions} suggestion{d.suggestions !== 1 ? "s" : ""}</>}
+                {d.cost_usd > 0 && <span className="mono"> · {tokens(d.input_tokens)} / {tokens(d.output_tokens)} tokens · {eur(d.cost_usd)}</span>}
                 {d.error && <div style={{ color: "var(--brick)", marginTop: 2, wordBreak: "break-word" }}>{d.error}</div>}
               </div>
             );
@@ -725,19 +1012,40 @@ function SourcesTab({ onChanged }) {
 
 /* ---------- onglet Historique ---------- */
 
+const TRIGGER_LABEL = { cron: "Automatique", manual: "Manuel", campagne: "Campagne qualité" };
+
 function HistoryTab() {
   const [runs, setRuns] = useState(null);
   const [error, setError] = useState(null);
+  const [open, setOpen] = useState({});
+  const [month, setMonth] = useState(null);
 
   useEffect(() => {
     supabase
       .from("race_check_runs")
       .select("*")
       .order("run_at", { ascending: false })
-      .limit(20)
+      .limit(50)
       .then(({ data, error }) => {
         if (error) setError(error.message);
         else setRuns(data);
+      });
+    // Total du mois en cours, sur tous les passages (pas seulement les 50 affichés).
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    supabase
+      .from("race_check_runs")
+      .select("cost_usd, input_tokens, output_tokens")
+      .gte("run_at", start.toISOString())
+      .then(({ data }) => {
+        if (!data) return;
+        setMonth({
+          n: data.length,
+          cost: data.reduce((t, r) => t + Number(r.cost_usd || 0), 0),
+          inp: data.reduce((t, r) => t + (r.input_tokens || 0), 0),
+          out: data.reduce((t, r) => t + (r.output_tokens || 0), 0),
+        });
       });
   }, []);
 
@@ -745,41 +1053,78 @@ function HistoryTab() {
   if (runs === null) return <p className="muted">Chargement…</p>;
   if (runs.length === 0) return <p className="muted">Aucune vérification pour l'instant.</p>;
 
-  const cost = (r) => (r.input_tokens || 0) * INPUT_PRICE + (r.output_tokens || 0) * OUTPUT_PRICE;
-  const total = runs.reduce((n, r) => n + cost(r), 0);
+  const total = runs.reduce((n, r) => n + Number(r.cost_usd || 0), 0);
+  const monthName = new Date().toLocaleDateString("fr-FR", { month: "long" });
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Déclenchement</th>
-            <th>Sources</th>
-            <th>Suggestions</th>
-            <th>Erreurs</th>
-            <th>Tokens (entrée / sortie)</th>
-            <th>Coût estimé</th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((r) => (
-            <tr key={r.id}>
-              <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{formatDateTime(r.run_at)}</td>
-              <td>{r.trigger === "cron" ? "Automatique" : r.trigger === "manual" ? "Manuel" : r.trigger}</td>
-              <td className="mono">{r.sources_checked}</td>
-              <td className="mono">{r.suggestions_created}</td>
-              <td className="mono">{typeof r.errors === "object" && r.errors !== null ? JSON.stringify(r.errors) : r.errors}</td>
-              <td className="mono" style={{ fontSize: 12 }}>
-                {(r.input_tokens || 0).toLocaleString("fr-FR")} / {(r.output_tokens || 0).toLocaleString("fr-FR")}
-              </td>
-              <td className="mono">{cost(r).toFixed(4)} $</td>
+    <div>
+      {month && (
+        <div className="ru-cost-summary">
+          <div><span className="ru-cost-big">{eur(month.cost)}</span><span className="muted"> en {monthName}</span></div>
+          <div className="muted mono" style={{ fontSize: 12 }}>
+            {month.n} vérifications · {tokens(month.inp)} tokens en entrée · {tokens(month.out)} en sortie · {usd(month.cost)}
+          </div>
+        </div>
+      )}
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Déclenchement</th>
+              <th>Sites</th>
+              <th>Suggestions</th>
+              <th>Erreurs</th>
+              <th>Tokens entrée / sortie</th>
+              <th>Coût</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {runs.map((r) => {
+              const hasDetails = Array.isArray(r.details) && r.details.length > 0;
+              const cacheInfo = r.cache_read_tokens || r.cache_write_tokens
+                ? `dont ${tokens(r.cache_read_tokens)} lus en cache et ${tokens(r.cache_write_tokens)} mis en cache`
+                : undefined;
+              return (
+                <Fragment key={r.id}>
+                  <tr
+                    className={hasDetails ? "ru-run-row" : undefined}
+                    onClick={hasDetails ? () => setOpen((o) => ({ ...o, [r.id]: !o[r.id] })) : undefined}
+                  >
+                    <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                      {hasDetails && <span className="ru-caret">{open[r.id] ? "▾" : "▸"}</span>}
+                      {formatDateTime(r.run_at)}
+                    </td>
+                    <td>{TRIGGER_LABEL[r.trigger] || r.trigger}</td>
+                    <td className="mono">{r.sources_checked}</td>
+                    <td className="mono">{r.suggestions_created}</td>
+                    <td className="mono">{typeof r.errors === "object" && r.errors !== null ? JSON.stringify(r.errors) : r.errors}</td>
+                    <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }} title={cacheInfo}>
+                      {tokens(r.input_tokens)} / {tokens(r.output_tokens)}
+                    </td>
+                    <td className="mono" style={{ whiteSpace: "nowrap" }} title={`${usd(r.cost_usd)}${r.cost_estimated ? " (estimé, détail du cache non enregistré)" : ""}`}>
+                      {eur(r.cost_usd, { approx: r.cost_estimated })}
+                    </td>
+                  </tr>
+                  {open[r.id] && r.details.map((d) => (
+                    <tr key={`${r.id}-${d.url}`} className="ru-run-detail">
+                      <td colSpan={2} className="mono" style={{ fontSize: 12, wordBreak: "break-all" }}>{shortUrl(d.url)}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{(SOURCE_STATUS[d.status] || SOURCE_STATUS.error).label}</td>
+                      <td className="mono">{d.suggestions}</td>
+                      <td style={{ fontSize: 12, color: "var(--brick)" }}>{d.error ? "oui" : ""}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{tokens(d.input_tokens)} / {tokens(d.output_tokens)}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{eur(d.cost_usd)}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <p className="muted mono" style={{ fontSize: 12, marginTop: 8 }}>
-        Total des {runs.length} dernières vérifications : {total.toFixed(4)} $
+        Total des {runs.length} dernières vérifications : {eur(total)} ({usd(total)}) · tarif Claude Haiku 5.5,
+        1 € = 1,12 $. Touche une ligne pour le détail par site.
       </p>
     </div>
   );

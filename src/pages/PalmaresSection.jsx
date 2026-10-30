@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
@@ -332,92 +333,118 @@ function AddResultForm({ onSaved, onCancel }) {
 }
 
 // Passeport Ultra : fiche A4 verticale, masquée à l'écran et révélée
-// uniquement à l'impression
-// (voir la règle @media print dans index.css). Le visiteur passe par la boîte
-// d'impression de son navigateur et choisit "Enregistrer au format PDF".
+// uniquement à l'impression (voir « Passeport Ultra — impression » dans
+// index.css). Le visiteur passe par la boîte d'impression de son navigateur
+// et choisit « Enregistrer au format PDF ».
+const ROLE_LABEL = { participant: "Participant", organizer: "Organisateur", admin: "Administrateur" };
+const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+function initials(name, email) {
+  const src = (name || email || "?").replace(/@.*/, "").replace(/[._-]+/g, " ").trim();
+  const parts = src.split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
 function AthleteCard({ profile, user, results, stats }) {
-  const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const since = profile?.created_at ? new Date(profile.created_at) : null;
+  const name = profile?.display_name || user?.email?.split("@")[0] || "—";
+  // Numéro de passeport stable, tiré de l'identifiant du compte.
+  const number = (user?.id || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+  const countries = new Set(results.map((r) => r.race?.country).filter(Boolean)).size;
+  const fmt = (n) => Math.round(n || 0).toLocaleString("fr-FR");
 
-  return (
-    <div className="print-sheet">
-      <div className="print-head">
-        <img src="/logo.png" alt="UltraRide" className="print-logo" />
-        <div className="print-doc-type">Passeport Ultra</div>
-      </div>
-
-      <div className="print-identity">
-        <div className="print-name">{profile?.display_name || "—"}</div>
-        <div className="print-email">{user?.email}</div>
-      </div>
-
-      <div className="print-section-title">Réalisations</div>
-      {results.length === 0 ? (
-        <p>Aucune réalisation enregistrée.</p>
-      ) : (
-        <table className="print-table">
-          <thead>
-            <tr>
-              <th>Année</th>
-              <th>Épreuve</th>
-              <th>Organisateur</th>
-              <th>Distance</th>
-              <th>D+</th>
-              <th>Temps total</th>
-              <th>Moyenne</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => (
-              <tr key={r.id}>
-                <td>{r.event_date ? new Date(r.event_date).getFullYear() : "—"}</td>
-                <td>{r.race_name}</td>
-                <td>{r.organizer_name || "—"}</td>
-                <td>{r.distance_km ? `${r.distance_km} km` : "—"}</td>
-                <td>{r.elevation_gain ? `${r.elevation_gain.toLocaleString("fr-FR")} m` : "—"}</td>
-                <td>{formatDuration(r.total_seconds)}</td>
-                <td>{formatSpeed(r.distance_km, r.total_seconds)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="print-stats">
-        <div>
-          <div className="print-stat-num">{stats.count}</div>
-          <div className="print-stat-label">Ultra{stats.count !== 1 ? "s" : ""}</div>
+  // Rendue directement sous <body> : à l'impression, le reste du site est
+  // retiré de la mise en page (pas seulement masqué), donc aucune page blanche.
+  return createPortal(
+    <div className="pp-portal">
+    <div className="print-sheet pp-sheet">
+      <header className="pp-head">
+        <div className="pp-brand">
+          <span className="pp-wordmark">ULTRA<span>RIDE</span></span>
+          <span className="pp-tagline">ULTRA-CYCLING ALMANAC</span>
         </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Kilomètres cumulés</div>
+        <div className="pp-doc">
+          <span className="pp-doc-title">PASSEPORT ULTRA</span>
+          <span className="pp-doc-meta">N° {number} · délivré le {today}</span>
         </div>
-        <div>
-          <div className="print-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
-          <div className="print-stat-label">Mètres de D+ cumulés</div>
+      </header>
+
+      <section className="pp-holder">
+        <div className="pp-holder-id">
+          <div className="pp-initials">{initials(profile?.display_name, user?.email)}</div>
+          <div className="pp-holder-text">
+            <span className="pp-label">TITULAIRE</span>
+            <span className="pp-name">{name}</span>
+            <span className="pp-meta">
+              {[ROLE_LABEL[profile?.role] || "Participant",
+                since ? `membre depuis ${MONTHS[since.getMonth()]} ${since.getFullYear()}` : null,
+                user?.email].filter(Boolean).join(" · ")}
+            </span>
+          </div>
         </div>
-        {stats.totalSeconds > 0 && (
-          <>
-            <div>
-              <div className="print-stat-num">{formatDuration(stats.totalSeconds)}</div>
-              <div className="print-stat-label">Temps total cumulé</div>
-            </div>
-            <div>
-              <div className="print-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
-              <div className="print-stat-label">km/h de moyenne</div>
-            </div>
-          </>
+        {stats.count > 0 && (
+          <div className="pp-stamp"><span>FINISHER</span><span>×{stats.count}</span></div>
         )}
-      </div>
+      </section>
 
-      <div className="print-footer">
-        Fiche générée le {today} depuis ultraride.eu — chaque réalisation listée est associée à une trace GPS
-        déposée par le participant.
-      </div>
+      <section className="pp-stats">
+        <div><b>{stats.count}</b><span>ULTRA{stats.count !== 1 ? "S" : ""} TERMINÉ{stats.count !== 1 ? "S" : ""}</span></div>
+        <div><b>{fmt(stats.km)}</b><span>KM CUMULÉS</span></div>
+        <div><b>{fmt(stats.dplus)}</b><span>M DE D+ CUMULÉS</span></div>
+        <div><b>{countries}</b><span>PAYS TRAVERSÉ{countries !== 1 ? "S" : ""}</span></div>
+      </section>
+
+      <section className="pp-results">
+        <span className="pp-label pp-section">RÉALISATIONS</span>
+        {results.length === 0 ? (
+          <p className="pp-empty">Aucune réalisation enregistrée.</p>
+        ) : (
+          <table className="pp-table">
+            <thead>
+              <tr>
+                <th>ANNÉE</th>
+                <th>ÉPREUVE</th>
+                <th>ORGANISATEUR</th>
+                <th className="pp-num">DISTANCE</th>
+                <th className="pp-num">D+</th>
+                <th className="pp-num">TEMPS</th>
+                <th className="pp-center">TRACE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => (
+                <tr key={r.id}>
+                  <td className="pp-mono">{r.event_date ? new Date(r.event_date).getFullYear() : "—"}</td>
+                  <td className="pp-strong">{r.race_name}</td>
+                  <td>{r.organizer_name || "—"}</td>
+                  <td className="pp-num">{r.distance_km ? `${fmt(r.distance_km)} km` : "—"}</td>
+                  <td className="pp-num">{r.elevation_gain ? `${fmt(r.elevation_gain)} m` : "—"}</td>
+                  <td className="pp-num">{r.total_seconds != null ? formatDuration(r.total_seconds) : "—"}</td>
+                  <td className="pp-center pp-mono">{r.gpx_track ? "✓" : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <footer className="pp-footer">
+        <span className="pp-footer-title">ATTESTATION</span>
+        <p>
+          Chaque réalisation listée est associée à une trace GPS (.FIT) déposée par le titulaire sur ultraride.eu.
+          Ce passeport résume des déclarations du participant ; il ne remplace pas le classement officiel de
+          l'organisateur.
+        </p>
+        <span className="pp-mono">Édité par ultraride.eu</span>
+      </footer>
     </div>
+    </div>,
+    document.body
   );
 }
 
-export default function PalmaresSection() {
+export default function PalmaresSection({ onChange }) {
   const { user, profile } = useAuth();
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -427,7 +454,7 @@ export default function PalmaresSection() {
   const load = () => {
     supabase
       .from("race_results")
-      .select("*, race:races(id, name)")
+      .select("*, race:races(id, name, country)")
       .eq("user_id", user.id)
       .order("event_date", { ascending: false, nullsFirst: false })
       .then(({ data, error }) => {
@@ -453,115 +480,86 @@ export default function PalmaresSection() {
     await supabase.from("race_results").delete().eq("id", id);
     setOpenTrackId(null);
     load();
+    onChange?.();
   };
 
   return (
-    <div className="panel" style={{ marginBottom: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div className="h2" style={{ margin: 0 }}>Mon palmarès</div>
-        {!adding && (
-          <button className="btn btn-primary" onClick={() => setAdding(true)}>+ Ajouter un résultat</button>
-        )}
+    <section id="palmares" className="acc-section" aria-labelledby="h-palmares">
+      <div className="acc-section-head">
+        <h2 id="h-palmares" className="acc-h2">Palmarès</h2>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {stats && stats.count > 0 && (
+            <button type="button" className="v2-btn v2-btn-outline acc-btn" onClick={() => window.print()} title="Enregistre ton Passeport Ultra en PDF depuis la fenêtre d'impression">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6" /><rect x="6" y="14" width="12" height="7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /></svg>
+              Passeport PDF
+            </button>
+          )}
+          {!adding && (
+            <button type="button" className="v2-btn v2-btn-rust acc-btn" onClick={() => setAdding(true)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              Ajouter un ultra terminé
+            </button>
+          )}
+        </div>
       </div>
 
-      {stats && stats.count > 0 && (
-        <>
-          <div className="palmares-stats">
-            <div>
-              <div className="palmares-stat-num">{stats.count}</div>
-              <div className="palmares-stat-label">Ultra{stats.count !== 1 ? "s" : ""}</div>
-            </div>
-            <div>
-              <div className="palmares-stat-num">{Math.round(stats.km).toLocaleString("fr-FR")}</div>
-              <div className="palmares-stat-label">km cumulés</div>
-            </div>
-            <div>
-              <div className="palmares-stat-num">{Math.round(stats.dplus).toLocaleString("fr-FR")}</div>
-              <div className="palmares-stat-label">m de D+ cumulés</div>
-            </div>
-            {stats.totalSeconds > 0 && (
-              <>
-                <div>
-                  <div className="palmares-stat-num">{formatDuration(stats.totalSeconds)}</div>
-                  <div className="palmares-stat-label">Temps total cumulé</div>
-                </div>
-                <div>
-                  <div className="palmares-stat-num">{averageSpeed(stats.km, stats.totalSeconds) || "—"}</div>
-                  <div className="palmares-stat-label">km/h de moyenne</div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <button className="btn" onClick={() => window.print()}>Télécharger mon Passeport Ultra (PDF)</button>
-            <div className="field-hint" style={{ marginTop: 6 }}>
-              Ouvre la fenêtre d'impression de ton navigateur — choisis « Enregistrer au format PDF »
-              pour obtenir un document A4 à joindre à tes inscriptions.
-            </div>
-          </div>
-        </>
-      )}
-
       {adding && (
-        <AddResultForm onSaved={() => { setAdding(false); load(); }} onCancel={() => setAdding(false)} />
+        <div className="acc-card acc-card-accent">
+          <AddResultForm onSaved={() => { setAdding(false); load(); onChange?.(); }} onCancel={() => setAdding(false)} />
+        </div>
       )}
 
       {error && <div className="error-box">{error}</div>}
       {results === null ? (
         <p className="muted">Chargement…</p>
       ) : results.length === 0 ? (
-        <p className="muted">Aucun résultat enregistré pour l'instant.</p>
+        !adding && (
+          <div className="acc-empty">
+            <span>Ajoute tes ultras terminés : dépose le fichier .FIT de ta trace, la distance, le dénivelé et le temps sont lus automatiquement.</span>
+          </div>
+        )
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {results.map((r) => (
-            <div key={r.id} className="card">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                <div>
-                  <div style={{ fontFamily: "var(--disp)", fontWeight: 600 }}>
-                    {r.race ? <Link to={`/courses/${r.race.id}`}>{r.race_name}</Link> : r.race_name}
-                    {!r.race && r.race_id === null && (
-                      <span className="badge" style={{ marginLeft: 8, border: "1px solid var(--line)", color: "var(--paperDim)" }}>Hors répertoire</span>
-                    )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {results.map((r, i) => {
+            const year = r.event_date ? new Date(r.event_date).getFullYear() : null;
+            return (
+              <article key={r.id} className="acc-card acc-result">
+                <div className="acc-result-row">
+                  <span className="acc-year" style={{ transform: `rotate(${i % 2 ? 6 : -8}deg)` }}>{year || "—"}</span>
+                  <div className="acc-result-main">
+                    <span className="acc-result-name">
+                      {r.race ? <Link to={`/courses/${r.race.id}`}>{r.race_name}</Link> : r.race_name}
+                      {!r.race && r.race_id === null && <span className="acc-tag">Hors répertoire</span>}
+                    </span>
+                    <span className="acc-result-sub">{[r.organizer_name, r.notes].filter(Boolean).join(" · ")}</span>
                   </div>
-                  <div className="muted mono" style={{ fontSize: 12 }}>
-                    {r.organizer_name && `${r.organizer_name} · `}
-                    {r.event_date && `${new Date(r.event_date).getFullYear()} · `}
-                    {r.distance_km ? `${r.distance_km} km` : ""}
-                    {r.elevation_gain ? ` · ${r.elevation_gain.toLocaleString("fr-FR")} D+` : ""}
+                  <div className="acc-result-stats">
+                    <div><span className="v2-label">Distance</span><b>{r.distance_km ? `${Math.round(r.distance_km).toLocaleString("fr-FR")} km` : "—"}</b></div>
+                    <div><span className="v2-label">D+</span><b>{r.elevation_gain ? `${Math.round(r.elevation_gain).toLocaleString("fr-FR")} m` : "—"}</b></div>
+                    <div><span className="v2-label">Temps</span><b>{r.total_seconds != null ? formatDuration(r.total_seconds) : "—"}</b></div>
+                    <div><span className="v2-label">Moyenne</span><b>{r.total_seconds != null ? formatSpeed(r.distance_km, r.total_seconds) : "—"}</b></div>
                   </div>
-                  {r.total_seconds != null && (
-                    <div className="muted mono" style={{ fontSize: 12 }}>
-                      {formatDuration(r.total_seconds)} au total ·{" "}
-                      {formatSpeed(r.distance_km, r.total_seconds)} de moyenne
-                    </div>
-                  )}
-                  {r.notes && <p style={{ margin: "6px 0 0", fontSize: 13 }}>{r.notes}</p>}
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <button
-                    className="btn"
-                    onClick={() => setOpenTrackId(openTrackId === r.id ? null : r.id)}
-                  >
+                <div className="acc-result-actions">
+                  <button type="button" className="acc-linkbtn" onClick={() => setOpenTrackId(openTrackId === r.id ? null : r.id)} aria-expanded={openTrackId === r.id}>
                     {openTrackId === r.id ? "Masquer la trace" : "Voir la trace"}
                   </button>
-                  <button className="btn btn-danger" onClick={() => remove(r.id)}>Retirer</button>
+                  <button type="button" className="acc-linkbtn acc-danger" onClick={() => remove(r.id)}>Retirer</button>
                 </div>
-              </div>
-
-              {openTrackId === r.id && (
-                <div style={{ marginTop: 12 }}>
-                  <ResultTrackMap track={r.gpx_track} />
-                </div>
-              )}
-            </div>
-          ))}
+                {openTrackId === r.id && (
+                  <div style={{ marginTop: 12 }}>
+                    <ResultTrackMap track={r.gpx_track} />
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
 
       {results && stats && (
         <AthleteCard profile={profile} user={user} results={results} stats={stats} />
       )}
-    </div>
+    </section>
   );
 }

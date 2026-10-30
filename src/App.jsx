@@ -28,8 +28,10 @@ import UsersManager from "./admin/UsersManager";
 import OrganizersManager from "./admin/OrganizersManager";
 import RaceSubmissions from "./admin/RaceSubmissions";
 import Analytics from "./admin/Analytics";
+import AdminOverview from "./admin/AdminOverview";
 import InstagramGenerator from "./admin/InstagramGenerator";
 import ImageOptimizer from "./admin/ImageOptimizer";
+import QualityFamily from "./admin/QualityFamily";
 import RaceUpdates from "./admin/RaceUpdates";
 import { trackVisit } from "./lib/trackVisit";
 
@@ -63,7 +65,8 @@ export default function App() {
         <Route path="/mode-d-emploi" element={<LegalPage content={modeEmploi} title="Mode d'emploi — UltraRide" className="nowrap-first-cols" />} />
 
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<PendingRaces />} />
+          <Route index element={<AdminOverview />} />
+          <Route path="a-valider" element={<PendingRaces />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="races" element={<RacesManager />} />
           <Route path="comments" element={<CommentsModeration />} />
@@ -73,6 +76,7 @@ export default function App() {
           <Route path="instagram" element={<InstagramGenerator />} />
           <Route path="images" element={<ImageOptimizer />} />
           <Route path="mises-a-jour" element={<RaceUpdates />} />
+          <Route path="qualite/:family" element={<QualityFamily />} />
         </Route>
       </Routes>
       <MobileTabBar />

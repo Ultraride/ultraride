@@ -11,6 +11,14 @@
   <meta name="apple-mobile-web-app-title" content="UltraRide" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <title>UltraRide — Le répertoire des ultra</title>
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    // Thème mémorisé appliqué avant le rendu, pour éviter un flash.
+    try {
+      var t = localStorage.getItem("ultraride_theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
   <meta name="description" content="Toutes les courses et aventures ultra-distance à vélo en France et en Europe." />
 </head>
 <body>

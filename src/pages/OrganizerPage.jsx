@@ -26,6 +26,7 @@ export default function OrganizerPage() {
       .select("id, name, country, discipline, format, mode, parcours, month, km, dplus, price, open, lat, lon, blurb, image_url")
       .eq("organizer_id", id)
       .eq("status", "published")
+      .eq("is_current", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => setRaces(data || []));
   }, [id]);
