@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { eur, tokens, usd } from "../lib/aiCost";
 import { supabase } from "../lib/supabaseClient";
@@ -1130,11 +1130,214 @@ function HistoryTab() {
   );
 }
 
+/* ---------- panneau « Mise à jour par IA » ---------- */
+
+const BATCH_SIZES = [10, 20, 30, 40, 50];
+const BATCH_STATUS = {
+  ok: { label: "Suggestions", bg: "#15793F", rank: 0 },
+  unreadable: { label: "Illisible", bg: "#C4622D", rank: 1 },
+  error: { label: "Erreur", bg: "#C4622D", rank: 1 },
+  no_change: { label: "Aucun changement", bg: "#8A8A80", rank: 2 },
+};
+
+function domainOf(url) {
+  try {
+    return new URL(normalizeUrl(url)).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function plural(n, word) {
+  return `${n} ${word}${n > 1 ? "s" : ""}`;
+}
+
+function AiBatchPanel({ onDone }) {
+  const [batchSize, setBatchSize] = useState(10);
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [lastRun, setLastRun] = useState(undefined);
+  const [counts, setCounts] = useState({ active: null, stale: null });
+  const cancelled = useRef(false);
+
+  const loadStatus = useCallback(async () => {
+    const { data } = await supabase
+      .from("race_check_runs")
+      .select("run_at, trigger, sources_checked, suggestions_created, errors, cost_usd")
+      .order("run_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLastRun(data || null);
+
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const [a, b] = await Promise.all([
+      supabase.from("race_sources").select("id", { count: "exact", head: true }).eq("active", true),
+      supabase
+        .from("race_sources")
+        .select("id", { count: "exact", head: true })
+        .eq("active", true)
+        .or(`last_checked_at.is.null,last_checked_at.lt.${since}`),
+    ]);
+    setCounts({ active: a.error ? null : a.count, stale: b.error ? null : b.count });
+  }, []);
+
+  useEffect(() => {
+    cancelled.current = false;
+    loadStatus();
+    return () => { cancelled.current = true; };
+  }, [loadStatus]);
+
+  const run = async () => {
+    const total = Number(batchSize);
+    const agg = { sources_checked: 0, suggestions_created: 0, errors: 0, cost_usd: 0, details: [], remaining: null };
+    let done = 0;
+    setRunning(true);
+    setError(null);
+    setResult(null);
+    setProgress({ done: 0, total, remaining: null });
+
+    while (done < total) {
+      if (cancelled.current) break;
+      const limit = Math.min(10, total - done);
+      const { data, error } = await supabase.functions.invoke("check-race-updates", {
+        body: { limit, min_age_days: 0 },
+      });
+      if (cancelled.current) return;
+      if (error || data?.error) {
+        setError(error ? await invokeError(error) : data.error);
+        break;
+      }
+      agg.sources_checked += data.sources_checked || 0;
+      agg.suggestions_created += data.suggestions_created || 0;
+      agg.errors += data.errors || 0;
+      agg.cost_usd += Number(data.cost_usd || 0);
+      agg.details.push(...(data.details || []));
+      agg.remaining = data.remaining;
+      done += data.sources_checked || 0;
+      setProgress({ done, total, remaining: data.remaining });
+      setResult({ ...agg, details: [...agg.details] });
+      if (!data.sources_checked || data.remaining === 0) break;
+    }
+
+    if (cancelled.current) return;
+    setResult({ ...agg, details: [...agg.details] });
+    setRunning(false);
+    loadStatus();
+    onDone?.();
+  };
+
+  const sortedDetails = useMemo(
+    () =>
+      [...(result?.details || [])].sort(
+        (a, b) => (BATCH_STATUS[a.status]?.rank ?? 1) - (BATCH_STATUS[b.status]?.rank ?? 1),
+      ),
+    [result],
+  );
+
+  const pct = progress ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  return (
+    <div className="panel" style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+        <h2 className="h2" style={{ margin: 0 }}>Mise à jour par IA</h2>
+        <div className="muted mono" style={{ fontSize: 12 }}>
+          {counts.active ?? "—"} sites actifs · {counts.stale ?? "—"} non vérifiés depuis plus de 30 jours
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", marginTop: 12 }}>
+        <div className="field" style={{ margin: 0, minWidth: 160 }}>
+          <label htmlFor="ai-batch-size">Fiches à vérifier</label>
+          <select
+            id="ai-batch-size"
+            value={batchSize}
+            onChange={(e) => setBatchSize(Number(e.target.value))}
+            disabled={running}
+          >
+            {BATCH_SIZES.map((n) => (
+              <option key={n} value={n}>{n} sites</option>
+            ))}
+          </select>
+        </div>
+        <button className="btn btn-primary" onClick={run} disabled={running}>
+          {running && progress ? `Vérification… ${progress.done} / ${progress.total}` : "Lancer une MAJ par IA"}
+        </button>
+      </div>
+      <div className="field-hint">
+        Les sites les plus anciens sont vérifiés en premier (ceux de plus d'un mois d'abord). Un site vérifié ici ne
+        sera pas repris lors du passage automatique du lundi.
+      </div>
+
+      {running && progress && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ height: 6, background: "rgba(27,43,32,.12)", borderRadius: 999, overflow: "hidden" }}>
+            <div style={{ width: `${Math.max(pct, 4)}%`, height: "100%", background: "#C4622D", transition: "width .4s" }} />
+          </div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+            Lot en cours… compter 30 s à 2 min par lot de 10 sites.
+          </div>
+        </div>
+      )}
+
+      <div className="muted" style={{ fontSize: 13, marginTop: 12 }}>
+        Dernier passage :{" "}
+        {lastRun === undefined
+          ? "…"
+          : lastRun
+            ? `${new Date(lastRun.run_at).toLocaleString("fr-FR", {
+                dateStyle: "long",
+                timeStyle: "short",
+                timeZone: "Europe/Paris",
+              })} (${TRIGGER_LABEL[lastRun.trigger] || lastRun.trigger}) — ${plural(lastRun.sources_checked, "site")}, ${plural(lastRun.suggestions_created, "suggestion")}`
+            : "aucun"}
+      </div>
+
+      {error && <div className="error-box" style={{ marginTop: 12 }}>{error}</div>}
+
+      {result && !running && (
+        <div style={{ marginTop: 12 }}>
+          <div className="mono" style={{ fontSize: 13 }}>
+            {result.sources_checked} site{result.sources_checked > 1 ? "s" : ""} vérifié{result.sources_checked > 1 ? "s" : ""} ·{" "}
+            {result.suggestions_created} suggestion(s) créée(s) · {result.errors} erreur(s) · coût ≈ $
+            {result.cost_usd.toFixed(4)} ({eur(result.cost_usd)})
+          </div>
+          {result.remaining === 0 && (
+            <div style={{ fontSize: 13, marginTop: 4 }}>Tous les sites actifs ont été vérifiés.</div>
+          )}
+          {result.suggestions_created > 0 && (
+            <div style={{ fontSize: 13, marginTop: 4 }}>Les nouvelles suggestions sont dans l'onglet Suggestions ci-dessous.</div>
+          )}
+        </div>
+      )}
+
+      {sortedDetails.length > 0 && (
+        <div style={{ marginTop: 12, borderTop: "1px solid rgba(27,43,32,.12)", paddingTop: 10 }}>
+          {sortedDetails.map((d, i) => {
+            const st = BATCH_STATUS[d.status] || BATCH_STATUS.error;
+            return (
+              <div key={`${d.url}-${i}`} style={{ fontSize: 12, marginBottom: 6 }}>
+                <Pill label={st.label} bg={st.bg} /> <span className="mono" title={d.url}>{domainOf(d.url)}</span>
+                {d.suggestions > 0 && <> · {plural(d.suggestions, "suggestion")}</>}
+                {d.error && (
+                  <div style={{ color: "#C4622D", fontSize: 11, marginTop: 2, wordBreak: "break-word" }}>{d.error}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- page ---------- */
 
 export default function RaceUpdates() {
   const [tab, setTab] = useState("suggestions");
   const [pending, setPending] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const loadPending = useCallback(async () => {
     const { count } = await supabase
@@ -1154,6 +1357,14 @@ export default function RaceUpdates() {
         apparaissent ici : aucun ultra n'est modifié sans validation.
       </p>
 
+      <AiBatchPanel
+        onDone={() => {
+          loadPending();
+          setRefreshKey((k) => k + 1);
+          setTab("suggestions");
+        }}
+      />
+
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
         {TABS.map((t) => (
           <button
@@ -1167,9 +1378,9 @@ export default function RaceUpdates() {
         ))}
       </div>
 
-      {tab === "suggestions" && <SuggestionsTab onChanged={loadPending} />}
-      {tab === "sources" && <SourcesTab onChanged={loadPending} />}
-      {tab === "history" && <HistoryTab />}
+      {tab === "suggestions" && <SuggestionsTab key={`s${refreshKey}`} onChanged={loadPending} />}
+      {tab === "sources" && <SourcesTab key={`o${refreshKey}`} onChanged={loadPending} />}
+      {tab === "history" && <HistoryTab key={`h${refreshKey}`} />}
     </div>
   );
 }
