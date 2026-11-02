@@ -164,6 +164,10 @@
 .m-row-sub{font-size:13px;color:var(--m-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .m-row-meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--m-ink);}
 .m-row-chev{color:var(--m-dim);flex-shrink:0;}
+.m-rowwrap{display:flex;align-items:center;border-bottom:1px solid var(--m-line-soft);}
+.m-rowwrap .m-row{flex:1;min-width:0;border-bottom:none;}
+.m-row-fav{width:44px;height:44px;margin-right:-10px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:none;border:none;padding:0;color:var(--m-dim);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.m-row-fav:active svg{transform:scale(.85);}
 
 /* ── Feuilles (menu, filtres) ── */
 .m-sheet-backdrop{position:fixed;inset:0;z-index:2100;background:rgba(27,43,32,.45);display:flex;align-items:flex-end;animation:m-fade .15s ease;}

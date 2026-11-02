@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useRaces, chronoRank, groupLabel, matchesSearch, MONTHS } from "./data";
-import { RaceRow, MenuButton, Icon, disciplineBg, formatLabel } from "./ui";
+import { RaceRow, MenuButton, Icon, disciplineBg, formatLabel, useFavoriteSet } from "./ui";
 
 const DISCIPLINES = ["Route", "Gravel", "VTT", "Bikepacking"];
 const FORMATS = ["course", "aventure", "endurance"];
@@ -10,6 +10,7 @@ const EMPTY = { d: "", f: "", m: "", c: "", mo: "", reg: "" };
 
 export default function MobileList() {
   const { races, error } = useRaces();
+  const fav = useFavoriteSet();
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
   const [filters, setFilters] = useState({ ...EMPTY, d: params.get("d") || "" });
@@ -105,7 +106,7 @@ export default function MobileList() {
         {groups.map((g) => (
           <section key={g.label}>
             <h2 className="m-label m-label--green m-group">{g.label.toUpperCase()}</h2>
-            {g.items.map((r) => <RaceRow key={r.id} race={r} />)}
+            {g.items.map((r) => <RaceRow key={r.id} race={r} isFav={fav.has(r.id)} onToggleFav={fav.toggle} />)}
           </section>
         ))}
         {pastCount > 0 && !showPast && (

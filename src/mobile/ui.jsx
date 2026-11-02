@@ -142,13 +142,13 @@ function placeLine(race) {
   return [place, race.country].filter(Boolean).join(" · ");
 }
 
-export function RaceRow({ race }) {
+export function RaceRow({ race, isFav, onToggleFav }) {
   const bits = [
     race.km ? `${formatNumber(race.km)} km` : null,
     race.dplus ? `${formatNumber(race.dplus)} m D+` : null,
     race.price ? `${formatNumber(race.price)} €` : null,
   ].filter(Boolean).join(" · ");
-  return (
+  const link = (
     <Link to={`/courses/${race.id}`} className="m-row">
       <DateTile race={race} />
       <span className="m-row-body">
@@ -156,8 +156,18 @@ export function RaceRow({ race }) {
         <span className="m-row-sub">{placeLine(race)}</span>
         {bits && <span className="m-row-meta">{bits}</span>}
       </span>
-      <span className="m-row-chev"><Icon name="chevron" size={18} /></span>
+      {!onToggleFav && <span className="m-row-chev"><Icon name="chevron" size={18} /></span>}
     </Link>
+  );
+  if (!onToggleFav) return link;
+  // Cœur à côté du lien (un bouton ne peut pas être dans un <a>).
+  return (
+    <div className="m-rowwrap">
+      {link}
+      <button type="button" className="m-row-fav" aria-label={isFav ? `Retirer ${race.name} des favoris` : `Ajouter ${race.name} aux favoris`} aria-pressed={!!isFav} onClick={() => onToggleFav(race.id)}>
+        <Icon name="heart" size={22} fill={isFav ? "#B4541F" : "none"} stroke={isFav ? "#B4541F" : "currentColor"} width={2} />
+      </button>
+    </div>
   );
 }
 
@@ -187,6 +197,31 @@ export function MiniCard({ race, extra }) {
 }
 
 // ── Favoris (cœur) ────────────────────────────────────────────────────
+// Tous les favoris de l'utilisateur en une requête (pour les listes).
+export function useFavoriteSet() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [ids, setIds] = useState(() => new Set());
+
+  useEffect(() => {
+    if (!user) { setIds(new Set()); return; }
+    supabase.from("favorites").select("race_id").eq("user_id", user.id)
+      .then(({ data }) => setIds(new Set((data || []).map((f) => f.race_id))));
+  }, [user]);
+
+  const toggle = async (raceId) => {
+    if (!user) { navigate("/login"); return; }
+    const was = ids.has(raceId);
+    // Mise à jour immédiate, annulée si Supabase refuse.
+    setIds((prev) => { const n = new Set(prev); was ? n.delete(raceId) : n.add(raceId); return n; });
+    const { error } = was
+      ? await supabase.from("favorites").delete().eq("user_id", user.id).eq("race_id", raceId)
+      : await supabase.from("favorites").insert({ user_id: user.id, race_id: raceId });
+    if (error) setIds((prev) => { const n = new Set(prev); was ? n.add(raceId) : n.delete(raceId); return n; });
+  };
+  return { has: (id) => ids.has(id), toggle };
+}
+
 export function useFavorite(raceId) {
   const { user } = useAuth();
   const navigate = useNavigate();
