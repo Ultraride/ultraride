@@ -20,7 +20,7 @@ function Elevation({ profile }) {
   return (
     <div className="m-card m-elev">
       <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={`Profil d'élévation, de ${Math.round(lo)} à ${Math.round(hi)} m`}>
-        <path d={`${line} L ${w} ${h} L 0 ${h} Z`} fill="#F3DCCD" />
+        <path d={`${line} L ${w} ${h} L 0 ${h} Z`} style={{ fill: "var(--m-elev-fill)" }} />
         <path d={line} stroke="#B4541F" strokeWidth="2" fill="none" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="m-elev-legend m-label"><span>{Math.round(lo)} m</span><span>max {Math.round(hi)} m</span></div>
