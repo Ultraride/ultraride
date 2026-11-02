@@ -5,6 +5,7 @@ import DisclaimerModal from "./components/DisclaimerModal";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import CookieBanner from "./components/CookieBanner";
 import MobileTabBar from "./components/MobileTabBar";
+import { AccountPrompt } from "./mobile/ui";
 import NativeBridge from "./components/NativeBridge";
 import { NotificationsScreen } from "./mobile/NotificationSettings";
 import { HomeRoute, RaceRoute, AccountRoute } from "./mobile/routes";
@@ -84,6 +85,7 @@ export default function App() {
         </Route>
       </Routes>
       <MobileTabBar />
+      <AccountPrompt />
     </>
   );
 }

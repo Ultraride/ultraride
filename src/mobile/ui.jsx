@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { dateTile, formatNumber, daysUntil, formatDate } from "./data";
@@ -197,10 +197,49 @@ export function MiniCard({ race, extra }) {
 }
 
 // ── Favoris (cœur) ────────────────────────────────────────────────────
+// Visiteur sans compte : une seule fenêtre, montée dans App.jsx, ouverte
+// par un événement (cœur de la liste ou de la fiche).
+const ASK_ACCOUNT = "ultraride:ask-account";
+export const askAccount = () => window.dispatchEvent(new Event(ASK_ACCOUNT));
+
+export function AccountPrompt() {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  useEffect(() => {
+    const onAsk = () => setOpen(true);
+    window.addEventListener(ASK_ACCOUNT, onAsk);
+    return () => window.removeEventListener(ASK_ACCOUNT, onAsk);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="m-sheet-backdrop" onClick={close}>
+      <div className="m-sheet" role="dialog" aria-modal="true" aria-labelledby="m-ask-title" onClick={(e) => e.stopPropagation()}>
+        <div className="m-sheet-head">
+          <span className="m-ask-icon"><Icon name="heart" size={22} fill="#B4541F" stroke="#B4541F" width={2} /></span>
+          <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Fermer" onClick={close}><Icon name="close" /></button>
+        </div>
+        <div className="m-ask-body">
+          <h2 id="m-ask-title" className="m-h2">Garde tes ultras en favoris</h2>
+          <p>Pour mettre un ultra en favoris, il faut un compte UltraRide. Tu retrouveras ensuite tous tes favoris et leurs dates dans ton Passeport.</p>
+        </div>
+        <div className="m-sheet-foot m-sheet-foot--stack">
+          <Link to="/login?mode=signup" className="m-btn m-btn--primary" onClick={close}>Ouvrir un compte</Link>
+          <Link to="/login" className="m-btn m-btn--ghost" onClick={close}>J'ai déjà un compte</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Tous les favoris de l'utilisateur en une requête (pour les listes).
 export function useFavoriteSet() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [ids, setIds] = useState(() => new Set());
 
   useEffect(() => {
@@ -210,7 +249,7 @@ export function useFavoriteSet() {
   }, [user]);
 
   const toggle = async (raceId) => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) { askAccount(); return; }
     const was = ids.has(raceId);
     // Mise à jour immédiate, annulée si Supabase refuse.
     setIds((prev) => { const n = new Set(prev); was ? n.delete(raceId) : n.add(raceId); return n; });
@@ -224,7 +263,6 @@ export function useFavoriteSet() {
 
 export function useFavorite(raceId) {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isFav, setIsFav] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -235,7 +273,7 @@ export function useFavorite(raceId) {
   }, [user, raceId]);
 
   const toggle = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) { askAccount(); return; }
     if (busy) return;
     setBusy(true);
     if (isFav) {

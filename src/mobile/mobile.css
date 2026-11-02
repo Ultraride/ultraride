@@ -178,6 +178,10 @@
 .m-sheet-links a.active{color:var(--m-rust-text);font-weight:600;}
 .m-sheet-foot{display:flex;gap:10px;}
 .m-sheet-foot > *{flex:1;}
+.m-sheet-foot--stack{flex-direction:column;}
+.m-ask-icon{width:44px;height:44px;border-radius:22px;background:#F6E6DA;display:inline-flex;align-items:center;justify-content:center;}
+.m-ask-body{display:flex;flex-direction:column;gap:10px;}
+.m-ask-body p{margin:0;font-size:15px;line-height:1.5;color:#3E4438;}
 .m-filter-group{display:flex;flex-direction:column;gap:10px;}
 .m-select{height:48px;border-radius:12px;border:1px solid var(--m-line);background:var(--m-card);padding:0 12px;font-size:16px;color:var(--m-ink);font-family:inherit;}
 @keyframes m-fade{from{opacity:0}to{opacity:1}}
