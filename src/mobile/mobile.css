@@ -25,7 +25,11 @@
      chargé après ce fichier et qui annulait la réserve sous la barre d'onglets. */
   html body{background:var(--m-paper);padding-bottom:calc(var(--m-tabbar) + var(--m-safe-b));-webkit-tap-highlight-color:transparent;}
   header.site.site--app{display:none;}
-  header.site{padding-top:calc(12px + var(--m-safe-t));padding-bottom:12px;}
+  /* « html body » : sinon header.site{padding:16px 20px} d'index.css (chargé après)
+     annule la réserve et le logo passe sous l'heure / l'îlot dynamique. */
+  html body header.site{padding-top:calc(12px + var(--m-safe-t));padding-bottom:12px;}
+  /* Bande opaque derrière la barre d'état : le contenu qui défile ne passe plus sous l'heure. */
+  html body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--m-safe-t);background:var(--m-paper);z-index:1400;pointer-events:none;}
   .site-footer{display:none;}
   .cookie-banner{bottom:calc(var(--m-tabbar) + var(--m-safe-b) + 8px) !important;}
 
