@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import L from "leaflet";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
@@ -68,6 +68,10 @@ export function Comments({ raceId }) {
   const [body, setBody] = useState("");
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
+  const { pathname, hash } = useLocation();
+  const sectionRef = useRef(null);
+  // Adresse de retour après connexion : la fiche, au niveau des avis.
+  const next = encodeURIComponent(`${pathname}#avis`);
 
   const load = () => {
     supabase
@@ -81,6 +85,13 @@ export function Comments({ raceId }) {
 
   useEffect(() => { load(); }, [raceId]);
 
+  // Retour depuis la connexion (#avis) : on amène directement au bloc d'avis.
+  useEffect(() => {
+    if (hash !== "#avis") return;
+    const t = setTimeout(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    return () => clearTimeout(t);
+  }, [hash, comments.length]);
+
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -90,7 +101,7 @@ export function Comments({ raceId }) {
   };
 
   return (
-    <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <section id="avis" ref={sectionRef} style={{ display: "flex", flexDirection: "column", gap: 12, scrollMarginTop: 80 }}>
       <h2 className="v2-h3">Avis des participants</h2>
       {comments.length === 0 && <p className="muted">Aucun avis pour l'instant.</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
@@ -108,7 +119,8 @@ export function Comments({ raceId }) {
       {!user ? (
         <div className="panel">
           <p className="muted" style={{ margin: 0 }}>
-            <Link to="/login" style={{ color: "var(--amber)", textDecoration: "underline" }}>Connecte-toi ou crée un compte</Link> pour laisser un avis.
+            <Link to={`/login?next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>Connecte-toi</Link> ou{" "}
+            <Link to={`/login?mode=signup&next=${next}`} style={{ color: "var(--amber)", textDecoration: "underline" }}>crée un compte</Link> pour laisser un avis.
           </p>
         </div>
       ) : isOrganizer ? (

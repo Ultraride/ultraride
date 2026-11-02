@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { dateTile, formatNumber, daysUntil, formatDate } from "./data";
@@ -204,6 +204,9 @@ export const askAccount = () => window.dispatchEvent(new Event(ASK_ACCOUNT));
 
 export function AccountPrompt() {
   const [open, setOpen] = useState(false);
+  // Après connexion, retour sur l'écran où le cœur a été touché.
+  const { pathname, search } = useLocation();
+  const next = encodeURIComponent(pathname + search);
   const close = () => setOpen(false);
   useEffect(() => {
     const onAsk = () => setOpen(true);
@@ -229,8 +232,8 @@ export function AccountPrompt() {
           <p>Pour mettre un ultra en favoris, il faut un compte UltraRide. Tu retrouveras ensuite tous tes favoris et leurs dates dans ton Passeport.</p>
         </div>
         <div className="m-sheet-foot m-sheet-foot--stack">
-          <Link to="/login?mode=signup" className="m-btn m-btn--primary" onClick={close}>Ouvrir un compte</Link>
-          <Link to="/login" className="m-btn m-btn--ghost" onClick={close}>J'ai déjà un compte</Link>
+          <Link to={`/login?mode=signup&next=${next}`} className="m-btn m-btn--primary" onClick={close}>Ouvrir un compte</Link>
+          <Link to={`/login?next=${next}`} className="m-btn m-btn--ghost" onClick={close}>J'ai déjà un compte</Link>
         </div>
       </div>
     </div>

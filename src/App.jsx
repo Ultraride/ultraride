@@ -7,6 +7,7 @@ import CookieBanner from "./components/CookieBanner";
 import MobileTabBar from "./components/MobileTabBar";
 import { AccountPrompt } from "./mobile/ui";
 import NativeBridge from "./components/NativeBridge";
+import ScrollToTop from "./components/ScrollToTop";
 import { NotificationsScreen } from "./mobile/NotificationSettings";
 import { HomeRoute, RaceRoute, AccountRoute } from "./mobile/routes";
 import EventPage from "./pages/EventPage";
@@ -48,6 +49,7 @@ export default function App() {
       <AnalyticsTracker />
       <CookieBanner />
       <NativeBridge />
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/carte" element={<HomeRoute view="map" />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordErrorMessage } from "../lib/passwordRules";
@@ -34,6 +34,10 @@ function Check() {
 export default function Login() {
   const { signInWithPassword, signUp, sendPasswordReset, user } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  // ?next=/courses/123#avis : où revenir après connexion (chemins internes uniquement).
+  const rawNext = searchParams.get("next") || "";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
   // /login?mode=signup ouvre directement l'onglet « Créer un compte ».
   const [mode, setMode] = useState(searchParams.get("mode") === "signup" ? "signup" : "signin"); // signin | signup | forgot
   const [email, setEmail] = useState("");
@@ -59,6 +63,16 @@ export default function Login() {
         setStats({ ultras: data.length, countries: new Set(data.map((r) => r.country).filter(Boolean)).size });
       });
   }, []);
+
+  useEffect(() => {
+    if (user && next) navigate(next, { replace: true });
+  }, [user, next, navigate]);
+
+  // Arrivée depuis un lien précis (avis, favori…) : le formulaire est en haut, on y va.
+  useEffect(() => {
+    if (!next) return;
+    document.querySelector(".auth-main")?.scrollIntoView({ block: "start" });
+  }, [next]);
 
   const signinErrorMessage = (err) => {
     const msg = err?.message || "";
