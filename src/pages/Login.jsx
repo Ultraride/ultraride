@@ -60,6 +60,13 @@ export default function Login() {
       });
   }, []);
 
+  const signinErrorMessage = (err) => {
+    const msg = err?.message || "";
+    if (err?.code === "invalid_credentials" || /Invalid login credentials/i.test(msg)) return "Email ou mot de passe incorrect.";
+    if (err?.code === "email_not_confirmed" || /Email not confirmed/i.test(msg)) return "Ton adresse n'est pas encore confirmée : clique sur le lien reçu par email.";
+    return msg;
+  };
+
   const switchMode = (m) => {
     setMode(m);
     setError(null);
@@ -97,7 +104,13 @@ export default function Login() {
     setLoading(false);
 
     if (result.error) {
-      setError(mode === "signup" ? passwordErrorMessage(result.error) : result.error.message);
+      setError(mode === "signup" ? passwordErrorMessage(result.error) : signinErrorMessage(result.error));
+      return;
+    }
+    if (result.alreadyExists) {
+      setMode("signin");
+      setPassword("");
+      setError("Un compte existe déjà avec cet email. Connecte-toi, ou utilise « Mot de passe oublié » si tu ne t'en souviens plus.");
       return;
     }
     if (mode === "signup") {

@@ -66,12 +66,15 @@ export function AuthProvider({ children }) {
   // terms_accepted) through to raw_user_meta_data, read by the
   // handle_new_user() trigger when it creates the profile row.
   const signUp = async (email, password, extraData = {}) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: SITE_ORIGIN, data: extraData },
     });
-    return { error };
+    // Email déjà inscrit : Supabase répond « OK » sans rien envoyer, avec un
+    // utilisateur factice dont la liste identities est vide.
+    const alreadyExists = !error && Array.isArray(data?.user?.identities) && data.user.identities.length === 0;
+    return { error, alreadyExists };
   };
 
   const signOut = () => supabase.auth.signOut();
