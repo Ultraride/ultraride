@@ -102,6 +102,11 @@
   html body header.site{padding-top:calc(12px + var(--m-safe-t));padding-bottom:12px;}
   /* Bande opaque derrière la barre d'état : le contenu qui défile ne passe plus sous l'heure. */
   html body::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--m-safe-t);background:var(--m-paper);z-index:1400;pointer-events:none;}
+  /* iOS zoome sur tout champ dont le texte fait moins de 16px (et ne dézoome pas) :
+     16px partout sur mobile, quels que soient les styles du site. */
+  html body input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html body textarea,
+  html body select{font-size:16px !important;}
   .site-footer{display:none;}
   .cookie-banner{bottom:calc(var(--m-tabbar) + var(--m-safe-b) + 8px) !important;}
 
