@@ -71,7 +71,13 @@ export default function Login() {
   // Arrivée depuis un lien précis (avis, favori…) : le formulaire est en haut, on y va.
   useEffect(() => {
     if (!next) return;
-    document.querySelector(".auth-main")?.scrollIntoView({ block: "start" });
+    // On s'arrête sous l'en-tête collant (barre d'état iOS comprise), sinon
+    // les onglets « Connexion / Créer un compte » passent dessous.
+    const el = document.querySelector(".auth-main");
+    if (!el) return;
+    const headerH = document.querySelector("header.site")?.offsetHeight || 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+    window.scrollTo(0, Math.max(0, top));
   }, [next]);
 
   const signinErrorMessage = (err) => {
