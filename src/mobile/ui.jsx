@@ -9,7 +9,6 @@ export const DISCIPLINE_BG = {
   Route: "#6E6E66",
   Gravel: "#15793F",
   VTT: "#B4541F",
-  Bikepacking: "#1B2B20",
 };
 export const disciplineBg = (d) => DISCIPLINE_BG[d] || "#1B2B20";
 

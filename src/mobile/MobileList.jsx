@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useRaces, chronoRank, groupLabel, matchesSearch, MONTHS } from "./data";
 import { RaceRow, MenuButton, Icon, disciplineBg, formatLabel, useFavoriteSet } from "./ui";
 
-const DISCIPLINES = ["Route", "Gravel", "VTT", "Bikepacking"];
+const DISCIPLINES = ["Route", "Gravel", "VTT"];
 const FORMATS = ["course", "aventure", "endurance"];
 const MODES = ["Autonomie", "Semi-autonomie", "Assisté"];
 const EMPTY = { d: "", f: "", m: "", c: "", mo: "", reg: "" };
