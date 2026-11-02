@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
@@ -309,7 +310,9 @@ export function MenuButton({ variant = "light" }) {
       <button type="button" className={`m-roundbtn m-roundbtn--${variant}`} aria-label="Menu" aria-expanded={open} onClick={() => setOpen(true)}>
         <Icon name="menu" />
       </button>
-      {open && (
+      {/* Portail vers <body> : rendu dans l'en-tête collant (backdrop-filter),
+          le menu était enfermé dans sa hauteur, sans croix ni fond pour fermer. */}
+      {open && createPortal(
         <div className="m-sheet-backdrop" onClick={close}>
           <div className="m-sheet" role="dialog" aria-label="Menu" onClick={(e) => e.stopPropagation()}>
             <div className="m-sheet-head">
@@ -339,7 +342,8 @@ export function MenuButton({ variant = "light" }) {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
