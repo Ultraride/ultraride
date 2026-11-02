@@ -21,7 +21,9 @@
 /* ── Global mobile ── */
 .tabbar{display:none;}
 @media(max-width:819px){
-  body{background:var(--m-paper);padding-bottom:calc(var(--m-tabbar) + var(--m-safe-b));-webkit-tap-highlight-color:transparent;}
+  /* « html body » : plus spécifique que html,body,#root{padding:0} d'index.css,
+     chargé après ce fichier et qui annulait la réserve sous la barre d'onglets. */
+  html body{background:var(--m-paper);padding-bottom:calc(var(--m-tabbar) + var(--m-safe-b));-webkit-tap-highlight-color:transparent;}
   header.site.site--app{display:none;}
   header.site{padding-top:calc(12px + var(--m-safe-t));padding-bottom:12px;}
   .site-footer{display:none;}
