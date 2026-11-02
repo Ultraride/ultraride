@@ -23,6 +23,7 @@ const P = {
   back: <path d="m15 6-6 6 6 6" />,
   chevron: <path d="m9 6 6 6-6 6" />,
   share: <><path d="M12 3v12M7 8l5-5 5 5" /><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></>,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   heart: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,

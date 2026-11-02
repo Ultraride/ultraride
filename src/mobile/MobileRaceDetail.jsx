@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import { formatPrice } from "../lib/price";
 import { RaceMap, Comments } from "../pages/RaceDetail";
 import { daysUntil, formatDate, formatNumber } from "./data";
+import { isNative } from "../lib/native";
 import { Cover, Pill, Icon, useFavorite, disciplineBg, formatLabel } from "./ui";
 
 const PARCOURS_LABEL = { boucle: "Boucle", point: "Point à point", ar: "Aller-retour" };
@@ -56,10 +57,22 @@ export default function MobileRaceDetail() {
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
 
   const share = async () => {
-    const url = window.location.href;
+    // Dans l'app, l'adresse de la page est interne (capacitor://localhost) :
+    // on partage toujours le lien public ultraride.eu.
+    const url = isNative ? `https://ultraride.eu${window.location.pathname}` : window.location.href;
+    const title = race?.name || "UltraRide";
     try {
-      if (navigator.share) await navigator.share({ title: race?.name, url });
-      else { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 2000); }
+      if (isNative) {
+        // Feuille de partage iOS / Android (la vue web n'expose pas navigator.share).
+        const { Share } = await import("@capacitor/share");
+        await Share.share({ title, text: title, url, dialogTitle: "Partager cet ultra" });
+      } else if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      }
     } catch { /* partage annulé */ }
   };
 
@@ -67,7 +80,7 @@ export default function MobileRaceDetail() {
     <div className="m-detail-top">
       <button type="button" className="m-roundbtn m-roundbtn--light" aria-label="Retour" onClick={back}><Icon name="back" /></button>
       <div className="m-detail-top-right">
-        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={shared ? "Lien copié" : "Partager"} onClick={share}><Icon name="share" size={18} /></button>
+        <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={shared ? "Lien copié" : "Partager"} onClick={share}><Icon name={shared ? "check" : "share"} size={18} /></button>
         <button type="button" className="m-roundbtn m-roundbtn--light" aria-label={fav.isFav ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={fav.isFav} onClick={fav.toggle} disabled={fav.busy}>
           <Icon name="heart" fill={fav.isFav ? "#B4541F" : "none"} stroke="#B4541F" width={2} />
         </button>
