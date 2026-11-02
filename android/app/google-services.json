@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "501357879590",
+    "project_id": "ultraride-8e408",
+    "storage_bucket": "ultraride-8e408.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501357879590:android:53c69f599dd615a1e4a1e7",
+        "android_client_info": {
+          "package_name": "eu.ultraride.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhuaREmDV7Cq9OHaqZtbwChK0iFNd1A1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

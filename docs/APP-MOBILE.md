@@ -23,7 +23,7 @@ d'affilée = **une** notification. Historique : table `push_notifications`.
 
 1. **SQL** : coller `supabase/migrations/20261030_app_mobile.sql` dans le SQL Editor.
 2. **Firebase** (console.firebase.google.com, compte Beyond The Track) :
-   - créer le projet « UltraRide » ;
+   - projet « UltraRide » créé : `ultraride-8e408` (apps Android et iOS enregistrées, fichiers de config dans le dépôt) ;
    - ajouter une app Android `eu.ultraride.app` → télécharger `google-services.json` → `android/app/` ;
    - ajouter une app iOS `eu.ultraride.app` → télécharger `GoogleService-Info.plist` → `ios/App/App/` (à ajouter aussi dans Xcode, cible App) ;
    - Paramètres du projet → Cloud Messaging → importer la **clé APNs** (.p8) créée dans Apple Developer → Keys (case « Apple Push Notifications service ») ;
