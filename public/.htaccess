@@ -23,10 +23,11 @@ DirectoryIndex index.html
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
   # Routage SPA : tout ce qui n'est ni un fichier ni un dossier existant sert
-  # index.html. Un fichier manquant sous /assets/ reste un vrai 404.
+  # index.html. Un fichier manquant sous /assets/, /media/ ou /api/ reste un
+  # vrai 404.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_URI} !^/assets/
+  RewriteCond %{REQUEST_URI} !^/(assets|media|api)/
   RewriteRule ^ /index.html [L]
 </IfModule>
 

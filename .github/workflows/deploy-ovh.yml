@@ -34,6 +34,20 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
 
+      # Le script d'envoi d'images (public/api/upload-image.php) vérifie la
+      # session de l'utilisateur auprès de Supabase : il lit l'URL du projet et
+      # la clé publique (anon, déjà présente dans le bundle) dans config.php,
+      # généré ici et jamais versionné.
+      - name: Write PHP config for image uploads
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          php -l dist/api/upload-image.php
+          printf "<?php\nreturn ['supabase_url' => '%s', 'anon_key' => '%s'];\n" \
+            "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > dist/api/config.php
+          php -l dist/api/config.php
+
       - name: Install lftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 

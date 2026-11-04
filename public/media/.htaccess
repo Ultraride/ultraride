@@ -1,0 +1,32 @@
+# UltraRide — images (logos, visuels d'ultras) servies par OVH à la place de
+# Supabase Storage. Les fichiers sont déposés par /api/upload-image.php et ne
+# sont jamais supprimés par le déploiement (lftp mirror sans --delete).
+
+Options -Indexes
+
+# Rien d'exécutable ici, même si un fichier passait le contrôle du script.
+<FilesMatch "\.(?i:php\d*|phtml|phar|pht|pl|py|cgi|sh|shtml|html?|js)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Les images recompressées en WebP sur Supabase ont gardé leur nom d'origine
+  # (logo.png contenant du WebP). Copiées ici en logo.png.webp, elles restent
+  # servies à leur URL d'origine, avec le bon type MIME.
+  # Ces règles remplacent celles de la racine : un fichier absent donne un vrai
+  # 404, pas la page d'accueil.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME}.webp -f
+  RewriteRule ^(.+)$ $1.webp [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Le générateur Instagram dessine les images dans un canvas : CORS ouvert.
+  Header set Access-Control-Allow-Origin "*"
+  # Chaque envoi a un nom unique : une image remplacée change d'URL.
+  Header set Cache-Control "public, max-age=31536000"
+  <FilesMatch "\.svg$">
+    Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
+  </FilesMatch>
+</IfModule>

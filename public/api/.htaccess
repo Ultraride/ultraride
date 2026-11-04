@@ -1,0 +1,5 @@
+# Configuration générée au déploiement (URL Supabase + clé publique) :
+# jamais servie directement.
+<Files "config.php">
+  Require all denied
+</Files>

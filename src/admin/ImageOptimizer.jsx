@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { compressImage, formatBytes } from "../lib/compressImage";
+import MediaMigration from "./MediaMigration";
 
 const BUCKET = "public-images";
 const BULK_THRESHOLD = 300 * 1024;
@@ -145,6 +146,8 @@ export default function ImageOptimizer() {
         <p className="muted">Chargement de la liste des fichiers…</p>
       ) : files && (
         <>
+          <MediaMigration files={files} downloadFile={downloadFile} />
+
           <div className="panel" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div className="mono" style={{ fontSize: 13 }}>

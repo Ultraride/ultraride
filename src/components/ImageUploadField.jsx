@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/AuthContext";
 import { compressImage, formatBytes } from "../lib/compressImage";
+import { uploadImage } from "../lib/mediaUpload";
 
 // Le SVG peut embarquer du script : seul l'admin peut en téléverser.
 const BASE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -10,12 +10,9 @@ const FORMAT_ERROR = "Format non autorisé : PNG, JPEG, WebP ou GIF uniquement."
 // Les logos s'affichent en petit : 600 px de large suffisent largement.
 const MAX_WIDTH_BY_FOLDER = { organizers: 600 };
 
-// Un an de cache navigateur : chaque upload a un nom unique, donc une image
-// remplacée change d'URL et le cache n'est jamais périmé.
-const CACHE_CONTROL = "31536000";
-
-// Reusable field: paste a URL directly, or upload a file (goes to Supabase
-// Storage, bucket "public-images"), with a small preview once set.
+// Champ réutilisable : coller une URL, ou envoyer un fichier (compressé dans
+// le navigateur puis hébergé chez OVH, dossier /media/), avec un aperçu.
+// Le cache navigateur d'un an est réglé par public/media/.htaccess.
 export default function ImageUploadField({ label, value, onChange, hint, folder = "uploads" }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -47,22 +44,18 @@ export default function ImageUploadField({ label, value, onChange, hint, folder 
     const compressed = result.contentType === "image/webp" && result.blob !== file;
 
     const ext = compressed ? "webp" : file.name.split(".").pop();
-    const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("public-images")
-      .upload(path, result.blob, { contentType: result.contentType, cacheControl: CACHE_CONTROL });
-
-    if (uploadError) {
-      const rejectedFormat =
-        String(uploadError.statusCode) === "415" || /mime|type/i.test(uploadError.message || "");
-      setError(rejectedFormat ? FORMAT_ERROR : uploadError.message);
+    let uploaded;
+    try {
+      // Le serveur choisit le nom (aléatoire) et vérifie le vrai format.
+      uploaded = await uploadImage(result.blob, { folder, filename: `image.${ext}` });
+    } catch (err) {
+      setError(err.status === 415 ? FORMAT_ERROR : err.message);
       e.target.value = "";
       setUploading(false);
       return;
     }
 
-    const { data } = supabase.storage.from("public-images").getPublicUrl(path);
-    onChange(data.publicUrl);
+    onChange(uploaded.url);
     setSizeInfo(
       compressed
         ? `Image optimisée : ${formatBytes(result.originalSize)} → ${formatBytes(result.newSize)}`
