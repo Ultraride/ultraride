@@ -2185,3 +2185,8 @@ a.sv-bar-link:hover{background:var(--track);}
 .auth-code-actions{display:flex;justify-content:space-between;gap:12px;}
 .auth-textlink:disabled{color:var(--text2);cursor:default;text-decoration:none;}
 .auth-shell-single{max-width:620px;margin:0 auto;}
+
+/* Proposer un ultra (même habillage que la connexion) */
+.auth-textarea{min-height:132px;padding:12px 14px;line-height:1.5;resize:vertical;}
+.auth-row2{display:flex;flex-wrap:wrap;gap:20px;}
+.auth-row2 .auth-field{flex:1 1 220px;}
