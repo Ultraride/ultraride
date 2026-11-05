@@ -47,9 +47,16 @@ export async function pushPermission() {
   }
 }
 
+// Si Apple ne délivre jamais le jeton APNs, getToken() peut attendre
+// indéfiniment : on coupe au bout de 15 s pour afficher l'erreur.
+function withTimeout(promise, ms, message) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))]);
+}
+
 async function applyTopics(prefs) {
   const fm = await plugin();
-  await fm.getToken(); // enregistre l'appareil auprès de Firebase
+  // Enregistre l'appareil auprès de Firebase.
+  await withTimeout(fm.getToken(), 15000, "aucun jeton reçu d'Apple (APNs) après 15 s");
   await Promise.all(Object.entries(TOPICS).map(([key, { topic }]) =>
     (prefs[key] ? fm.subscribeToTopic({ topic }) : fm.unsubscribeFromTopic({ topic })).catch(() => {})
   ));
