@@ -73,8 +73,9 @@ export async function setPushPrefs(next) {
       throw new Error("denied");
     }
   }
-  writeJson(PREFS_KEY, next);
+  // On n'enregistre le choix qu'une fois l'inscription réussie.
   await applyTopics(next);
+  writeJson(PREFS_KEY, next);
   return next;
 }
 

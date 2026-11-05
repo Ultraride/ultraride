@@ -8,6 +8,7 @@ export function NotificationSettings() {
   const [prefs, setPrefs] = useState(getPushPrefs);
   const [perm, setPerm] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState(null);
 
   useEffect(() => { pushPermission().then(setPerm); }, []);
 
@@ -15,12 +16,17 @@ export function NotificationSettings() {
 
   const toggle = async (key) => {
     setBusy(true);
+    setFailure(null);
     try {
       setPrefs(await setPushPrefs({ ...prefs, [key]: !prefs[key] }));
       setPerm("granted");
-    } catch {
-      setPrefs(getPushPrefs());
-      setPerm("denied");
+    } catch (e) {
+      // Refus de l'utilisateur, ou autorisation accordée mais inscription
+      // Firebase / Apple en échec : on distingue les deux cas.
+      const p = await pushPermission();
+      setPerm(p);
+      if (p === "granted") setFailure(e?.message || String(e));
+      setPrefs({ newRaces: false, updates: false });
     }
     setBusy(false);
   };
@@ -36,6 +42,12 @@ export function NotificationSettings() {
           <input type="checkbox" className="m-switch" checked={!!prefs[key]} disabled={busy} onChange={() => toggle(key)} />
         </label>
       ))}
+      {failure && (
+        <p className="m-note m-note--warn">
+          L'inscription aux notifications n'a pas abouti. Réessaie dans un instant.
+          <br /><small style={{ opacity: 0.7 }}>Détail : {failure}</small>
+        </p>
+      )}
       {perm === "denied" && (
         <p className="m-note m-note--warn">
           Les notifications sont bloquées pour UltraRide. Autorise-les dans les réglages du téléphone, puis réessaie.
