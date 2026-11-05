@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "./supabaseClient";
+import { NATIVE_AUTH_REDIRECT, openNativeOAuth } from "./nativeAuth";
 import { isNative } from "./native";
 
 // Dans l'app, window.location.origin vaut « capacitor://localhost » : les
@@ -77,14 +78,79 @@ export function AuthProvider({ children }) {
     return { error, alreadyExists };
   };
 
+  // Google / Apple. Le retour se fait sur /auth/callback (voir AuthCallback.jsx).
+  const signInWithProvider = async (provider) => {
+    const queryParams = provider === "google" ? { prompt: "select_account" } : undefined;
+    if (isNative) {
+      // App installée : navigateur système, retour par eu.ultraride.app://auth/callback.
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: NATIVE_AUTH_REDIRECT, skipBrowserRedirect: true, queryParams },
+      });
+      if (error) return { error };
+      try {
+        await openNativeOAuth(data.url);
+      } catch (e) {
+        return { error: e };
+      }
+      return { error: null };
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams },
+    });
+    return { error };
+  };
+
+  // Code à 6 chiffres par email. create=false à la connexion (pas de création
+  // de compte implicite) ; à l'inscription, extraData porte rôle + consentements
+  // jusqu'au trigger handle_new_user(), comme pour signUp.
+  const sendEmailCode = async (email, { create = false, extraData } = {}) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: create, data: create ? extraData : undefined },
+    });
+    return { error };
+  };
+
+  const verifyEmailCode = async (email, token) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    return { error };
+  };
+
+  // Comptes créés via Google / Apple : rôle + CGU choisis après coup (/bienvenue).
+  const completeOnboarding = async ({ role, terms, marketing }) => {
+    const { error } = await supabase.rpc("complete_oauth_onboarding", {
+      p_role: role,
+      p_terms: terms,
+      p_marketing: marketing,
+    });
+    if (!error) {
+      await supabase.auth.refreshSession();
+      await loadProfile(session?.user?.id);
+    }
+    return { error };
+  };
+
   const signOut = () => supabase.auth.signOut();
 
   const role = profile?.role || null;
+  const user = session?.user || null;
+  const providers = user?.app_metadata?.providers || [user?.app_metadata?.provider].filter(Boolean);
+  const needsOnboarding =
+    !!user &&
+    !user.user_metadata?.requested_role &&
+    providers.some((p) => p === "google" || p === "apple");
 
   const value = {
     session,
-    user: session?.user || null,
+    user,
     profile,
+    needsOnboarding,
+    signInWithProvider,
+    sendEmailCode,
+    verifyEmailCode,
+    completeOnboarding,
     role,
     isAdmin: role === "admin",
     isOrganizer: role === "organizer",
