@@ -6,6 +6,12 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>UltraRide utilise ta position pour te montrer les ultras qui partent près de chez toi. Elle n'est ni enregistrée ni partagée.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>UltraRide enregistre l'image de ton Passeport Ultra dans tes photos quand tu le demandes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>UltraRide accède à tes photos uniquement pour choisir une image, par exemple le logo de ton ultra.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>UltraRide utilise l'appareil photo uniquement si tu choisis de prendre une photo, par exemple pour le logo de ton ultra.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

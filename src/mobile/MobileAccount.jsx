@@ -8,6 +8,8 @@ import { formatNumber } from "./data";
 import { MiniCard, MenuButton, Stamp, Icon } from "./ui";
 import { NotificationSettings } from "./NotificationSettings";
 import { isNative } from "../lib/native";
+import { sharePassport } from "../lib/sharePassport";
+import { sharePassportPdf } from "../lib/passportPdf";
 
 function Collapsible({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -27,6 +29,8 @@ export default function MobileAccount() {
   const [results, setResults] = useState(null);
   const [favorites, setFavorites] = useState(null);
   const [managing, setManaging] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareMsg, setShareMsg] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -49,6 +53,34 @@ export default function MobileAccount() {
 
   const name = profile?.display_name || user.email?.split("@")[0] || "Participant";
   const role = isAdmin ? "Admin" : isOrganizer ? "Organisateur" : "Participant";
+
+  const onPdf = async () => {
+    setSharing(true); setShareMsg("");
+    try {
+      const { data, error } = await supabase.from("race_results")
+        .select("*, race:races(id, name, country)").eq("user_id", user.id)
+        .order("event_date", { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      const res = await sharePassportPdf({ profile, user, results: data || [] });
+      if (res === "downloaded") setShareMsg("PDF enregistré dans tes téléchargements.");
+    } catch {
+      setShareMsg("Impossible de créer le PDF du passeport. Réessaie.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const onShare = async () => {
+    setSharing(true); setShareMsg("");
+    try {
+      const res = await sharePassport({ name, role, ...stats });
+      if (res === "downloaded") setShareMsg("Image enregistrée dans tes téléchargements.");
+    } catch {
+      setShareMsg("Impossible de créer l'image du passeport. Réessaie.");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   return (
     <div className="m-screen">
@@ -79,6 +111,21 @@ export default function MobileAccount() {
           </div>
         </div>
 
+        {!isOrganizer && stats.count > 0 && (
+          <div className="m-stack m-stack--tight">
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" className="m-btn m-btn--ghost" style={{ flex: 1 }} disabled={sharing} onClick={onShare}>
+                <Icon name="share" size={18} /> Image
+              </button>
+              <button type="button" className="m-btn m-btn--ghost" style={{ flex: 1 }} disabled={sharing} onClick={onPdf}>
+                <Icon name="share" size={18} /> Passeport PDF
+              </button>
+            </div>
+            {sharing && <p className="m-label" role="status" style={{ textAlign: "center" }}>Préparation…</p>}
+            {shareMsg && <p className="m-label" role="status" style={{ textAlign: "center" }}>{shareMsg}</p>}
+          </div>
+        )}
+
         {!isOrganizer && (
           <section className="m-section">
             <div className="m-section-head">
@@ -88,7 +135,7 @@ export default function MobileAccount() {
               </button>
             </div>
             {managing ? (
-              <div className="m-legacy"><PalmaresSection /></div>
+              <div className="m-legacy"><PalmaresSection embedded /></div>
             ) : results && results.length === 0 ? (
               <div className="m-card m-geo"><p>Ajoute tes ultras terminés (fichier .FIT) pour remplir ton passeport.</p></div>
             ) : (

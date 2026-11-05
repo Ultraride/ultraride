@@ -345,7 +345,9 @@ function initials(name, email) {
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
 }
 
-function AthleteCard({ profile, user, results, stats }) {
+// Le Passeport Ultra (format A4). Utilisé tel quel pour l'impression sur le
+// site et pour le PDF généré dans l'app (src/lib/passportPdf.js).
+export function PassportSheet({ profile, user, results, stats }) {
   const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const since = profile?.created_at ? new Date(profile.created_at) : null;
   const name = profile?.display_name || user?.email?.split("@")[0] || "—";
@@ -354,10 +356,7 @@ function AthleteCard({ profile, user, results, stats }) {
   const countries = new Set(results.map((r) => r.race?.country).filter(Boolean)).size;
   const fmt = (n) => Math.round(n || 0).toLocaleString("fr-FR");
 
-  // Rendue directement sous <body> : à l'impression, le reste du site est
-  // retiré de la mise en page (pas seulement masqué), donc aucune page blanche.
-  return createPortal(
-    <div className="pp-portal">
+  return (
     <div className="print-sheet pp-sheet">
       <header className="pp-head">
         <div className="pp-brand">
@@ -439,12 +438,16 @@ function AthleteCard({ profile, user, results, stats }) {
         <span className="pp-mono">Édité par ultraride.eu</span>
       </footer>
     </div>
-    </div>,
-    document.body
   );
 }
 
-export default function PalmaresSection({ onChange }) {
+// Rendue directement sous <body> : à l'impression, le reste du site est
+// retiré de la mise en page (pas seulement masqué), donc aucune page blanche.
+function AthleteCard(props) {
+  return createPortal(<div className="pp-portal"><PassportSheet {...props} /></div>, document.body);
+}
+
+export default function PalmaresSection({ onChange, embedded = false }) {
   const { user, profile } = useAuth();
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -486,9 +489,11 @@ export default function PalmaresSection({ onChange }) {
   return (
     <section id="palmares" className="acc-section" aria-labelledby="h-palmares">
       <div className="acc-section-head">
-        <h2 id="h-palmares" className="acc-h2">Palmarès</h2>
+        {/* Dans l'app, l'écran affiche déjà le titre « Palmarès » au-dessus. */}
+        {embedded ? <span id="h-palmares" className="sr-only">Palmarès</span> : <h2 id="h-palmares" className="acc-h2">Palmarès</h2>}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {stats && stats.count > 0 && (
+          {/* L'impression n'existe pas dans l'app : on y partage une image du passeport à la place. */}
+          {!embedded && stats && stats.count > 0 && (
             <button type="button" className="v2-btn v2-btn-outline acc-btn" onClick={() => window.print()} title="Enregistre ton Passeport Ultra en PDF depuis la fenêtre d'impression">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6" /><rect x="6" y="14" width="12" height="7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /></svg>
               Passeport PDF

@@ -97,6 +97,9 @@ export default function Ultras() {
 
   // Les liens de l'accueil arrivent avec ?q=… ou ?discipline=… ; ?mois=5 (1-12) filtre par mois.
   const [search, setSearch] = useState(params.get("q") || "");
+  // Recopié dans l'URL seulement en quittant le champ : sur iOS, modifier l'URL
+  // à chaque frappe fait perdre le focus après la 1re lettre.
+  const [urlSearch, setUrlSearch] = useState(search);
   const [disciplines, setDisciplines] = useState(() => new Set(params.getAll("discipline")));
   const [formats, setFormats] = useState(() => new Set());
   const [minKm, setMinKm] = useState(0);
@@ -132,11 +135,11 @@ export default function Ultras() {
   // filtrée se partage telle quelle.
   useEffect(() => {
     const next = new URLSearchParams();
-    if (search.trim()) next.set("q", search.trim());
+    if (urlSearch.trim()) next.set("q", urlSearch.trim());
     disciplines.forEach((d) => next.append("discipline", d));
     [...months].sort((a, b) => a - b).forEach((m) => next.append("mois", String(m + 1)));
     setParams(next, { replace: true });
-  }, [search, disciplines, months, setParams]);
+  }, [urlSearch, disciplines, months, setParams]);
 
   useEffect(() => { setLimit(PAGE); }, [search, disciplines, formats, minKm, country, mode, parcours, openOnly, months, sort, zoneOnly]);
 
@@ -204,7 +207,7 @@ export default function Ultras() {
 
   const reset = () => {
     setMonths(new Set()); setDisciplines(new Set()); setFormats(new Set()); setMinKm(0); setCountry("");
-    setMode(""); setParcours(""); setOpenOnly(false); setSearch(""); setZoneOnly(false);
+    setMode(""); setParcours(""); setOpenOnly(false); setSearch(""); setUrlSearch(""); setZoneOnly(false);
   };
 
   const summary = [
@@ -228,7 +231,7 @@ export default function Ultras() {
           <label className="v2-input" style={{ flex: "1 1 300px" }}>
             <SearchIcon />
             <span className="sr-only">Rechercher un ultra</span>
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nom, lieu, pays, organisateur…" />
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} onBlur={() => setUrlSearch(search)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Nom, lieu, pays, organisateur…" />
           </label>
           <MonthPicker selected={months} onChange={setMonths} counts={monthCounts} />
           <div className="v2-toggle" role="group" aria-label="Affichage">

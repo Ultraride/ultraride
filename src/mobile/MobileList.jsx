@@ -13,6 +13,9 @@ export default function MobileList() {
   const fav = useFavoriteSet();
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
+  // Le texte n'est recopié dans l'URL qu'en quittant le champ (ou sur « Rechercher ») :
+  // sur iOS, modifier l'URL à chaque frappe fait perdre le focus après la 1re lettre.
+  const [urlQ, setUrlQ] = useState(q);
   const [filters, setFilters] = useState({ ...EMPTY, d: params.get("d") || "" });
   const [sheet, setSheet] = useState(false);
   const [showPast, setShowPast] = useState(false);
@@ -20,10 +23,10 @@ export default function MobileList() {
   // La recherche reste dans l'URL : retour arrière depuis une fiche = même liste.
   useEffect(() => {
     const next = {};
-    if (q) next.q = q;
+    if (urlQ) next.q = urlQ;
     if (filters.d) next.d = filters.d;
     setParams(next, { replace: true });
-  }, [q, filters.d]);
+  }, [urlQ, filters.d]);
 
   const countries = useMemo(
     () => (races ? [...new Set(races.map((r) => r.country).filter(Boolean))].sort() : []),
@@ -76,7 +79,7 @@ export default function MobileList() {
             <label className="m-search">
               <Icon name="search" size={18} />
               <span className="m-sr">Rechercher un ultra</span>
-              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nom, lieu, organisateur…" enterKeyHint="search" />
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => setUrlQ(q.trim())} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} placeholder="Nom, lieu, organisateur…" enterKeyHint="search" />
             </label>
             <button type="button" className="m-squarebtn" aria-label={`Filtres${activeCount ? ` (${activeCount} actifs)` : ""}`} onClick={() => setSheet(true)}>
               <Icon name="sliders" size={18} />
@@ -100,7 +103,7 @@ export default function MobileList() {
         {races && results.length === 0 && (
           <div className="m-empty">
             <p>Aucun ultra ne correspond.</p>
-            <button type="button" className="m-btn m-btn--ghost" onClick={() => { setQ(""); setFilters(EMPTY); }}>Réinitialiser</button>
+            <button type="button" className="m-btn m-btn--ghost" onClick={() => { setQ(""); setUrlQ(""); setFilters(EMPTY); }}>Réinitialiser</button>
           </div>
         )}
         {groups.map((g) => (
