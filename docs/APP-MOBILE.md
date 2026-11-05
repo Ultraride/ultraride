@@ -16,7 +16,7 @@ Sur le site (navigateur), tout le code natif est ignoré (`src/lib/native.js`).
 Les notifications passent par des *topics* Firebase (`nouveaux-ultras`,
 `mises-a-jour`) : aucun jeton n'est stocké en base. `send-push` tourne toutes
 les 15 min (pg_cron `send-push-notifications`) et n'envoie une vague que
-lorsqu'aucune nouvelle ligne n'est arrivée depuis 10 min : valider 15 fiches
+lorsqu'aucune nouvelle ligne n'est arrivée depuis 60 min : valider 90 fiches
 d'affilée = **une** notification. Historique : table `push_notifications`.
 
 ## Mise en place (une fois)

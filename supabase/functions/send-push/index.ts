@@ -16,7 +16,7 @@
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
-const QUIET_MINUTES = 10;
+const QUIET_MINUTES = 60; // une campagne du lundi avec des pauses reste une seule vague
 const SITE = "https://ultraride.eu";
 
 const TOPIC = { new_race: "nouveaux-ultras", race_update: "mises-a-jour" } as const;

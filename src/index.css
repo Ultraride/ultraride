@@ -2170,3 +2170,18 @@ a.sv-bar-link:hover{background:var(--track);}
 .ru-packet-change{font-size:12.5px;color:var(--text3);overflow-wrap:anywhere;}
 .ru-packet-change s{color:var(--text2);}
 .ru-tag-edition{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:#DCEBDF;color:#15793F;white-space:nowrap;}
+
+/* Connexion Google / Apple + code par email */
+.auth-oauth{display:flex;flex-direction:column;gap:10px;}
+.auth-oauth-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;border-radius:10px;font:600 15.5px var(--sans);cursor:pointer;box-sizing:border-box;}
+.auth-oauth-apple{background:#000;color:#fff;border:1px solid #000;}
+.auth-oauth-apple:hover{background:#1c1c1c;}
+.auth-oauth-google{background:#fff;color:#1F1F1F;border:1px solid #DADCE0;}
+.auth-oauth-google:hover{background:#F8F9FA;}
+.auth-sep{display:flex;align-items:center;gap:12px;margin-top:6px;color:var(--text2);font-size:13px;}
+.auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:var(--line3);}
+.auth-pw-toggle{align-self:center;}
+.auth-code{font-family:var(--mono);font-size:26px;letter-spacing:.4em;text-align:center;}
+.auth-code-actions{display:flex;justify-content:space-between;gap:12px;}
+.auth-textlink:disabled{color:var(--text2);cursor:default;text-decoration:none;}
+.auth-shell-single{max-width:620px;margin:0 auto;}

@@ -1,0 +1,8 @@
+-- Appliquée le 5 nov. 2026 via MCP (migration auth_oauth_role_onboarding).
+-- 1) profiles_before_update : un changement de rôle reste réservé aux admins,
+--    sauf depuis une fonction de confiance qui pose le flag local ultraride.trusted_role_change.
+-- 2) complete_oauth_onboarding(p_role, p_terms, p_marketing) : comptes Google / Apple,
+--    une seule fois (refusé si raw_user_meta_data.requested_role existe déjà) ;
+--    pose requested_role + CGU + newsletter, met à jour profiles.role et déclenche
+--    le mail de bienvenue organisateur (organizer-welcome) si rôle organisateur.
+-- Voir le corps exact dans l'historique des migrations Supabase.
