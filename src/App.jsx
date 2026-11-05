@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "./lib/AuthContext";
 import Header from "./components/Header";
 import DisclaimerModal from "./components/DisclaimerModal";
 import AnalyticsTracker from "./components/AnalyticsTracker";
@@ -10,6 +11,8 @@ import Ultras from "./pages/Ultras";
 import EventPage from "./pages/EventPage";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
+import Welcome from "./pages/Welcome";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import OrganizerRaces from "./pages/OrganizerRaces";
 import OrganizerPage from "./pages/OrganizerPage";
@@ -37,6 +40,16 @@ import QualityFamily from "./admin/QualityFamily";
 import RaceUpdates from "./admin/RaceUpdates";
 import { trackVisit } from "./lib/trackVisit";
 
+// Compte Google / Apple pas encore finalisé (rôle + CGU) → /bienvenue,
+// sauf sur les pages légales qu'il doit pouvoir lire.
+const ONBOARDING_FREE = ["/bienvenue", "/auth/callback", "/cgu", "/confidentialite", "/rules", "/cookies"];
+function OnboardingGate() {
+  const { needsOnboarding } = useAuth();
+  const { pathname } = useLocation();
+  if (needsOnboarding && !ONBOARDING_FREE.includes(pathname)) return <Navigate to="/bienvenue" replace />;
+  return null;
+}
+
 export default function App() {
   useEffect(() => { trackVisit(); }, []);
 
@@ -46,6 +59,7 @@ export default function App() {
       <DisclaimerModal />
       <AnalyticsTracker />
       <CookieBanner />
+      <OnboardingGate />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/ultras" element={<Ultras />} />
@@ -54,6 +68,8 @@ export default function App() {
         <Route path="/organizers/:id" element={<OrganizerPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/bienvenue" element={<Welcome />} />
         <Route path="/organizer/profile" element={<OrganizerProfile />} />
         <Route path="/organizer/races" element={<OrganizerRaces />} />
         <Route path="/account" element={<Account />} />
