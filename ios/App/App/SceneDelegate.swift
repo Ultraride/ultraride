@@ -29,5 +29,12 @@ class UltraRideViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         webView?.allowsBackForwardNavigationGestures = true
+        // iOS 26+ : pas de fondu système sous la barre d'état ni au-dessus de la
+        // barre d'onglets. Il se calait sur le thème de l'appareil (clair) et
+        // laissait un dégradé blanc quand l'app est en mode sombre.
+        if #available(iOS 26.0, *) {
+            webView?.scrollView.topEdgeEffect.isHidden = true
+            webView?.scrollView.bottomEdgeEffect.isHidden = true
+        }
     }
 }
