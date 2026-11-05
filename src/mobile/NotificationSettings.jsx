@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { isNative } from "../lib/native";
-import { TOPICS, getPushPrefs, setPushPrefs, pushPermission, pushInviteSeen, markPushInviteSeen } from "../lib/push";
+import { onPushTrace, TOPICS, getPushPrefs, setPushPrefs, pushPermission, pushInviteSeen, markPushInviteSeen } from "../lib/push";
 import { MenuButton } from "./ui";
 
 // Interrupteurs « Nouveaux ultras » / « Ultras mis à jour » (app seulement).
@@ -9,6 +9,8 @@ export function NotificationSettings() {
   const [perm, setPerm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState(null);
+  const [trace, setTrace] = useState([]);
+  useEffect(() => onPushTrace(setTrace), []);
 
   useEffect(() => { pushPermission().then(setPerm); }, []);
 
@@ -47,6 +49,11 @@ export function NotificationSettings() {
           L'inscription aux notifications n'a pas abouti. Réessaie dans un instant.
           <br /><small style={{ opacity: 0.7 }}>Détail : {failure}</small>
         </p>
+      )}
+      {trace.length > 0 && (
+        <pre style={{ margin: "8px 16px 12px", fontSize: 11, lineHeight: 1.4, whiteSpace: "pre-wrap", opacity: 0.75 }}>
+          {trace.join("\n")}
+        </pre>
       )}
       {perm === "denied" && (
         <p className="m-note m-note--warn">

@@ -37,12 +37,22 @@ async function plugin() {
 }
 
 // "granted" | "denied" | "prompt" | "unsupported"
-const log = (...a) => console.log("[UR-push]", ...a);
+// Journal temporaire de diagnostic, affiché aussi à l'écran Notifications.
+const trace = [];
+const traceListeners = new Set();
+export function onPushTrace(fn) { traceListeners.add(fn); fn([...trace]); return () => traceListeners.delete(fn); }
+const t0 = Date.now();
+const log = (...a) => {
+  console.log("[UR-push]", ...a);
+  trace.push(`${((Date.now() - t0) / 1000).toFixed(1)}s ${a.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" ")}`);
+  traceListeners.forEach((fn) => fn([...trace]));
+};
 
 export async function pushPermission() {
   if (!isNative) return "unsupported";
   try {
-    const { receive } = await (await plugin()).checkPermissions();
+    log("checkPermissions…");
+    const { receive } = await withTimeout((await plugin()).checkPermissions(), 10000, "checkPermissions sans réponse après 10 s");
     log("checkPermissions →", receive);
     return receive === "granted" ? "granted" : receive === "denied" ? "denied" : "prompt";
   } catch (e) {
@@ -69,13 +79,16 @@ async function applyTopics(prefs) {
     throw e;
   }
   await Promise.all(Object.entries(TOPICS).map(([key, { topic }]) =>
-    (prefs[key] ? fm.subscribeToTopic({ topic }) : fm.unsubscribeFromTopic({ topic })).catch(() => {})
+    (prefs[key] ? fm.subscribeToTopic({ topic }) : fm.unsubscribeFromTopic({ topic }))
+      .then(() => log((prefs[key] ? "abonné à " : "désabonné de ") + topic))
+      .catch((e) => log("topic " + topic + " erreur :", e?.message || e))
   ));
 }
 
 // Active / désactive les sujets. Demande l'autorisation si besoin.
 // Renvoie les préférences effectivement appliquées.
 export async function setPushPrefs(next) {
+  log("setPushPrefs", next, "isNative=" + isNative);
   if (!isNative) return getPushPrefs();
   const wantsAny = Object.values(next).some(Boolean);
   if (wantsAny) {
@@ -83,7 +96,8 @@ export async function setPushPrefs(next) {
     let perm = await pushPermission();
     log("setPushPrefs, permission =", perm);
     if (perm === "prompt") {
-      const { receive } = await fm.requestPermissions();
+      log("requestPermissions…");
+      const { receive } = await withTimeout(fm.requestPermissions(), 60000, "requestPermissions sans réponse après 60 s");
       log("requestPermissions →", receive);
       perm = receive === "granted" ? "granted" : "denied";
     }
