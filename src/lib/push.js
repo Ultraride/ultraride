@@ -31,9 +31,25 @@ export function getPushPrefs() {
 export function pushInviteSeen() { return readJson(ASKED_KEY, false); }
 export function markPushInviteSeen() { writeJson(ASKED_KEY, true); }
 
-async function plugin() {
-  const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
-  return FirebaseMessaging;
+// Une attente qui ne répond jamais (module, autorisation, jeton Apple…)
+// est coupée pour afficher l'erreur au lieu de bloquer l'interrupteur.
+function withTimeout(promise, ms, message) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))]);
+}
+
+let pluginPromise = null;
+function plugin() {
+  if (!pluginPromise) {
+    log("chargement du module FirebaseMessaging…");
+    import("@capacitor/core").then(({ Capacitor }) =>
+      log("plugin natif enregistré :", Capacitor.isPluginAvailable("FirebaseMessaging"))
+    ).catch(() => {});
+    pluginPromise = import("@capacitor-firebase/messaging").then(
+      (m) => { log("module chargé"); return m.FirebaseMessaging; },
+      (e) => { pluginPromise = null; log("échec du chargement :", e?.message || e); throw e; }
+    );
+  }
+  return withTimeout(pluginPromise, 10000, "module FirebaseMessaging sans réponse après 10 s");
 }
 
 // "granted" | "denied" | "prompt" | "unsupported"
@@ -51,20 +67,15 @@ const log = (...a) => {
 export async function pushPermission() {
   if (!isNative) return "unsupported";
   try {
+    const fm = await plugin();
     log("checkPermissions…");
-    const { receive } = await withTimeout((await plugin()).checkPermissions(), 10000, "checkPermissions sans réponse après 10 s");
+    const { receive } = await withTimeout(fm.checkPermissions(), 10000, "checkPermissions sans réponse après 10 s");
     log("checkPermissions →", receive);
     return receive === "granted" ? "granted" : receive === "denied" ? "denied" : "prompt";
   } catch (e) {
     log("checkPermissions erreur :", e?.message || e);
     return "unsupported";
   }
-}
-
-// Si Apple ne délivre jamais le jeton APNs, getToken() peut attendre
-// indéfiniment : on coupe au bout de 15 s pour afficher l'erreur.
-function withTimeout(promise, ms, message) {
-  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))]);
 }
 
 async function applyTopics(prefs) {
