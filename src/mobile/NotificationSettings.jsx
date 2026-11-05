@@ -25,7 +25,7 @@ export function NotificationSettings() {
       // Firebase / Apple en échec : on distingue les deux cas.
       const p = await pushPermission();
       setPerm(p);
-      if (p === "granted") setFailure(e?.message || String(e));
+      if (!(p === "denied" && e?.message === "denied")) setFailure(e?.message || String(e));
       setPrefs({ newRaces: false, updates: false });
     }
     setBusy(false);

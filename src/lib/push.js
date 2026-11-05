@@ -37,12 +37,16 @@ async function plugin() {
 }
 
 // "granted" | "denied" | "prompt" | "unsupported"
+const log = (...a) => console.log("[UR-push]", ...a);
+
 export async function pushPermission() {
   if (!isNative) return "unsupported";
   try {
     const { receive } = await (await plugin()).checkPermissions();
+    log("checkPermissions →", receive);
     return receive === "granted" ? "granted" : receive === "denied" ? "denied" : "prompt";
-  } catch {
+  } catch (e) {
+    log("checkPermissions erreur :", e?.message || e);
     return "unsupported";
   }
 }
@@ -56,7 +60,14 @@ function withTimeout(promise, ms, message) {
 async function applyTopics(prefs) {
   const fm = await plugin();
   // Enregistre l'appareil auprès de Firebase.
-  await withTimeout(fm.getToken(), 15000, "aucun jeton reçu d'Apple (APNs) après 15 s");
+  log("getToken…");
+  try {
+    const { token } = await withTimeout(fm.getToken(), 15000, "aucun jeton reçu d'Apple (APNs) après 15 s");
+    log("getToken OK", token ? token.slice(0, 12) + "…" : token);
+  } catch (e) {
+    log("getToken erreur :", e?.message || e);
+    throw e;
+  }
   await Promise.all(Object.entries(TOPICS).map(([key, { topic }]) =>
     (prefs[key] ? fm.subscribeToTopic({ topic }) : fm.unsubscribeFromTopic({ topic })).catch(() => {})
   ));
@@ -70,14 +81,16 @@ export async function setPushPrefs(next) {
   if (wantsAny) {
     const fm = await plugin();
     let perm = await pushPermission();
+    log("setPushPrefs, permission =", perm);
     if (perm === "prompt") {
       const { receive } = await fm.requestPermissions();
+      log("requestPermissions →", receive);
       perm = receive === "granted" ? "granted" : "denied";
     }
     if (perm !== "granted") {
       const off = { newRaces: false, updates: false };
       writeJson(PREFS_KEY, off);
-      throw new Error("denied");
+      throw new Error(perm === "unsupported" ? "module de notifications indisponible dans l'app" : "denied");
     }
   }
   // On n'enregistre le choix qu'une fois l'inscription réussie.
