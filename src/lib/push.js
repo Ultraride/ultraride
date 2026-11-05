@@ -57,16 +57,8 @@ function plugin() {
 }
 
 // "granted" | "denied" | "prompt" | "unsupported"
-// Journal temporaire de diagnostic, affiché aussi à l'écran Notifications.
-const trace = [];
-const traceListeners = new Set();
-export function onPushTrace(fn) { traceListeners.add(fn); fn([...trace]); return () => traceListeners.delete(fn); }
-const t0 = Date.now();
-const log = (...a) => {
-  console.log("[UR-push]", ...a);
-  trace.push(`${((Date.now() - t0) / 1000).toFixed(1)}s ${a.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" ")}`);
-  traceListeners.forEach((fn) => fn([...trace]));
-};
+// Journal visible dans la console Xcode / Android Studio (filtre : UR-push).
+const log = (...a) => console.log("[UR-push]", ...a);
 
 export async function pushPermission() {
   if (!isNative) return "unsupported";
