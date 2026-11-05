@@ -44,8 +44,12 @@ function plugin() {
     import("@capacitor/core").then(({ Capacitor }) =>
       log("plugin natif enregistré :", Capacitor.isPluginAvailable("FirebaseMessaging"))
     ).catch(() => {});
+    // Surtout ne jamais résoudre une promesse avec le proxy du plugin :
+    // il répond à tous les noms de méthode, y compris "then", et JavaScript
+    // le prendrait pour une promesse qui ne se termine jamais (d'où des
+    // interrupteurs restés bloqués). On transporte le module, pas le proxy.
     pluginPromise = import("@capacitor-firebase/messaging").then(
-      (m) => { log("module chargé"); return m.FirebaseMessaging; },
+      (m) => { log("module chargé"); return m; },
       (e) => { pluginPromise = null; log("échec du chargement :", e?.message || e); throw e; }
     );
   }
@@ -67,7 +71,7 @@ const log = (...a) => {
 export async function pushPermission() {
   if (!isNative) return "unsupported";
   try {
-    const fm = await plugin();
+    const { FirebaseMessaging: fm } = await plugin();
     log("checkPermissions…");
     const { receive } = await withTimeout(fm.checkPermissions(), 10000, "checkPermissions sans réponse après 10 s");
     log("checkPermissions →", receive);
@@ -79,7 +83,7 @@ export async function pushPermission() {
 }
 
 async function applyTopics(prefs) {
-  const fm = await plugin();
+  const { FirebaseMessaging: fm } = await plugin();
   // Enregistre l'appareil auprès de Firebase.
   log("getToken…");
   try {
@@ -103,7 +107,7 @@ export async function setPushPrefs(next) {
   if (!isNative) return getPushPrefs();
   const wantsAny = Object.values(next).some(Boolean);
   if (wantsAny) {
-    const fm = await plugin();
+    const { FirebaseMessaging: fm } = await plugin();
     let perm = await pushPermission();
     log("setPushPrefs, permission =", perm);
     if (perm === "prompt") {
@@ -129,7 +133,7 @@ export async function disablePush() {
   writeJson(PREFS_KEY, { newRaces: false, updates: false });
   if (!isNative) return;
   try {
-    const fm = await plugin();
+    const { FirebaseMessaging: fm } = await plugin();
     await Promise.all(Object.values(TOPICS).map(({ topic }) => fm.unsubscribeFromTopic({ topic }).catch(() => {})));
     await fm.deleteToken();
   } catch { /* rien à faire */ }
@@ -139,7 +143,7 @@ export async function disablePush() {
 // on touche une notification, et ré-abonnement silencieux.
 export async function initPush(navigate) {
   if (!isNative) return () => {};
-  const fm = await plugin();
+  const { FirebaseMessaging: fm } = await plugin();
   if (platform === "android") {
     await fm.createChannel({ id: "ultras", name: "Ultras", description: "Nouveaux ultras et mises à jour", importance: 3 }).catch(() => {});
   }
