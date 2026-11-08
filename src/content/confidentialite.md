@@ -64,7 +64,6 @@ Les données sont hébergées dans l'Union européenne. Certains prestataires so
 | --- | --- | --- |
 | OVHcloud | Hébergement du site | France |
 | Supabase Inc. (société américaine) | Base de données et authentification | Serveurs à Paris, France |
-| Cloudflare Inc. (société américaine) | Copie de secours du site (ultraride.pages.dev) et réseau de diffusion | Union européenne et États-Unis |
 | Google et Apple | Connexion « Continuer avec Google » ou « avec Apple », seulement si vous la choisissez : ils nous transmettent votre adresse email et votre nom | Union européenne et États-Unis |
 | Brevo | Envoi des emails (confirmation, récap de modération, informations) | France |
 | Google Ireland Limited | Mesure d'audience (Google Analytics 4), seulement avec votre accord | Union européenne, transferts possibles vers les États-Unis |

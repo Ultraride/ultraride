@@ -344,6 +344,12 @@ export default function RaceDetail() {
                 {(race.edition > 1 || siblings.length > 0) && (
                   <span className="v2-pill" style={{ border: "1px solid #E9A27A", color: "#E9A27A" }}>{`ÉDITION ${race.edition}${year ? ` · ${year}` : ""}`}</span>
                 )}
+                {previousEditions.length > 0 && (
+                  <a href="#editions" className="v2-pill" style={{ border: "1px solid rgba(245,241,230,0.4)", color: "#F5F1E6", textDecoration: "none" }}
+                    onClick={(e) => { e.preventDefault(); document.getElementById("editions")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
+                    {`VOIR LES ÉDITIONS PASSÉES (${previousEditions.length}) ↓`}
+                  </a>
+                )}
               </div>
               <h1 className="v2-race-title">{race.name}</h1>
               {orgName && (
@@ -447,7 +453,7 @@ export default function RaceDetail() {
             </div>
           )}
 
-          <div className="v2-panel" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div id="editions" className="v2-panel" style={{ display: "flex", flexDirection: "column", gap: 12, scrollMarginTop: 90 }}>
             <span className="v2-h3" style={{ fontSize: 12 }}>Éditions</span>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="v2-ed-num">{race.edition || 1}</span>

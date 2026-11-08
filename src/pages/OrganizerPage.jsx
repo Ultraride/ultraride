@@ -8,6 +8,7 @@ export default function OrganizerPage() {
   const { id } = useParams();
   const [organizer, setOrganizer] = useState(null);
   const [races, setRaces] = useState(null);
+  const [pastEditions, setPastEditions] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -29,6 +30,16 @@ export default function OrganizerPage() {
       .eq("is_current", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => setRaces(data || []));
+
+    // Éditions passées : visibles ici et depuis la fiche, pas dans l'annuaire.
+    supabase
+      .from("races")
+      .select("id, name, edition, start_date, next_edition, km")
+      .eq("organizer_id", id)
+      .eq("status", "published")
+      .eq("is_current", false)
+      .order("start_date", { ascending: false, nullsFirst: false })
+      .then(({ data }) => setPastEditions(data || []));
   }, [id]);
 
   if (error) return <div className="wrap" style={{ paddingTop: 40 }}><div className="error-box">{error}</div></div>;
@@ -75,6 +86,24 @@ export default function OrganizerPage() {
         <div className="race-grid">
           {races.map((r) => <RaceCard key={r.id} race={{ ...r, organizer: { name: organizer.name, logo_url: organizer.logo_url, id: organizer.id } }} />)}
         </div>
+      )}
+
+      {pastEditions.length > 0 && (
+        <section style={{ marginTop: 36 }}>
+          <div className="h2" style={{ marginBottom: 12 }}>Éditions passées ({pastEditions.length})</div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            {pastEditions.map((e) => {
+              const y = e.start_date ? String(e.start_date).slice(0, 4) : e.next_edition;
+              return (
+                <li key={e.id}>
+                  <Link to={`/courses/${e.id}`} className="mono" style={{ fontSize: 14, color: "var(--rust-text)" }}>
+                    {[e.name, e.edition ? `édition ${e.edition}` : null, y, e.km ? `${Number(e.km).toLocaleString("fr-FR")} km` : null].filter(Boolean).join(" — ")}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       <div style={{ marginTop: 32 }}>
