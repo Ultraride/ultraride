@@ -9,7 +9,7 @@ export default function SiteFooter() {
         <span className="site-footer-tagline">Ultra-cycling almanac</span>
       </div>
       <nav className="site-footer-links">
-        <Link to="/cgu">Conditions générales d'utilisation</Link>
+        <Link to="/cgu">Mentions légales et CGU</Link>
         <span aria-hidden="true">·</span>
         <Link to="/confidentialite">Politique de confidentialité</Link>
         <span aria-hidden="true">·</span>
@@ -22,7 +22,7 @@ export default function SiteFooter() {
         )}
       </nav>
       <div className="site-footer-legal">
-        © 2026 UltraRide · édité par l'association Beyond The Track
+        © 2026 UltraRide
       </div>
     </footer>
   );
