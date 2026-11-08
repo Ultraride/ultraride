@@ -13,6 +13,8 @@ export default function SiteFooter() {
         <span aria-hidden="true">·</span>
         <Link to="/confidentialite">Politique de confidentialité</Link>
         <span aria-hidden="true">·</span>
+        <a href="/app/">L'app</a>
+        <span aria-hidden="true">·</span>
         <a href="mailto:hello@ultraride.eu">Contact</a>
         {analyticsEnabled() && (
           <>

@@ -19,6 +19,7 @@ La consultation du répertoire ne nécessite aucun compte et aucune donnée pers
 | Utilisation du compte | Ultras en favoris, commentaires et notes publiés |
 | Palmarès et Passeport Ultra | Ultras terminés, temps, et traces GPS (fichiers FIT) que vous importez : ce sont des données de localisation précises et datées |
 | Formulaire « Proposer un ultra » | Nom, email, site de l'épreuve, message |
+| Liste « Préviens-moi » de l'app (page ultraride.eu/app) | Adresse email et date d'inscription |
 | Navigation | Compteur de consultations des fiches, agrégé par jour et sans identification du visiteur |
 
 Aucune donnée sensible (santé, origine, opinions) n'est demandée. Merci de ne pas en publier dans vos commentaires.
@@ -47,6 +48,7 @@ Vos données ne font l'objet d'aucune revente, d'aucun profilage publicitaire ni
 | Commentaires publiés | Tant qu'ils sont en ligne. À la suppression du compte, ils restent visibles, signés « utilisateur supprimé », sans lien avec vous |
 | Fiches d'épreuves | Tant que l'épreuve est référencée ; les informations de l'épreuve elle-même ne sont pas des données personnelles |
 | Propositions d'ultras | 2 ans après leur réception |
+| Liste « Préviens-moi » de l'app | Jusqu'à 6 mois après la sortie de l'app, ou jusqu'à ta désinscription |
 | Consentement aux emails d'information | Jusqu'à son retrait, ou 3 ans sans interaction |
 | Récaps de modération reçus par l'administrateur | 90 jours |
 
