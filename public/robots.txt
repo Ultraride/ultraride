@@ -1,0 +1,24 @@
+# UltraRide — annuaire public des ultras vélo.
+# Moteurs de recherche et assistants IA sont les bienvenus sur les pages publiques.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /api/
+
+# Assistants IA (autorisés explicitement)
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /api/

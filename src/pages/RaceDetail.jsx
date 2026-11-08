@@ -430,6 +430,9 @@ export default function RaceDetail() {
                 Ajouter à mon agenda
               </button>
             )}
+            <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.4 }}>
+              Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.
+            </p>
           </div>
 
           <OrganizerBox race={race} />

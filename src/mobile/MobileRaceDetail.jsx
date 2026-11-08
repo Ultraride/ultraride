@@ -165,6 +165,8 @@ export default function MobileRaceDetail() {
           <div><span className="m-label">INSCRIPTIONS</span><span>{race.open ? "Ouvertes" : "Fermées ou à venir"}</span></div>
         </div>
 
+        <p className="m-note">Dates, tarifs et parcours peuvent changer : vérifie-les sur le site de l'organisateur avant de t'inscrire.</p>
+
         <div className="m-comments"><Comments raceId={race.id} /></div>
       </div>
 
