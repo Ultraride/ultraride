@@ -211,6 +211,13 @@ function AddResultForm({ onSaved, onCancel }) {
   const handleGpx = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // iOS grise parfois les .fit si on filtre trop strictement : on élargit
+    // le filtre ci-dessous et on vérifie l'extension ici.
+    if (!/\.fit$/i.test(file.name)) {
+      setGpxError("Ce fichier n'est pas une trace .fit. Exporte ta sortie au format FIT (Garmin, Wahoo, Strava…).");
+      e.target.value = "";
+      return;
+    }
     setParsing(true);
     setGpxError(null);
     try {
@@ -289,7 +296,7 @@ function AddResultForm({ onSaved, onCancel }) {
         <label>Trace FIT <span style={{ color: "var(--brick)" }}>*</span></label>
         <label className="btn image-upload-btn" style={{ display: "inline-flex" }}>
           {parsing ? "Analyse…" : gpxInfo ? "Remplacer le fichier" : "Charger un fichier .fit"}
-          <input type="file" accept=".fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
+          <input type="file" accept=".fit,.FIT,application/octet-stream,application/vnd.ant.fit" onChange={handleGpx} disabled={parsing} style={{ display: "none" }} />
         </label>
         {gpxInfo && (
           <div className="muted mono" style={{ fontSize: 12, marginTop: 6 }}>

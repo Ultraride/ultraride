@@ -14,9 +14,10 @@ La consultation du répertoire ne nécessite aucun compte et aucune donnée pers
 
 | Situation | Données |
 | --- | --- |
-| Création d'un compte | Adresse email, mot de passe (chiffré, jamais lisible), nom affiché, date d'acceptation des CGU, choix concernant les emails d'information |
+| Création d'un compte | Adresse email, mot de passe (chiffré, jamais lisible) ou identifiant de connexion Google ou Apple, nom affiché, date d'acceptation des CGU, choix concernant les emails d'information |
 | Compte organisateur | Nom de la structure, site web, email de contact, liens réseaux sociaux (Instagram, Facebook, Strava), logo |
 | Utilisation du compte | Ultras en favoris, commentaires et notes publiés |
+| Palmarès et Passeport Ultra | Ultras terminés, temps, et traces GPS (fichiers FIT) que vous importez : ce sont des données de localisation précises et datées |
 | Formulaire « Proposer un ultra » | Nom, email, site de l'épreuve, message |
 | Navigation | Compteur de consultations des fiches, agrégé par jour et sans identification du visiteur |
 
@@ -27,6 +28,7 @@ Aucune donnée sensible (santé, origine, opinions) n'est demandée. Merci de ne
 | Finalité | Base légale (RGPD, art. 6) |
 | --- | --- |
 | Gérer votre compte, vos favoris et vos publications | Exécution des CGU (contrat) |
+| Afficher votre palmarès et votre Passeport Ultra | Exécution des CGU (contrat) |
 | Référencer et afficher les épreuves des organisateurs | Exécution des CGU (contrat) |
 | Modérer les contenus (récap quotidien interne des inscriptions, commentaires et soumissions) | Intérêt légitime : qualité et sécurité du répertoire |
 | Répondre à une proposition d'ultra ou à un message | Intérêt légitime |
@@ -41,7 +43,8 @@ Vos données ne font l'objet d'aucune revente, d'aucun profilage publicitaire ni
 | Données | Durée |
 | --- | --- |
 | Compte et données associées | Jusqu'à la suppression du compte, ou 3 ans après la dernière connexion (vous êtes prévenu par email un mois avant) |
-| Commentaires publiés | Tant que le compte existe. À sa suppression, ils sont supprimés |
+| Palmarès et traces GPS | Jusqu'à leur suppression par vous, ou la suppression du compte |
+| Commentaires publiés | Tant qu'ils sont en ligne. À la suppression du compte, ils restent visibles, signés « utilisateur supprimé », sans lien avec vous |
 | Fiches d'épreuves | Tant que l'épreuve est référencée ; les informations de l'épreuve elle-même ne sont pas des données personnelles |
 | Propositions d'ultras | 2 ans après leur réception |
 | Consentement aux emails d'information | Jusqu'à son retrait, ou 3 ans sans interaction |
@@ -49,18 +52,20 @@ Vos données ne font l'objet d'aucune revente, d'aucun profilage publicitaire ni
 
 ## 5. Destinataires
 
-Vos données ne sont accessibles qu'aux administrateurs d'UltraRide, membres de l'association. Sont visibles publiquement sur le site : votre nom affiché avec vos commentaires, et les coordonnées professionnelles que les organisateurs choisissent de publier. Votre adresse email n'est jamais affichée.
+Vos données ne sont accessibles qu'aux administrateurs d'UltraRide, membres de l'association. Sont visibles publiquement sur le site : votre nom affiché avec vos commentaires, et les coordonnées professionnelles que les organisateurs choisissent de publier. Votre adresse email n'est jamais affichée. Votre palmarès et vos traces GPS ne sont visibles que par vous.
 
 Elles peuvent être communiquées aux autorités sur réquisition légale.
 
 ## 6. Sous-traitants et hébergement
 
-Toutes les données sont hébergées en France, à l'exception des statistiques de mesure d'audience, collectées seulement avec votre accord (voir article 7).
+Les données sont hébergées dans l'Union européenne. Certains prestataires sont des sociétés américaines : elles sont indiquées ci-dessous, avec les garanties qui encadrent un éventuel accès depuis les États-Unis (Data Privacy Framework ou clauses contractuelles types de la Commission européenne).
 
 | Prestataire | Rôle | Localisation |
 | --- | --- | --- |
 | OVHcloud | Hébergement du site | France |
-| Supabase | Base de données et authentification | Paris, France |
+| Supabase Inc. (société américaine) | Base de données et authentification | Serveurs à Paris, France |
+| Cloudflare Inc. (société américaine) | Copie de secours du site (ultraride.pages.dev) et réseau de diffusion | Union européenne et États-Unis |
+| Google et Apple | Connexion « Continuer avec Google » ou « avec Apple », seulement si vous la choisissez : ils nous transmettent votre adresse email et votre nom | Union européenne et États-Unis |
 | Brevo | Envoi des emails (confirmation, récap de modération, informations) | France |
 | Google Ireland Limited | Mesure d'audience (Google Analytics 4), seulement avec votre accord | Union européenne, transferts possibles vers les États-Unis |
 | Google (Firebase Cloud Messaging) et Apple (APNs) | Envoi des notifications de l'app mobile, seulement si vous les activez | Union européenne et États-Unis |
@@ -113,4 +118,4 @@ Les échanges avec le site sont chiffrés (HTTPS). Les mots de passe sont stock�
 
 Cette politique peut évoluer avec le site. La version en vigueur est celle publiée sur cette page. En cas de changement important, les titulaires d'un compte en sont informés par email.
 
-*Dernière mise à jour : 24 septembre 2026*
+*Dernière mise à jour : 7 novembre 2026*

@@ -1202,7 +1202,7 @@ function AiBatchPanel({ onDone }) {
       if (cancelled.current) break;
       const limit = Math.min(10, total - done);
       const { data, error } = await supabase.functions.invoke("check-race-updates", {
-        body: { limit, min_age_days: 0 },
+        body: { limit, min_age_days: 1 }, // 1 : un site vérifié aujourd'hui n'est pas revérifié (sinon « reste » ne tombe jamais à 0 et on paie deux fois)
       });
       if (cancelled.current) return;
       if (error || data?.error) {

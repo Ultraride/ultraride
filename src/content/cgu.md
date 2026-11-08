@@ -6,7 +6,7 @@ Le site UltraRide (ultraride.eu), « l'Almanach de l'ultra-cyclisme », est édi
 
 - Directeur de la publication : Antoine Chareyre, président de l'association
 - Contact : hello@ultraride.eu
-- Hébergement du site : OVH SAS, 2 rue Kellermann, 59100 Roubaix, France
+- Hébergement du site : OVH SAS, 2 rue Kellermann, 59100 Roubaix, France — téléphone : 1007
 - Hébergement des données : Supabase, serveurs situés à Paris (France)
 
 ## Article 2 — Objet et acceptation
@@ -89,7 +89,7 @@ Les logos, noms et visuels des épreuves restent la propriété de leurs organis
 
 Les données collectées (email, nom affiché, favoris, commentaires, informations d'organisateur) servent à fournir le service, à modérer les contenus et, avec l'accord de l'utilisateur, à lui envoyer des informations. Elles sont hébergées en France et ne sont ni vendues ni cédées.
 
-Sous-traitants : Supabase (base de données, Paris), Brevo (envoi d'emails, France), OVHcloud (hébergement du site, France).
+Sous-traitants : la liste à jour figure dans la Politique de confidentialité (article 6).
 
 Conformément au RGPD, l'utilisateur dispose d'un droit d'accès, de rectification, d'effacement, d'opposition et de portabilité, exerçable à hello@ultraride.eu. Il peut saisir la CNIL (cnil.fr). Le détail figure dans la [Politique de confidentialité](/confidentialite).
 

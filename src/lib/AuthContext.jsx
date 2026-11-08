@@ -66,11 +66,14 @@ export function AuthProvider({ children }) {
   // extraData carries signup-time consent flags (marketing_consent,
   // terms_accepted) through to raw_user_meta_data, read by the
   // handle_new_user() trigger when it creates the profile row.
-  const signUp = async (email, password, extraData = {}) => {
+  // redirectPath : chemin interne où revenir après le clic sur le lien de
+  // confirmation (ex. la fiche d'où l'on venait). Sinon, l'accueil.
+  const signUp = async (email, password, extraData = {}, redirectPath = null) => {
+    const safePath = typeof redirectPath === "string" && redirectPath.startsWith("/") && !redirectPath.startsWith("//") ? redirectPath : "";
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: SITE_ORIGIN, data: extraData },
+      options: { emailRedirectTo: SITE_ORIGIN + safePath, data: extraData },
     });
     // Email déjà inscrit : Supabase répond « OK » sans rien envoyer, avec un
     // utilisateur factice dont la liste identities est vide.

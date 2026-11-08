@@ -220,7 +220,7 @@ export default function Login() {
             terms_accepted: termsAccepted,
             marketing_consent: newsletter,
             requested_role: accountType,
-          });
+          }, next);
     setLoading(false);
 
     if (result.error) {
